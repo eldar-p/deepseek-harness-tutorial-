@@ -1,0 +1,127 @@
+# Solo agent + VM bash + Tor. One LM Studio model "coder".
+# Tokens replaced by install.ps1: __HOST_SHARE__ __VM_MOUNT__ __PLUGIN_DIR__
+
+- id: system-prompt
+  config:
+    includeHarnessIdentity: false
+    includeRuntimeContext: false
+    persona: >-
+      You are a solo coding agent on LM Studio id "coder" (one model).
+      HARD RULE: shell = tool `bash` only (Debian VM via SSH). Never tool `pwsh`.
+      Forbidden: Get-ChildItem, host python/git/apt, clearnet Search/fetch.
+      PATHS:
+      - Host Read/Write/Edit/Glob MUST be under __HOST_SHARE__\...
+      - bash MUST use __VM_MOUNT__/... for the same files
+      - Never write to /home/kodachi, /tmp, or invented drive\home\...
+      - Same file: __HOST_SHARE__\foo.py ↔ __VM_MOUNT__/foo.py
+      Proof: uname → Linux.
+      Web: bash curl --socks5-hostname 127.0.0.1:9050
+      ONE-SHOT: Write under __HOST_SHARE__\<name>, one bash via __VM_MOUNT__, ONE short answer.
+      Do NOT: python --version, share-root README/LICENSE, todo_write, pwd/ls probes, bare pip.
+      LARGE: __HOST_SHARE__\projects\<slug>\ ↔ __VM_MOUNT__/projects/<slug>/.
+      Use create_goal; STRUCTURE.txt; one concern per file; complete_goal when done.
+      HUGE FILES: grep/rg first, then Read limit≤120 around hits.
+      FRONTEND: real CSS/fonts/atmosphere — not bare Times + blue links.
+      NO EMOJI: ASCII [OK], [FAIL], [WARN] only.
+      STOP: when answered, stop once. No restating the same summary.
+
+- id: tool-bash
+  name: '@deepseek-ai/dsh-tool-bash'
+  disabled: false
+
+- id: tool-pwsh
+  name: '@deepseek-ai/dsh-tool-pwsh'
+  disabled: true
+
+- id: pwsh-sandbox
+  name: '@deepseek-ai/dsh-pwsh-sandbox'
+  disabled: true
+
+- id: bash-sandbox
+  name: '@deepseek-ai/dsh-bash-sandbox'
+  disabled: true
+
+- id: fs-sandbox
+  name: 'file:///__PLUGIN_DIR__/path-fix-fs/index.mjs'
+  config:
+    cwd: '__HOST_SHARE__'
+
+- id: tool-fs
+  name: '@deepseek-ai/dsh-tool-fs'
+  config:
+    readLimit: 400
+    readMaxLineLength: 2000
+    readMaxBytes: 120000
+
+- id: web-search-deepseek
+  name: '@deepseek-ai/dsh-web-search-deepseek'
+  disabled: true
+
+- id: tool-web
+  config:
+    search: false
+    fetch: false
+    searchTimeoutMs: 60000
+
+- id: agent-instructions
+  config:
+    maxBytes: 16384
+
+- id: agent-presets
+  config:
+    default: vm-only
+    includeUserRoot: true
+    roots: []
+
+- id: sandbox-policy
+  config:
+    mode: !!js process.env.DSH_PERMISSION_MODE ?? 'danger-full-access'
+    workspaceRoot: !!js process.cwd()
+
+- id: approval
+  config:
+    policy: !!js "(process.env.DSH_PERMISSION_MODE ?? 'danger-full-access') === 'danger-full-access' ? 'never' : 'ask'"
+
+- id: compaction-basic
+  config:
+    thresholdRatio: 0.45
+    retainRatio: 0.12
+    maxTokens: 3072
+    compactionRetries: 2
+    auto: true
+
+- id: tool-result-pruner
+  config:
+    thresholdChars: 2800
+    headChars: 1400
+    tailChars: 400
+
+- id: tool-todo
+  name: '@deepseek-ai/dsh-tool-todo'
+  disabled: true
+
+- id: tool-subagent
+  config:
+    provider: spawn
+    toolName: subagent
+    enableRunInBackground: false
+    backgroundMode: one-shot
+    persona: >-
+      Same solo VM bash-only helper. Short scoped task; return result.
+      Paths: host __HOST_SHARE__\... ; bash __VM_MOUNT__/... only.
+
+- insert:
+  - id: one-shot-guard
+    name: 'file:///__PLUGIN_DIR__/one-shot-guard/index.mjs'
+
+  - id: harness-narrative
+    name: 'file:///__PLUGIN_DIR__/harness-narrative/index.mjs'
+
+  - id: bash-vm-local
+    name: 'file:///__PLUGIN_DIR__/vm-bash-local/index.mjs'
+    config:
+      cwd: '__HOST_SHARE__'
+      timeoutMs: 7200000
+      maxTimeoutMs: 7200000
+      maxOutputBytes: 48000
+      maxSpillBytes: 16777216
