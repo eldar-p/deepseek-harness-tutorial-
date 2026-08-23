@@ -1,0 +1,4 @@
+﻿host-mac/** text eol=lf
+guest/** text eol=lf
+install.sh text eol=lf
+env.sh.example text eol=lf

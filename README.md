@@ -1,7 +1,11 @@
 ﻿# DeepSeek Harness — туториал + наш стек
 
-В репозитории лежит **готовое самописное**: плагины, skills, host/guest скрипты, конфиги.  
-После `git clone` их можно поставить через `install.ps1`.
+В репозитории лежит **готовое самописное**: плагины, skills, host/guest скрипты, конфиги.
+
+| ОС | Гайд | Установка |
+|----|------|-----------|
+| **Windows** | этот файл | `install.ps1` + `host/` |
+| **macOS** | **[MACOS.md](./MACOS.md)** | `install.sh` + `host-mac/` |
 
 ```bash
 git clone https://github.com/eldar-p/deepseek-harness-tutorial-.git
@@ -14,19 +18,17 @@ cd deepseek-harness-tutorial-
 
 ```text
 dsh-plugins/          кастомные плагины DSH
-  vm-bash-local/      bash → SSH в Debian VM
-  path-fix-fs/        переписывает кривые пути на shared folder
-  one-shot-guard/     hard-deny todo/probe/pip/emoji/root README
-  harness-narrative/  Think-блок из шагов tools
-skills/               agent-speed, path-map-vm, search-large-files,
-                      large-project, frontend-ui, web-access, web_researcher
+skills/               agent-speed, path-map-vm, …
 config/               cordis.patch.yml, settings.yaml, AGENTS.md
-host/                 vm-exec.ps1, start-solo-max.ps1, start-dsh.ps1,
-                      after-reboot-start.ps1, ensure-hostshare-junction.ps1, …
-guest/                guest-setup.sh, tor-up.sh, install-agent-lean.sh, …
-knowledge/            шпаргалки debian/tor/api/archives/…
-env.example           пути (скопируй в env.ps1)
-install.ps1           установка в DSH_HOME + HOST_SHARE
+host/                 Windows: vm-exec.ps1, start-*.ps1, …
+host-mac/             macOS: vm-exec.sh, start-*.sh, …
+guest/                guest-setup.sh, tor-up.sh, … (общие)
+knowledge/            шпаргалки
+env.example           Windows → env.ps1
+env.sh.example        macOS → env.sh
+install.ps1           установка на Windows
+install.sh            установка на macOS
+MACOS.md              туториал для Mac
 ```
 
 ---
@@ -89,7 +91,7 @@ powershell -File .\host\after-reboot-start.ps1
 
 | Компонент | Роль |
 |-----------|------|
-| **vm-bash-local** | каждый `bash` уходит в VM через `host/vm-exec.ps1` |
+| **vm-bash-local** | каждый `bash` уходит в VM через `host/vm-exec.ps1` (Win) или `host-mac/vm-exec.sh` (Mac) |
 | **path-fix-fs** | `/home/…`, `/tmp/…`, `*\mnt\hostshare\…` → `HOST_SHARE` |
 | **one-shot-guard** | deny: todo, probe bash, bare pip, root README/LICENSE, emoji |
 | **harness-narrative** | раскрываемый Think из tool-шагов |
