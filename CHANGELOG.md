@@ -29,7 +29,9 @@
 - `npm run pack:release` packs `dist/deep-cli-*.zip` with sha256 snippet
 - `deep update --channel beta` extracts zip + writes `%LOCALAPPDATA%\deep\bin\deep.cmd`
 - Local override: `DEEP_CLI_ZIP` / `DEEP_CLI_SHA256`
-- `scripts/publish-release.ps1` uploads zip via `gh` (when installed)
+- GitHub Release `v0.2.0-alpha` includes `deep-cli-0.2.0-alpha.zip` (CDN install verified)
+- `deep doctor --readiness --stage=beta` (100/100)
+- `BETA.md` status page
 
 ## [0.1.0-prealpha] — 2026-08-24
 

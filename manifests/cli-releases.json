@@ -1,6 +1,6 @@
 {
   "schema": "deep-cli-releases/v1",
-  "note": "CC BY-NC-SA 4.0. Fill url after uploading zip from npm run pack:release. Local test: DEEP_CLI_ZIP=dist/deep-cli-*.zip",
+  "note": "CC BY-NC-SA 4.0. Artifact on GitHub Releases v0.2.0-alpha. Local override: DEEP_CLI_ZIP.",
   "channels": {
     "stable": {
       "revision": "2026.08.24-alpha",
@@ -19,28 +19,28 @@
             "arch": "x64",
             "format": "zip",
             "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.2.0-alpha/deep-cli-0.2.0-alpha.zip",
-            "sha256": "1d5fd3673d357c8328924b0144127ae3551ca4f0738a690239e6b45fd9cfb326"
+            "sha256": "273f0f020a4daaefa2aeb50a3899d4f5a1299679e5a1cc403c96475ad2347cf7"
           },
           {
             "os": "darwin",
             "arch": "arm64",
             "format": "zip",
             "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.2.0-alpha/deep-cli-0.2.0-alpha.zip",
-            "sha256": "1d5fd3673d357c8328924b0144127ae3551ca4f0738a690239e6b45fd9cfb326"
+            "sha256": "273f0f020a4daaefa2aeb50a3899d4f5a1299679e5a1cc403c96475ad2347cf7"
           },
           {
             "os": "darwin",
             "arch": "x64",
             "format": "zip",
             "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.2.0-alpha/deep-cli-0.2.0-alpha.zip",
-            "sha256": "1d5fd3673d357c8328924b0144127ae3551ca4f0738a690239e6b45fd9cfb326"
+            "sha256": "273f0f020a4daaefa2aeb50a3899d4f5a1299679e5a1cc403c96475ad2347cf7"
           },
           {
             "os": "linux",
             "arch": "x64",
             "format": "zip",
             "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.2.0-alpha/deep-cli-0.2.0-alpha.zip",
-            "sha256": "1d5fd3673d357c8328924b0144127ae3551ca4f0738a690239e6b45fd9cfb326"
+            "sha256": "273f0f020a4daaefa2aeb50a3899d4f5a1299679e5a1cc403c96475ad2347cf7"
           }
         ]
       }

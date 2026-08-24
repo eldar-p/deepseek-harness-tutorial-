@@ -91,7 +91,8 @@ export async function cmdDoctor(flags = {}) {
   if (cfg?.rebootRequired) console.log('  reboot   REQUIRED before start')
 
   if (flags.readiness) {
-    const stage = flags.stage === 'alpha' ? 'alpha' : 'pre-alpha'
+    const stage =
+      flags.stage === 'beta' ? 'beta' : flags.stage === 'alpha' ? 'alpha' : 'pre-alpha'
     const r = assessReadiness(stage)
     console.log(formatReadinessReport(r, { host, engine, gpu: gpu, stage }))
   }
@@ -496,7 +497,7 @@ export function cmdHelp() {
   console.log(`Deep CLI ${ver}`)
   console.log(bar)
   console.log(`Usage:
-  deep doctor [--readiness] [--stage pre-alpha|alpha]
+  deep doctor [--readiness] [--stage pre-alpha|alpha|beta]
   deep bootstrap [--gguf PATH] [--preset NAME] [--channel stable|beta|edge]
   deep start [--name STACK] [--gguf PATH] [--cpu] [--preset NAME]
   deep stop [--name STACK] [--emergency] [--wipe-session]

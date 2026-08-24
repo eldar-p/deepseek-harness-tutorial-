@@ -11,7 +11,7 @@
 - [x] Extract + install shim (`src/cli-install.js`)
 - [x] Local test: `DEEP_CLI_ZIP=dist/...` + `deep update --channel beta`
 - [x] `scripts/publish-release.ps1` (needs `gh auth`)
-- [ ] Maintainer: run publish-release.ps1 to upload zip to GitHub Release
+- [x] Maintainer: zip uploaded to GitHub Release `v0.2.0-alpha` (sha256 `273f0f02…`)
 
 ## Verify
 

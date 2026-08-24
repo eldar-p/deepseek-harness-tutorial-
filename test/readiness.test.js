@@ -1,6 +1,14 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { assessPreAlphaReadiness, assessAlphaReadiness, assessReadiness, PREALPHA_MILESTONES, ALPHA_MILESTONES } from '../src/readiness.js'
+import {
+  assessPreAlphaReadiness,
+  assessAlphaReadiness,
+  assessBetaReadiness,
+  assessReadiness,
+  PREALPHA_MILESTONES,
+  ALPHA_MILESTONES,
+  BETA_MILESTONES,
+} from '../src/readiness.js'
 
 test('PREALPHA_MILESTONES weights sum to 100', () => {
   const sum = PREALPHA_MILESTONES.reduce((s, m) => s + m.weight, 0)
@@ -25,7 +33,19 @@ test('assessAlphaReadiness returns pct and stage', () => {
   assert.equal(r.items.length, ALPHA_MILESTONES.length)
 })
 
+test('BETA_MILESTONES weights sum to 100', () => {
+  const sum = BETA_MILESTONES.reduce((s, m) => s + m.weight, 0)
+  assert.equal(sum, 100)
+})
+
+test('assessBetaReadiness returns pct and stage', () => {
+  const r = assessBetaReadiness()
+  assert.ok(r.pct >= 0 && r.pct <= 100)
+  assert.equal(r.items.length, BETA_MILESTONES.length)
+})
+
 test('assessReadiness stage routing', () => {
+  assert.equal(assessReadiness('beta').items.length, BETA_MILESTONES.length)
   assert.equal(assessReadiness('alpha').items.length, ALPHA_MILESTONES.length)
   assert.equal(assessReadiness('pre-alpha').items.length, PREALPHA_MILESTONES.length)
 })
