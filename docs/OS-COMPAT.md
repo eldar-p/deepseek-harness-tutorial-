@@ -53,7 +53,7 @@ deep doctor --readiness --stage=field
 1. **llama pins** — win32 / linux (cpu+vulkan) / darwin sha256 for **b9771**.
 2. **WSL Docker** — prefer Docker Desktop WSL integration; apt docker is often a separate daemon.
 3. **WSL DSH** — install Linux dsh under `~/.local` (reject `/mnt/c` Windows shim).
-4. **macOS physical full stack** — no dedicated Mac in lab; Metal binary + field-lite CI green; full e2e needs operator with GGUF.
+4. **macOS physical full stack** — **out of scope**. No lab Mac; accepted bar = GH Actions `macos-latest` field-lite + Metal pin. Alternatives (paid): see [MACOS-WITHOUT-HARDWARE.md](./MACOS-WITHOUT-HARDWARE.md).
 5. **Linux CUDA** — no official ggml zip; use Vulkan pin or `DEEP_LLAMA_BIN`.
 6. **lsp-bridge** — must use `defineTool` + `output.render` (fixed in 1.1.1); old `ctx.tool` crashed DSH boot.
 
