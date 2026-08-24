@@ -16,6 +16,25 @@ test('resolveDshBin respects DEEP_DSH_BIN', () => {
   else process.env.DEEP_DSH_BIN = prev
 })
 
+test('writeDshRuntimeSettings api profile', () => {
+  const settingsPath = writeDshRuntimeSettings({
+    apiProfile: {
+      id: 'deepseek',
+      displayName: 'DeepSeek',
+      model: 'deepseek-chat',
+      baseURL: 'https://api.deepseek.com/v1',
+      apiKeyEnv: 'DEEPSEEK_API_KEY',
+      apiKey: 'sk-test',
+      contextWindow: 65536,
+      maxTokens: 8192,
+      supportsDeveloperRole: false,
+    },
+  })
+  const yaml = fs.readFileSync(settingsPath, 'utf8')
+  assert.match(yaml, /baseURL: https:\/\/api\.deepseek\.com\/v1/)
+  assert.match(yaml, /model: deepseek-chat/)
+})
+
 test('writeDshRuntimeSettings writes yaml and env', () => {
   const settingsPath = writeDshRuntimeSettings({ llamaPort: 18123, contextWindow: 4096 })
   assert.ok(fs.existsSync(settingsPath))

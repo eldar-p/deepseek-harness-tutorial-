@@ -1,125 +1,136 @@
 ﻿# Deep CLI
 
-Локальный стек: **llama.cpp** + **Docker guest** + **DSH**.  
-**Стадия:** [Alpha](./ALPHA.md) + [Beta](./BETA.md) · tag [`v0.2.0-alpha`](https://github.com/eldar-p/deepseek-harness-tutorial-/releases/tag/v0.2.0-alpha)  
-**Лицензия:** [CC BY-NC-SA 4.0](./LICENSE) — Attribution-NonCommercial-ShareAlike / «С указанием авторства — Некоммерческая — С сохранением условий»
+**Гибридный AI-оркестратор:** локальные GGUF (llama.cpp) **или** облачные OpenAI-compatible API + Docker guest + DSH.  
+Работает **на вашей машине** (agent, sandbox, index) — модель может быть **локальной или в облаке**.
 
-[Документация](./docs/README.md) · [Установка](./docs/INSTALL.md) · [Troubleshooting](./docs/TROUBLESHOOTING.md) · [ADR](./adr/README.md) · [Alpha](./ALPHA.md) · [Beta](./BETA.md) · [Pre-beta](./PRE-BETA.md) · [Changelog](./CHANGELOG.md)
+**Стадия:** [Alpha](./ALPHA.md) + [Beta](./BETA.md) · tag [`v0.2.0-alpha`](https://github.com/eldar-p/deepseek-harness-tutorial-/releases/tag/v0.2.0-alpha)  
+**Лицензия:** [CC BY-NC-SA 4.0](./LICENSE)
+
+[Документация](./docs/README.md) · **[Гайд для новичков](./README_BEGINNER.md)** · [Установка](./docs/INSTALL.md) · [ОС-матрица](./docs/OS-COMPAT.md) · [Troubleshooting](./docs/TROUBLESHOOTING.md) · [ADR](./adr/README.md)
+
+> **Впервые?** → [README_BEGINNER.md](./README_BEGINNER.md)
+
+---
+
+## Режимы модели
+
+| Режим | Флаг | Когда использовать |
+|-------|------|-------------------|
+| **Локальный GGUF** | `--gguf PATH` | Приватность, офлайн, своя GPU (4070+), нет подписки на API |
+| **Облачный API** | `--api PROVIDER` | Нет GPU / слабый ПК, нужен SOTA-кодер, быстрый старт |
+| **Гибрид стеков** | `--name work` / `--name local` | Один стек на API, другой на GGUF |
+
+Провайдеры API: `openai`, `deepseek`, `openrouter`, `groq`, `together`, `custom` — см. `deep api`.
+
+---
+
+## Рекомендуемые модели
+
+### Локальные GGUF (field-tested, RTX 4070 Ti 16 GB)
+
+| Модель | Квант | VRAM | Coding / tools | Вердикт |
+|--------|-------|------|----------------|---------|
+| **Qwen3-Coder-30B A3B Instruct** | Q3_K_M (~14 GB) | ~16 GB | **16/16** eval | **Лучший coding agent** |
+| gpt-oss-20b | Q8_0 (~11 GB) | ~12 GB | 14/16 | Сильный запасной |
+| Qwen3-4B | Q4_K_M (~2.3 GB) | ~4 GB | 12/16 | Smoke / слабый ПК |
+| gemma-3-1b | Q6 (~1 GB) | минимум | слабый | Только проверка стека |
+
+Предпочитайте **Q4_K_M+** для tool-heavy задач; Q3 — с предупреждением `deep start`.
+
+### Облачные API (через `--api`)
+
+| Провайдер | Модель (пример) | Зачем |
+|-----------|-----------------|-------|
+| **deepseek** | `deepseek-chat`, `deepseek-reasoner` | Дёшево, сильный код, OpenAI-compatible |
+| **openai** | `gpt-4o`, `gpt-4o-mini` | Универсальный SOTA |
+| **openrouter** | `deepseek/deepseek-chat`, Claude, Llama | Один ключ — много моделей |
+| **groq** | `llama-3.3-70b-versatile` | Быстрый inference |
+| **together** | `Qwen2.5-Coder-32B-Instruct-Turbo` | Облачный кодер без своей GPU |
+| **custom** | любая | Свой LiteLLM / vLLM / корпоративный endpoint |
+
+---
 
 ## Требования
 
 - Node.js **^22.19** или **≥24**
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (или Podman) — Engine running
-- GGUF-модель (например Q4_K_M)
-- Опционально: `npm i -g @deepseek-ai/dsh@0.1.1-rc.2`
+- **Docker Desktop** (guest sandbox) — Engine running
+- **Модель:** GGUF **или** API-ключ облака
+- DSH: `npm i -g @deepseek-ai/dsh@0.1.1-rc.2`
 
-## Быстрый старт
+---
 
-```bash
+## Быстрый старт — локальный GGUF
+
+```powershell
 git clone https://github.com/eldar-p/deepseek-harness-tutorial-.git
 cd deepseek-harness-tutorial-
-git checkout v0.2.0-alpha   # или main
-```
-
-**Windows:**
-
-```powershell
 powershell -File .\scripts\wait-docker.ps1
-node bin/deep.js bootstrap --gguf "PATH\to\model.Q4_K_M.gguf"
-node bin/deep.js start --cpu
+npm install -g @deepseek-ai/dsh@0.1.1-rc.2
+node bin/deep.js bootstrap --gguf "C:\ai\models\Qwen3-4B-Q4_K_M.gguf"
+node bin/deep.js start
 node bin/deep.js status
 ```
 
-**macOS / Linux:**
-
-```bash
-node bin/deep.js bootstrap --gguf /path/to/model.Q4_K_M.gguf
-node bin/deep.js start --cpu
-node bin/deep.js status
-```
-
-Открой URL **DSH** из вывода `status` (порт случайный, ~13000–14000).
+## Быстрый старт — облачный API (без GPU и без GGUF)
 
 ```powershell
-node bin/deep.js stop
+node bin/deep.js bootstrap --api deepseek --api-model deepseek-chat --api-key sk-...
+node bin/deep.js start --api deepseek
+node bin/deep.js status
 ```
+
+Или ключ через env: `$env:DEEPSEEK_API_KEY="sk-..."` → `deep start --api deepseek`
+
+Свой endpoint:
+
+```powershell
+node bin/deep.js bootstrap --api custom --api-base https://llm.example.com/v1 --api-model my-model --api-key ...
+```
+
+---
 
 ## Команды
 
 | Команда | Описание |
 |---------|----------|
-| `deep doctor [--readiness] [--stage alpha]` | Проверка окружения / readiness |
-| `deep bootstrap --gguf PATH` | Конфиг, assets, prefetch llama |
-| `deep start [--name STACK] [--cpu] [--preset NAME]` | Поднять стек |
-| `deep stop [--name STACK]` | Остановить |
-| `deep status [--name STACK] [--all]` | Статус |
-| `deep stacks` | Список стеков |
-| `deep presets` | Пресеты сети / traces |
-| `deep update` | Сверка канала (git) |
+| `deep doctor` | Проверка окружения |
+| `deep bootstrap --gguf PATH` | Локальная модель |
+| `deep bootstrap --api PROVIDER [--api-model M] [--api-key K]` | Облачная модель |
+| `deep start [--gguf PATH \| --api PROVIDER] [--cpu]` | Поднять стек |
+| `deep stop` | Остановить (не спамить Ctrl+C) |
+| `deep status` | DSH URL + модель |
+| `deep index build \| search \| status` | Семантический поиск по коду |
+| `deep api` | Список API-провайдеров |
 
-Алиас после `npm link`: `deep` → `bin/deep.js`.
+---
 
 ## Архитектура
 
 ```text
 User → deep CLI (host)
-         ├── llama-server   127.0.0.1:PORT/v1
-         ├── deep-guest     Docker + iptables allowlist @ /workspace
-         └── DSH web        127.0.0.1:PORT/  → llama + guest tools
+         ├── Model backend
+         │     ├── llama-server  127.0.0.1:PORT/v1  (local --gguf)
+         │     └── cloud API     OpenAI-compatible (--api)
+         ├── deep-guest          Docker sandbox @ /workspace
+         ├── egress-proxy        allowlist + secrets on host
+         ├── code-index          semantic search (LanceDB optional)
+         └── DSH web             127.0.0.1:PORT/
 ```
 
-Образ: `deep-guest:0.2-beta` (entrypoint `deep-net-enforce`).  
-Подробнее: [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)
+Guest + jail + index работают **одинаково** в local и API режиме — меняется только «мозг».
+
+Подробнее: [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) · [docs/CLAUDE-CODE-LEAK-TRIAGE.md](./docs/CLAUDE-CODE-LEAK-TRIAGE.md)
+
+---
 
 ## Quality / smoke
 
 ```bash
 npm test
-npm run test:coverage    # ≥50% src (beta gate)
-npm run audit:alpha
-npm run smoke:guest      # Docker image + mount
-npm run smoke:e2e        # живой стек: jail, HTTP, chat, guest
-npm run pack:release     # zip + sha256 для Release / CDN
+npm run audit:security
+npm run smoke:e2e
 ```
-
-CDN install (после upload zip на GitHub Release, или локально):
-
-```powershell
-# local
-$env:DEEP_CLI_ZIP = (Resolve-Path .\dist\deep-cli-0.2.0-alpha.zip).Path
-node bin/deep.js update --channel beta
-
-# remote (когда артефакт на Release)
-node bin/deep.js update --channel beta
-# shim → %LOCALAPPDATA%\deep\bin  (добавь в PATH)
-```
-
-## Структура репо (Deep)
-
-```text
-bin/deep.js          CLI entry
-src/                 оркестратор
-manifests/           pins (llama, guest, channels)
-assets/              cordis patch, AGENTS, memory template
-dsh-plugins/         guest-bash-local, workspace-jail-fs, …
-presets/             balanced, offline, paranoia, …
-Dockerfile.guest     образ deep-guest:prealpha
-todo/                alpha + beta backlog
-adr/                 architecture decisions
-docs/                install, audits, legal
-```
-
-## Legacy tutorial (VirtualBox)
-
-Старый трек с Debian VM + LM Studio остаётся в репо, но **не** является продуктом Deep CLI.
-
-| ОС | Установка | Хост-скрипты |
-|----|-----------|--------------|
-| Windows | `install.ps1` + `env.example` | `host/` |
-| macOS | `install.sh` + `env.sh.example` | `host-mac/` · [MACOS.md](./MACOS.md) |
-
-Там же: Shared Folder → `/mnt/hostshare`, SSH `:2222`, Tor `:9050`, DSH на `:3080`, модель через LM Studio `:1234`.
 
 ---
 
-**Лицензия:** [CC BY-NC-SA 4.0](./LICENSE) (некоммерческая, с указанием авторства и ShareAlike) · **Тег / zip:** [`v0.2.0-alpha`](https://github.com/eldar-p/deepseek-harness-tutorial-/releases/tag/v0.2.0-alpha)
+**Лицензия:** [CC BY-NC-SA 4.0](./LICENSE)

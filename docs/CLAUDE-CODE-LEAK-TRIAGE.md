@@ -1,0 +1,80 @@
+# Claude Code leak — triage for Deep CLI
+
+**Sources reviewed:**
+- [gitlawb explorer](https://explorer.gitlawb.com/repos/z6MkgKkbqz2sLMtUWW7LwVqiBePw1pCEmvbHdVnpc2dam4XS/chatgptprojects-claude-code) — shows full `src/` tree (~785 KB `main.tsx`, tools, coordinator, MCP, LSP)
+- GitHub `chatgptprojects/claude-code` — **NOT the leak**; redirects to **clear-code** marketing repo (skills/tests only)
+- Full source mirror: `vseeliu/claude-code-source` (local grep, March 2026 leak)
+
+**Legal:** Anthropic IP. Use for **architecture study only** — do not copy code verbatim into Deep CLI.
+
+---
+
+## Verdict: есть полезное, но не «скопировать репо целиком»
+
+| Area | Useful for Deep? | What to borrow (pattern, not paste) |
+|------|------------------|-------------------------------------|
+| **ToolSearchTool** | ✅ High | Deferred tools: model starts with search-only tool, loads MCP/bash schemas on demand → saves context. Deep: MCP `code_search` + thin tool set in Cordis. |
+| **Coordinator mode** | ✅ High | Lead agent spawns workers with **subset of tools** + scratchpad dir. Deep: parallel DSH stacks or `deep agent spawn` with clean context. |
+| **Auto mode (yoloClassifier)** | ✅ Medium | Separate **LLM classifier** with allow / soft_deny / environment rules before bash/write. Deep: start with **heuristic** `permission-risk.js`, optional llama classifier later. |
+| **memdir / MEMORY.md** | ✅ Medium | Entrypoint cap 200 lines / 25 KB, topic files, truncation warnings. Deep: extend `.deep/memory.json` + `CONTEXT.md` with same caps (ADR 0006). |
+| **LSPTool** | ✅ Medium | goToDefinition, references, hover, workspace symbols via LSP manager. Deep: Cordis plugin calling `typescript-language-server` / `pyright` on host. |
+| **MCP services** | ✅ High | Config from JSON, server approval, scoped tools. Deep: **`deep mcp`** stdio server wrapping index + guest status (implemented). |
+| **Compact / pruner** | ✅ Already | Deep has `compaction-basic` + `tool-result-pruner` in cordis patch. |
+| **Kairos / PROACTIVE** | ⚠️ Low now | Background daemon, tick messages, channels — heavy, needs always-on process. Phase 2: `deep daemon`. |
+| **Undercover mode** | ❌ Skip | Strips AI attribution from commits in public repos — ethically toxic; not aligned with Deep transparency. |
+| **Ink/React TUI (785 KB main.tsx)** | ❌ Skip | Deep uses DSH web UI, not terminal REPL. |
+| **Analytics / Growthbook / Statsig** | ❌ Skip | Telemetry gates; Deep is telemetry-off by design. |
+| **Team agents / SleepTool / Voice** | ❌ Skip | Enterprise/experimental; out of scope for local llama stack. |
+
+---
+
+## Top 5 steals (ranked)
+
+### 1. ToolSearch + deferred MCP tools
+Claude Code keeps **hundreds of tool schemas out of context** until `ToolSearch` matches keywords (`+slack`, `select:bash`).  
+**Deep action:** MCP server exposes `code_search`, `index_build`; Cordis persona says «search before grep». Optional: defer guest-bash tool description.
+
+### 2. Coordinator + AgentTool
+`coordinatorMode.ts`: lead uses `AgentTool` to spawn workers with `ASYNC_AGENT_ALLOWED_TOOLS` minus internal tools; scratchpad under injected dir.  
+**Deep action:** `scripts/coordinator.mjs` — split task → N × `deep index search` + focused read in parallel (host-side, no Anthropic code).
+
+### 3. Auto mode classifier
+`yoloClassifier.ts`: second LLM call classifies tool use into allow / confirm / deny using rule templates.  
+**Deep action:** `src/permission-risk.js` — regex tiers (safe read vs destructive rm/curl). Future: `--auto-mode` uses local llama for classify.
+
+### 4. memdir memory budget
+`memdir.ts`: hard caps on MEMORY.md, one-line index entries, «move detail to topic files».  
+**Deep action:** validate `memory.template.json` size at bootstrap; warn in doctor.
+
+### 5. LSP as first-class tool
+`LSPTool.ts`: unified tool for definition / references / hover / workspaceSymbol.  
+**Deep action:** `dsh-plugins/lsp-bridge/` — spawn LSP child, expose compact JSON to agent (next sprint).
+
+---
+
+## gitlawb vs GitHub mismatch
+
+The **gitlawb explorer** indexes the leaked file tree. The linked GitHub repo **`chatgptprojects/claude-code`** currently clones as **clear-code** (comparison/marketing + skills package), **without** `src/QueryEngine.ts`, `src/coordinator/`, etc.
+
+To read real sources locally:
+```bash
+git clone --depth 1 https://github.com/vseeliu/claude-code-source.git
+# or unpack from npm @anthropic-ai/claude-code cli.js.map (see leak README)
+```
+
+---
+
+## Deep CLI mapping (implemented / planned)
+
+| Claude Code | Deep CLI status |
+|-------------|-----------------|
+| Codebase semantic search | ✅ `deep index search` + LanceDB optional |
+| MCP tools | ✅ `node scripts/deep-mcp.mjs` (stdio) |
+| Egress proxy + secrets | ✅ `egress-proxy` sidecar |
+| Auto approve bash | 🟡 `permission-risk.js` + one-shot-guard |
+| Coordinator subagents | 📋 ADR + script stub |
+| LSP integration | 📋 planned plugin |
+| Kairos daemon | 📋 `deep daemon` backlog |
+| Undercover commits | ❌ rejected |
+
+See [0008-code-index-egress-proxy.md](../adr/0008-code-index-egress-proxy.md).

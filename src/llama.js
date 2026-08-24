@@ -156,7 +156,7 @@ export async function startLlama({ stack, bin, gguf, port, device }) {
     '-ngl',
     ngl,
     '-c',
-    '8192',
+    process.env.DEEP_LLAMA_CTX || '32768',
   ]
   const logFile = runLogPath(stack, 'llama')
   const cwd = path.dirname(bin)

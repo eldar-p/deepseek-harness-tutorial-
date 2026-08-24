@@ -1,7 +1,15 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { PKG_ROOT, paths, ensureDirs, appendLog } from './paths.js'
-import { getOrInitConfig, readConfig, writeConfig, applyPreset, registerStack, PRESET_NAMES } from './config.js'
+import {
+  getOrInitConfig,
+  readConfig,
+  writeConfig,
+  applyPreset,
+  registerStack,
+  PRESET_NAMES,
+  assertStackName,
+} from './config.js'
 import { detectContainerEngine, detectGpu, hostSummary, nodeOk, isRoot, which } from './detect.js'
 import { printStatusScreen } from './status-ui.js'
 import { readRunState, writeRunState, clearRunState, summarizeStacks } from './runstate.js'
@@ -16,9 +24,18 @@ import {
   waitLlamaHealthy,
   stopLlama,
 } from './llama.js'
-import { startGuest, stopGuest, mountSmoke, isGuestRunning } from './guest.js'
+import { startGuest, stopGuest, mountSmoke, isGuestRunning, resolveAllowlist } from './guest.js'
 import { startDsh, stopDsh } from './dsh.js'
-import { isPidAlive, killTree } from './proc.js'
+import { isPidAlive, killTree, spawnDetached, runLogPath } from './proc.js'
+import { cmdIndexBuild, cmdIndexSearch, cmdIndexStatus } from './code-index-cli.js'
+import { ensureSecretsTemplate } from './secrets.js'
+import {
+  isApiMode,
+  resolveApiProfile,
+  saveApiToConfig,
+  writeApiKeyToDshEnv,
+  listApiProviderIds,
+} from './api-provider.js'
 import { rotateLogIfLarge, cleanStalePartFiles } from './io-policy.js'
 import { assessGgufQuant, formatQuantWarning } from './quant-warn.js'
 import { cmdUpdate } from './update.js'
@@ -116,11 +133,15 @@ export async function cmdDoctor(flags = {}) {
 }
 
 export async function cmdBootstrap(flags) {
+  if (flags.gguf && flags.api) {
+    throw Object.assign(new Error('Use either --gguf (local model) or --api (cloud), not both'), { exitCode: 2 })
+  }
   if (flags.gguf && !fs.existsSync(flags.gguf)) {
     throw Object.assign(new Error(`GGUF not found: ${flags.gguf}`), { exitCode: 2 })
   }
-  const stack = flags.name || 'default'
+  const stack = assertStackName(flags.name || 'default')
   const p = ensureDirs(stack)
+  ensureSecretsTemplate()
   const cfg = getOrInitConfig({
     preset: flags.preset,
     channel: flags.channel,
@@ -130,6 +151,15 @@ export async function cmdBootstrap(flags) {
   if (flags.gguf) {
     cfg.gguf = path.resolve(flags.gguf)
     writeConfig(cfg)
+  }
+  if (isApiMode(cfg, flags)) {
+    const profile = resolveApiProfile(flags, cfg)
+    writeApiKeyToDshEnv(profile)
+    saveApiToConfig(cfg, profile)
+    writeConfig(cfg)
+    console.log(`[OK] API:       ${profile.displayName} → ${profile.model}`)
+    console.log(`[OK] API base:  ${profile.baseURL}`)
+    console.log(`[INFO] Key env:   ${profile.apiKeyEnv}${profile.apiKey ? ' (set)' : ' — pass --api-key or export env'}`)
   }
 
   materializeAssets(stack)
@@ -175,21 +205,24 @@ export async function cmdBootstrap(flags) {
     console.log(`[OK] Engine ${engine.name}`)
   }
 
-  // Prefetch CPU llama binary (small); CUDA on demand at start
-  try {
-    const device = detectGpu().discrete ? 'gpu' : 'cpu'
-    // Prefer CPU fetch during bootstrap for size; GPU start may fetch cuda later
-    const { bin, source } = await ensureLlamaBinary({ device: 'cpu', fetch: true })
-    console.log(`[OK] llama-server (${source}): ${bin}`)
-  } catch (e) {
-    console.log(`[YELLOW] llama fetch skipped: ${e.message}`)
+  // Prefetch CPU llama binary (small); skip when cloud API mode
+  if (!isApiMode(cfg, flags)) {
+    try {
+      const { bin, source } = await ensureLlamaBinary({ device: 'cpu', fetch: true })
+      console.log(`[OK] llama-server (${source}): ${bin}`)
+    } catch (e) {
+      console.log(`[YELLOW] llama fetch skipped: ${e.message}`)
+    }
+  } else {
+    console.log('[INFO] API mode — llama-server not required')
   }
 
   console.log(`[OK] Deep home: ${p.home}`)
   console.log(`[OK] Workspace: ${p.workspace}`)
   console.log(`[OK] Preset:    ${cfg.preset} (net=${cfg.guestNetwork}, traces=${cfg.zeroTraces})`)
   if (cfg.gguf) console.log(`[OK] GGUF:      ${cfg.gguf}`)
-  else console.log('[YELLOW] No GGUF — pass --gguf or put one file in ~/.deep/models')
+  else if (cfg.api?.provider) console.log(`[OK] API mode:  ${cfg.api.provider} / ${cfg.api.model}`)
+  else console.log('[YELLOW] No model — pass --gguf PATH (local) or --api PROVIDER (cloud)')
   appendLog(`event=bootstrap preset=${cfg.preset} stack=${stack}`)
 }
 
@@ -212,7 +245,7 @@ export async function cmdStatus(flags) {
     return
   }
 
-  const stack = flags.name || readConfig()?.defaultStack || 'default'
+  const stack = assertStackName(flags.name || readConfig()?.defaultStack || 'default')
   const cfg = readConfig() || getOrInitConfig({})
   const engine = detectContainerEngine()
   const gpu = detectGpu()
@@ -221,7 +254,10 @@ export async function cmdStatus(flags) {
 
   let llamaLevel = 'red'
   let llamaDetail = 'not started'
-  if (run?.pids?.llama && isPidAlive(run.pids.llama)) {
+  if (run?.apiProfile) {
+    llamaLevel = 'green'
+    llamaDetail = `API ${run.apiProfile.id}/${run.apiProfile.model} @ ${run.apiProfile.baseURL}`
+  } else if (run?.pids?.llama && isPidAlive(run.pids.llama)) {
     llamaLevel = run.warming ? 'yellow' : 'green'
     llamaDetail = run.urls?.llama || `pid=${run.pids.llama}`
   } else if (run?.urls?.llama) {
@@ -262,14 +298,116 @@ export async function cmdStatus(flags) {
       detail: cfg.rebootRequired ? 'REQUIRED' : 'ok',
     },
     urls: run?.urls || null,
+    apiMode: !!(run?.apiProfile || cfg?.api?.provider),
   })
+}
+
+/** Cloud API stack — no local llama-server or GPU lock. */
+async function startStackApi({ stack, cfg, flags, engine }) {
+  const profile = resolveApiProfile(flags, cfg)
+  if (!profile.apiKey && !process.env[profile.apiKeyEnv]) {
+    throw Object.assign(
+      new Error(
+        `Missing API key for ${profile.apiKeyEnv} — pass --api-key or export ${profile.apiKeyEnv}`,
+      ),
+      { exitCode: 2 },
+    )
+  }
+  writeApiKeyToDshEnv(profile)
+  saveApiToConfig(cfg, profile)
+  writeConfig(cfg)
+
+  const { dshPort, indexPort, proxyPort } = await allocateStackPorts()
+  const urls = {
+    dsh: `http://127.0.0.1:${dshPort}/`,
+    llama: profile.baseURL,
+    index: `http://127.0.0.1:${indexPort}`,
+  }
+
+  const state = {
+    stack,
+    sessionId: `sess_${Date.now().toString(36)}`,
+    device: 'api',
+    apiProfile: { id: profile.id, model: profile.model, baseURL: profile.baseURL },
+    warming: false,
+    guestRunning: false,
+    pids: {},
+    ports: { dshPort, indexPort, proxyPort },
+    urls,
+    startedAt: new Date().toISOString(),
+  }
+  writeRunState(stack, state)
+
+  console.log(`[GREEN] API ${profile.displayName} → ${profile.model}`)
+  console.log(`[INFO] Endpoint: ${profile.baseURL}`)
+
+  if (cfg.guestNetwork !== 'none' && cfg.guestNetwork !== 'offline') {
+    const allow = resolveAllowlist(cfg.guestNetwork)
+    state.pids.proxy = spawnDetached(process.execPath, [path.join(PKG_ROOT, 'scripts', 'deep-services.mjs'), 'egress-proxy'], {
+      env: { DEEP_PROXY_PORT: String(proxyPort), DEEP_NET_PRESET: cfg.guestNetwork, DEEP_PROXY_BIND: '0.0.0.0' },
+      logFile: runLogPath(stack, 'egress-proxy'),
+    })
+    console.log(`[GREEN] Egress proxy :${proxyPort} (${allow.length} hosts)`)
+  }
+
+  state.pids.index = spawnDetached(process.execPath, [path.join(PKG_ROOT, 'scripts', 'deep-services.mjs'), 'index'], {
+    env: {
+      DEEP_INDEX_PORT: String(indexPort),
+      DEEP_WORKSPACE: paths(stack).workspace,
+    },
+    logFile: runLogPath(stack, 'code-index'),
+  })
+  console.log(`[GREEN] Code index ${urls.index}`)
+
+  if (engine.ok) {
+    const g = await startGuest({ stack, presetNet: cfg.guestNetwork, proxyPort })
+    if (g.ok) {
+      const smoke = await mountSmoke(stack, g.engine)
+      if (smoke.ok) {
+        state.guestRunning = true
+        state.guestName = g.name
+        console.log(`[GREEN] Guest ${g.name}`)
+      } else {
+        state.guestSkip = smoke.detail
+        console.log(`[YELLOW] Guest mount: ${smoke.detail}`)
+      }
+    } else {
+      state.guestSkip = g.detail
+      console.log(`[YELLOW] Guest skipped: ${g.detail}`)
+    }
+  }
+  writeRunState(stack, state)
+
+  const dsh = await startDsh({
+    stack,
+    port: dshPort,
+    apiProfile: profile,
+    guestName: state.guestName || `deep-guest-${stack}`,
+    engineBin: engine.bin || 'docker',
+    indexPort,
+  })
+  if (dsh.ok) {
+    state.pids.dsh = dsh.pid
+    console.log(`[GREEN] DSH ${urls.dsh}`)
+  } else {
+    state.dshSkip = dsh.detail
+    console.log(`[YELLOW] DSH: ${dsh.detail}`)
+  }
+  writeRunState(stack, state)
+
+  console.log('')
+  console.log('[OK] Stack started (cloud API mode)')
+  console.log(`DSH:   ${urls.dsh}`)
+  console.log(`API:   ${profile.id} / ${profile.model}`)
+  registerStack(cfg, stack, { preset: cfg.preset, device: 'api', guestNetwork: cfg.guestNetwork, urls })
+  appendLog(`event=start_api stack=${stack} provider=${profile.id} model=${profile.model}`)
 }
 
 export async function cmdStart(flags) {
   if (isRoot()) {
     throw Object.assign(new Error('Refuse deep start as root — use a normal user'), { exitCode: 2 })
   }
-  const stack = flags.name || 'default'
+  const stack = assertStackName(flags.name || 'default')
   const cfg = getOrInitConfig({ preset: flags.preset, gguf: flags.gguf })
   if (flags.preset) applyPreset(cfg, flags.preset)
   if (flags.gguf) {
@@ -296,6 +434,14 @@ export async function cmdStart(flags) {
 
   ensureDirs(stack)
   materializeAssets(stack)
+
+  if (flags.gguf && isApiMode(cfg, flags)) {
+    throw Object.assign(new Error('Use either --gguf (local) or --api (cloud), not both'), { exitCode: 2 })
+  }
+  if (isApiMode(cfg, flags)) {
+    await startStackApi({ stack, cfg, flags, engine })
+    return
+  }
 
   let gguf = resolveGguf({ flagsGguf: flags.gguf || cfg.gguf, configGguf: cfg.gguf })
   if (gguf && typeof gguf === 'object' && gguf.needsDownload) {
@@ -341,10 +487,11 @@ export async function cmdStart(flags) {
     // If cuda entry has null sha256, pickBinaryEntry still returns it; ensureCachedAsset needs sha.
     // Fix: when sha null, skip verify OR use cpu. Patch ensureLlamaBinary path — already falls back if url fetch fails.
 
-    const { llamaPort, dshPort } = await allocateStackPorts()
+    const { llamaPort, dshPort, indexPort, proxyPort } = await allocateStackPorts()
     const urls = {
       dsh: `http://127.0.0.1:${dshPort}/`,
       llama: `http://127.0.0.1:${llamaPort}/v1`,
+      index: `http://127.0.0.1:${indexPort}`,
     }
 
     const state = {
@@ -354,7 +501,7 @@ export async function cmdStart(flags) {
       warming: true,
       guestRunning: false,
       pids: {},
-      ports: { llamaPort, dshPort },
+      ports: { llamaPort, dshPort, indexPort, proxyPort },
       urls,
       gguf,
       llamaBin: bin,
@@ -383,10 +530,38 @@ export async function cmdStart(flags) {
       throw Object.assign(e, { exitCode: 1 })
     }
 
+    // Egress sidecar proxy (host-only secrets; guest uses HTTP_PROXY)
+    let proxyPid = null
+    if (cfg.guestNetwork !== 'none' && cfg.guestNetwork !== 'offline') {
+      const allow = resolveAllowlist(cfg.guestNetwork)
+      proxyPid = spawnDetached(process.execPath, [path.join(PKG_ROOT, 'scripts', 'deep-services.mjs'), 'egress-proxy'], {
+        env: {
+          DEEP_PROXY_PORT: String(proxyPort),
+          DEEP_NET_PRESET: cfg.guestNetwork,
+          DEEP_PROXY_BIND: '0.0.0.0',
+        },
+        logFile: runLogPath(stack, 'egress-proxy'),
+      })
+      state.pids.proxy = proxyPid
+      console.log(`[GREEN] Egress proxy :${proxyPort} (${allow.length} hosts, secrets on host)`)
+    }
+
+    // Code index HTTP service
+    const indexPid = spawnDetached(process.execPath, [path.join(PKG_ROOT, 'scripts', 'deep-services.mjs'), 'index'], {
+      env: {
+        DEEP_INDEX_PORT: String(indexPort),
+        DEEP_WORKSPACE: paths(stack).workspace,
+        DEEP_LLAMA_URL: urls.llama,
+      },
+      logFile: runLogPath(stack, 'code-index'),
+    })
+    state.pids.index = indexPid
+    console.log(`[GREEN] Code index ${urls.index}`)
+
     // Guest (optional if no engine)
     let guestSkip = null
     if (engine.ok) {
-      const g = await startGuest({ stack, presetNet: cfg.guestNetwork })
+      const g = await startGuest({ stack, presetNet: cfg.guestNetwork, proxyPort })
       if (g.ok) {
         const smoke = await mountSmoke(stack, g.engine)
         if (!smoke.ok) {
@@ -416,6 +591,8 @@ export async function cmdStart(flags) {
       llamaPort,
       guestName: state.guestName || `deep-guest-${stack}`,
       engineBin: engine.bin || 'docker',
+      indexPort,
+      apiProfile: null,
     })
     if (dsh.ok) {
       state.pids.dsh = dsh.pid
@@ -443,7 +620,7 @@ export async function cmdStart(flags) {
 }
 
 export async function cmdStop(flags) {
-  const stack = flags.name || 'default'
+  const stack = assertStackName(flags.name || 'default')
   const cfg = readConfig() || {}
   const run = readRunState(stack)
   if (!run) {
@@ -467,7 +644,11 @@ export async function cmdStop(flags) {
   // leftover pids
   for (const [name, pid] of Object.entries(run.pids || {})) {
     if (name === 'llama' || name === 'dsh') continue
-    if (pid) killTree(pid, { force: !!flags.emergency })
+    if (pid) {
+      killTree(pid, { force: !!flags.emergency })
+      if (name === 'proxy') console.log(`[OK] Egress proxy stopped pid=${pid}`)
+      if (name === 'index') console.log(`[OK] Code index stopped pid=${pid}`)
+    }
   }
 
   if (flags['wipe-workspace']) {
@@ -555,12 +736,15 @@ export function cmdHelp(topic) {
   deep deps
   deep doctor [--readiness] [--stage pre-alpha|alpha|beta|rc|0.5|1.0]
   deep bootstrap [--gguf PATH] [--preset NAME] [--channel stable|beta|edge]
-  deep start [--name STACK] [--gguf PATH] [--cpu] [--preset NAME]
+  deep start [--name STACK] [--gguf PATH | --api PROVIDER] [--api-model MODEL] [--api-key KEY] [--cpu] [--preset NAME]
+  deep bootstrap [--gguf PATH | --api PROVIDER] [--api-model MODEL] [--api-key KEY] [--preset NAME]
+  deep api
   deep stop [--name STACK] [--emergency] [--wipe-session]
   deep status [--name STACK] [--all]
   deep stacks
   deep update [--channel stable|beta|edge] [--dry-run]
   deep presets
+  deep index build|search|status [--name STACK]
 
 Tips:
   First run:  deep doctor && deep bootstrap --gguf MODEL.gguf && deep start
@@ -611,6 +795,25 @@ export async function main(argv) {
         return await cmdUpdate(flags)
       case 'presets':
         return await cmdPresets()
+      case 'api': {
+        console.log('Cloud API providers (--api NAME):')
+        for (const id of listApiProviderIds()) console.log(`  ${id}`)
+        console.log('')
+        console.log('Example:')
+        console.log('  deep bootstrap --api deepseek --api-model deepseek-chat --api-key sk-...')
+        console.log('  deep start --api deepseek')
+        return
+      }
+      case 'index': {
+        const sub = args[0]
+        const rest = args.slice(1)
+        if (sub === 'build') return await cmdIndexBuild(flags)
+        if (sub === 'search') return await cmdIndexSearch(flags, rest)
+        if (sub === 'status') return await cmdIndexStatus(flags)
+        console.error('Usage: deep index build|search|status')
+        process.exitCode = 2
+        return
+      }
       case 'version':
       case '-V':
       case '--version':

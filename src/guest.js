@@ -45,7 +45,24 @@ export function guestNetworkArgs(presetNet, allowlistDomains = []) {
   void allowlistDomains
   if (presetNet === 'none' || presetNet === 'offline') return ['--network', 'none']
   if (presetNet === 'open') return ['--network', 'bridge']
+  // allowlist + proxy sidecar share bridge; egress forced via HTTP_PROXY
   return ['--network', 'bridge']
+}
+
+/** Extra env when host egress proxy is active. */
+export function guestProxyEnv(proxyPort) {
+  if (!proxyPort) return {}
+  const base =
+    process.platform === 'win32' || process.platform === 'darwin'
+      ? `http://host.docker.internal:${proxyPort}`
+      : `http://172.17.0.1:${proxyPort}`
+  return {
+    HTTP_PROXY: base,
+    HTTPS_PROXY: base,
+    http_proxy: base,
+    https_proxy: base,
+    NO_PROXY: '127.0.0.1,localhost',
+  }
 }
 
 /** Env vars passed into guest for network policy (iptables via deep-net-enforce). */
@@ -61,7 +78,7 @@ export function formatAllowlistLog(presetNet, domains) {
   if (presetNet === 'none' || presetNet === 'offline') return 'network=none (no egress)'
   if (presetNet === 'open') return 'network=open (full egress — WARN)'
   const n = domains.length
-  return `network=allowlist (${n} domain${n === 1 ? '' : 's'}; iptables + NET_ADMIN)`
+  return `network=allowlist (${n} domain${n === 1 ? '' : 's'}; sidecar proxy + iptables)`
 }
 
 export async function ensureGuestImage() {
@@ -95,7 +112,7 @@ export async function ensureGuestImage() {
   return { ok: true, image, engine }
 }
 
-export async function startGuest({ stack, presetNet = 'allowlist' }) {
+export async function startGuest({ stack, presetNet = 'allowlist', proxyPort = null }) {
   const ensured = await ensureGuestImage()
   if (!ensured.ok) {
     return { ok: false, detail: ensured.reason }
@@ -109,8 +126,15 @@ export async function startGuest({ stack, presetNet = 'allowlist' }) {
 
   const resolved = resolveAllowlist(presetNet)
   const netEnv = guestNetworkEnv(presetNet, resolved)
+  const proxyEnv =
+    proxyPort && presetNet !== 'none' && presetNet !== 'offline' ? guestProxyEnv(proxyPort) : {}
+  if (proxyPort && Object.keys(proxyEnv).length) {
+    netEnv.DEEP_NET_MODE = 'proxy'
+    netEnv.DEEP_PROXY_HOST = process.platform === 'win32' || process.platform === 'darwin' ? 'host.docker.internal' : '172.17.0.1'
+    netEnv.DEEP_PROXY_PORT = String(proxyPort)
+  }
   console.log(`[INFO] Guest net: ${formatAllowlistLog(presetNet, resolved)}`)
-  const envArgs = Object.entries(netEnv).flatMap(([k, v]) => ['-e', `${k}=${v}`])
+  const envArgs = Object.entries({ ...netEnv, ...proxyEnv }).flatMap(([k, v]) => ['-e', `${k}=${v}`])
   const args = [
     'run',
     '-d',

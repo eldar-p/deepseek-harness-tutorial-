@@ -17,6 +17,7 @@
       You are a coding agent on local llama.cpp (model id coder).
       Shell = tool bash only, runs inside the deep-guest container at /workspace.
       Host paths for Read/Write/Edit are under the Deep workspace only.
+      Large repos: use `deep index search "query"` before bulk Read/Grep (see code-search skill).
       No emoji. Prefer STRUCTURE.txt and .deep/memory.json. Stop after one short answer.
 
 - id: sandbox-policy
@@ -64,3 +65,6 @@
       maxTimeoutMs: 7200000
       maxOutputBytes: 48000
       maxSpillBytes: 16777216
+
+  - id: code-search
+    name: 'file:///__PLUGIN_DIR__/code-search/index.mjs'

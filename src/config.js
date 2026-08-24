@@ -4,8 +4,26 @@ import { PKG_ROOT, paths, ensureDirs, chmodOwnerOnly } from './paths.js'
 
 const PRESET_NAMES = ['balanced', 'dev', 'offline', 'paranoia', 'open']
 
+/** Stack names used in container/dirs — no path separators or odd chars. */
+export function assertStackName(name) {
+  const n = name == null || name === true ? 'default' : String(name)
+  if (!/^[a-zA-Z0-9_][a-zA-Z0-9_-]{0,63}$/.test(n)) {
+    throw Object.assign(
+      new Error(`Invalid stack name: ${n} (use letters, digits, _-; max 64)`),
+      { exitCode: 2 },
+    )
+  }
+  return n
+}
+
 export function loadPreset(name) {
   const n = name || 'balanced'
+  if (!PRESET_NAMES.includes(n)) {
+    throw Object.assign(
+      new Error(`Unknown preset: ${n}. Allowed: ${PRESET_NAMES.join(', ')}`),
+      { exitCode: 2 },
+    )
+  }
   const local = path.join(PKG_ROOT, 'presets', `${n}.json`)
   if (!fs.existsSync(local)) {
     throw Object.assign(new Error(`Unknown preset: ${n}`), { exitCode: 2 })
@@ -80,6 +98,7 @@ export function applyPreset(cfg, presetName) {
 
 export function registerStack(cfg, name, meta = {}) {
   if (!name) return cfg
+  assertStackName(name)
   cfg.stacks = cfg.stacks || {}
   cfg.stacks[name] = {
     ...(cfg.stacks[name] || {}),
