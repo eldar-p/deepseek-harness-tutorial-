@@ -2,6 +2,6 @@
 
 **Status:** PASS
 
-JSDoc in 9/22 src files; TS deferred (docs/TYPES.md)
+JSDoc in 10/24 src files; TS deferred (docs/TYPES.md)
 
 _Auto-generated 2026-08-24. Re-run: `npm run audit`_

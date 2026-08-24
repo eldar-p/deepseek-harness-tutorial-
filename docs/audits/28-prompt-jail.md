@@ -1,7 +1,7 @@
-# 2. Качество и структура
+# 28. Prompt/jail
 
 **Status:** PASS
 
-24 src modules
+workspace-jail + tests; tool FS rewritten
 
 _Auto-generated 2026-08-24. Re-run: `npm run audit`_

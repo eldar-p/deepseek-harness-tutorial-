@@ -1,14 +1,14 @@
 # Audit run 2026-08-24
 
-Gate: **pre-beta**
+Gate: **security**
 
 | # | Аудит | Статус | Детали |
 |---|-------|--------|--------|
 | 1 | Безопасность | PASS | No hardcoded secrets; root refuse; log policy |
-| 2 | Качество и структура | PASS | 22 src modules |
+| 2 | Качество и структура | PASS | 24 src modules |
 | 3 | Документация | PASS | Core docs present |
 | 4 | Лицензии | PASS | package: CC-BY-NC-SA-4.0 |
-| 5 | Типы и сигнатуры | PASS | JSDoc in 9/22 src files; TS deferred (docs/TYPES.md) |
+| 5 | Типы и сигнатуры | PASS | JSDoc in 10/24 src files; TS deferred (docs/TYPES.md) |
 | 6 | Версии среды | PASS | node ^22.19.0 // >=24.0.0 |
 | 7 | Производительность | PASS | Health timeouts + AbortSignal; deep profiling deferred to field beta |
 | 8 | Зависимости | PASS | Zero runtime npm deps (CLI only) |
@@ -30,10 +30,16 @@ Gate: **pre-beta**
 | 24 | Диск I/O и износ | PASS | log rotate 512KiB; stale .part cleanup; atomic downloads |
 | 25 | Телеметрия и приватность | PASS | telemetry off; PRIVACY.md; no prompt logs |
 | 26 | Деградация квантования | PASS | Q4_K_M baseline; WARN on Q3 and below at start |
+| 27 | Supply chain | PASS | 0 runtime deps; CDN sha256 pinned; checksums module |
+| 28 | Prompt/jail | PASS | workspace-jail + tests; tool FS rewritten |
+| 29 | Egress allowlist | PASS | allowlist manifest + guest env; no --network host |
+| 30 | Secrets/redaction | PASS | PRIVACY.md + no prompt logging policy |
+| 31 | Container surface | PASS | no docker.sock mount; NET_ADMIN for iptables=true |
+| 32 | Update integrity | PASS | sha256 verify + local zip override path |
 
 ## Gate summary
 
 - FAIL: 0
 - WARN: 0
 
-**Gate pre-beta: OK** (no FAIL)
+**Gate security: OK** (no FAIL)

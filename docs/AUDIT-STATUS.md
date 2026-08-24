@@ -1,5 +1,13 @@
 # Аудиты и статус продукта (перепрогон 2026-08-24)
 
+Дополнительно к gate 1–26:
+
+| Документ | О чём |
+|----------|--------|
+| [MARKET-FIT.md](./MARKET-FIT.md) | Рынок / gap map / позиционирование Deep CLI |
+| [SNAP-PUBLISH.md](./SNAP-PUBLISH.md) | Чеклист публикации в Ubuntu Snap Store |
+| [SECURITY-AUDITS-EXTRA.md](./SECURITY-AUDITS-EXTRA.md) | Аудиты 27+ (supply chain, jail/egress, update integrity) |
+
 ## Полный прогон: 26/26 PASS
 
 Команда: `npm run audit:prebeta` (gate = все аудиты из твоих списков + доп.).
