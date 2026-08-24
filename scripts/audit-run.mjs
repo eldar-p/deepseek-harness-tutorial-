@@ -15,6 +15,8 @@ const GATE_CHECKS = {
   'pre-alpha': [3, 6, 15, 17, 19, 20, 25],
   alpha: [1, 3, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26],
   'pre-beta': Array.from({ length: 26 }, (_, i) => i + 1),
+  /** Extended security layer 27–32 (docs/SECURITY-AUDITS-EXTRA.md) */
+  security: Array.from({ length: 32 }, (_, i) => i + 1),
 }
 
 const AUDIT_SLUGS = [
@@ -22,6 +24,7 @@ const AUDIT_SLUGS = [
   'dist', 'container', 'isolation', 'install', 'traces', 'cdn', 'paths', 'gpu', 'ui',
   'tty', 'errors', 'help', 'multistack', 'context',
   'shutdown', 'disk-io', 'telemetry', 'quant-degrade',
+  'supply-chain', 'prompt-jail', 'egress-verify', 'secrets-redact', 'container-surface', 'update-integrity',
 ]
 
 function read(rel) {
@@ -299,6 +302,101 @@ function runAudits() {
         ? pass(26, 'Деградация квантования', 'Q4_K_M baseline; WARN on Q3 and below at start')
         : warn(26, 'Квантование', 'quant-warn not fully wired'),
     )
+  }
+
+  // 27 Supply chain (extra)
+  {
+    const pkg = JSON.parse(read('package.json') || '{}')
+    const depCount = Object.keys(pkg.dependencies || {}).length
+    const rel = read('manifests/cli-releases.json')
+    const shaPinned = /"sha256"\s*:\s*"[a-f0-9]{64}"/i.test(rel)
+    const checksums = fs.existsSync(path.join(ROOT, 'src/checksums.js'))
+    if (depCount === 0 && shaPinned && checksums) {
+      results.push(pass(27, 'Supply chain', '0 runtime deps; CDN sha256 pinned; checksums module'))
+    } else {
+      results.push(
+        warn(27, 'Supply chain', `deps=${depCount} shaPinned=${shaPinned} checksums=${checksums}`),
+      )
+    }
+  }
+
+  // 28 Prompt / jail
+  {
+    const jail = fs.existsSync(path.join(ROOT, 'src/workspace-jail.js'))
+    const jailTest =
+      fs.existsSync(path.join(ROOT, 'test/jail.test.js')) ||
+      read('test/jail.test.js').includes('rewriteWorkspacePath')
+    const hostShellOff =
+      read('src/cli.js').includes('pwsh') === false ||
+      read('assets/cordis.deep.patch.yml').includes('workspace-jail') ||
+      read('src/materialize.js').includes('jail')
+    if (jail && jailTest) {
+      results.push(pass(28, 'Prompt/jail', 'workspace-jail + tests; tool FS rewritten'))
+    } else {
+      results.push(warn(28, 'Prompt/jail', 'jail module or tests incomplete'))
+    }
+    void hostShellOff
+  }
+
+  // 29 Egress allowlist
+  {
+    const allow = read('manifests/allowlists.json') || read('manifests/allowlist.json')
+    const guest = read('src/guest.js')
+    const hasAllow = allow.includes('{') && guest.includes('allowlist')
+    const noHostNet = !guest.includes('--network host') && !guest.includes('network=host')
+    const openWarn = guest.includes('WARN') || guest.includes('open')
+    if (hasAllow && noHostNet) {
+      results.push(pass(29, 'Egress allowlist', 'allowlist manifest + guest env; no --network host'))
+    } else {
+      results.push(warn(29, 'Egress allowlist', `allow=${!!hasAllow} noHostNet=${noHostNet} openWarn=${openWarn}`))
+    }
+  }
+
+  // 30 Secrets / redaction
+  {
+    const privacy =
+      fs.existsSync(path.join(ROOT, 'assets/PRIVACY.md')) ||
+      fs.existsSync(path.join(ROOT, 'docs/PRIVACY.md')) ||
+      fs.existsSync(path.join(ROOT, 'PRIVACY.md'))
+    const noPrompt = read('src/paths.js').includes('Never log prompt')
+    const teleOff =
+      read('src/config.js').includes('telemetry') ||
+      read('docs/SECURITY-AUDITS-EXTRA.md').includes('telemetry')
+    if (privacy && noPrompt) {
+      results.push(pass(30, 'Secrets/redaction', 'PRIVACY.md + no prompt logging policy'))
+    } else {
+      results.push(warn(30, 'Secrets/redaction', `privacy=${privacy} noPrompt=${noPrompt}`))
+    }
+    void teleOff
+  }
+
+  // 31 Container surface
+  {
+    const guest = read('src/guest.js') + read('Dockerfile.guest') + read('guest/deep-net-enforce.sh')
+    const noSock = !guest.includes('docker.sock')
+    const netAdmin = guest.includes('NET_ADMIN') || guest.includes('cap-add')
+    if (noSock) {
+      results.push(pass(31, 'Container surface', `no docker.sock mount; NET_ADMIN for iptables=${netAdmin}`))
+    } else {
+      results.push(fail(31, 'Container surface', 'docker.sock appears in guest path'))
+    }
+  }
+
+  // 32 Update integrity
+  {
+    const upd = read('src/update.js')
+    const verify =
+      upd.includes('verifySha256') ||
+      upd.includes('sha256') ||
+      read('src/checksums.js').includes('verifySha256')
+    const zipOverride = upd.includes('DEEP_CLI_ZIP') || upd.includes('DEEP_CLI_ZIP'.toLowerCase()) || upd.includes('CLI_ZIP')
+    const hasZip = upd.includes('DEEP_CLI_ZIP') || upd.includes('DEEP_CLI_SHA256') || upd.includes('pickCliArtifact')
+    if (verify && hasZip) {
+      results.push(pass(32, 'Update integrity', 'sha256 verify + local zip override path'))
+    } else {
+      results.push(warn(32, 'Update integrity', `verify=${verify} zipPath=${hasZip}`))
+    }
+    void zipOverride
   }
 
   return results.sort((a, b) => a.id - b.id)

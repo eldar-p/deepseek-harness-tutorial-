@@ -1,7 +1,7 @@
-# 2. Качество и структура
+# 32. Update integrity
 
 **Status:** PASS
 
-24 src modules
+sha256 verify + local zip override path
 
 _Auto-generated 2026-08-24. Re-run: `npm run audit`_

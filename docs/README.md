@@ -14,6 +14,10 @@
 | [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) | Типичные ошибки |
 | [VERSION-PLAN.md](./VERSION-PLAN.md) | Этапы 0.1 → 1.0 |
 | [AUDITS.md](./AUDITS.md) | 26 аудитов |
+| [AUDIT-STATUS.md](./AUDIT-STATUS.md) | Статус прогона + ссылки на market / snap / extra security |
+| [MARKET-FIT.md](./MARKET-FIT.md) | Market fit / gap map |
+| [SNAP-PUBLISH.md](./SNAP-PUBLISH.md) | Snap Store checklist |
+| [SECURITY-AUDITS-EXTRA.md](./SECURITY-AUDITS-EXTRA.md) | Аудиты 27+ сверх gate |
 | [INFRASTRUCTURE.md](./INFRASTRUCTURE.md) | Dist / docs / community / legal |
 | [dist/CHANNELS.md](./dist/CHANNELS.md) | stable / beta / edge |
 | [../assets/PRIVACY.md](../assets/PRIVACY.md) | Приватность |

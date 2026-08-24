@@ -1,7 +1,7 @@
-# 2. Качество и структура
+# 30. Secrets/redaction
 
 **Status:** PASS
 
-24 src modules
+PRIVACY.md + no prompt logging policy
 
 _Auto-generated 2026-08-24. Re-run: `npm run audit`_

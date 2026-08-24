@@ -31,6 +31,7 @@
     "audit": "node scripts/audit-run.mjs --gate=pre-alpha",
     "audit:alpha": "node scripts/audit-run.mjs --gate=alpha",
     "audit:prebeta": "node scripts/audit-run.mjs --gate=pre-beta",
+    "audit:security": "node scripts/audit-run.mjs --gate=security",
     "infra:check": "node scripts/infra-check.mjs"
   },
   "license": "CC-BY-NC-SA-4.0"
