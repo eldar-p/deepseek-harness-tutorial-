@@ -20,11 +20,13 @@
 
 ### Changed
 
+- **License:** MIT → **CC BY-NC-SA 4.0** (Attribution-NonCommercial-ShareAlike)
 - README rewritten for Deep CLI alpha (legacy VirtualBox moved to bottom)
 - Coverage gate raised to **50%** (src ~69%)
 - Audit #18 TTY → PASS; Audit #22 context → PASS
 - Guest image `deep-guest:0.2-beta` with iptables allowlist (`deep-net-enforce`)
 - `deep update --dry-run` + CDN fetch path when artifact URLs set
+- `npm run pack:release` packs `dist/deep-cli-*.zip` with sha256 snippet
 
 ## [0.1.0-prealpha] — 2026-08-24
 

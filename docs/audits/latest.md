@@ -7,7 +7,7 @@ Gate: **alpha**
 | 1 | Безопасность | PASS | No hardcoded secrets; root refuse; log policy |
 | 2 | Качество и структура | PASS | 20 src modules |
 | 3 | Документация | PASS | Core docs present |
-| 4 | Лицензии | PASS | package: MIT |
+| 4 | Лицензии | PASS | package: CC-BY-NC-SA-4.0 |
 | 5 | Типы и сигнатуры | N/A | JS only pre-alpha; TS deferred to pre-beta |
 | 6 | Версии среды | PASS | node ^22.19.0 // >=24.0.0 |
 | 7 | Производительность | N/A | Manual profiling at beta |

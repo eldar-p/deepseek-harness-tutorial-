@@ -27,17 +27,20 @@ Env: `DEEP_HOME`, `PREFIX` / `--prefix`, `CHANNEL`.
 ## Обновление
 
 ```bash
-deep update --channel stable    # pre-alpha: сверка revision, подсказка git pull
-deep bootstrap --channel beta   # перечитать channel в config
+deep update --channel stable    # сверка revision; git hint если нет CDN
+deep update --channel beta --dry-run
+npm run pack:release            # локальный zip + sha256 для Release upload
 ```
 
 Канон: `manifests/channels.json` → revision per channel; install/update читают один контракт.
 
-## CDN (planned beta)
+**Лицензия артефактов:** CC BY-NC-SA 4.0 (см. `LICENSE` в zip).
+
+## CDN (beta)
 
 ```
-https://cdn.example/deep/manifests/channels.json
-https://cdn.example/deep/releases/{channel}/{os}-{arch}/deep-{version}.zip
+GitHub Releases: deep-cli-{version}.zip
+manifests/cli-releases.json → artifacts[].url + sha256
 ```
 
 Все загрузки: **url + sha256** (или digest для guest image).

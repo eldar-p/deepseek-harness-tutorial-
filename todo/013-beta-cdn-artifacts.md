@@ -7,5 +7,7 @@
 - [x] `pickCliArtifact()` + `deep update --dry-run`
 - [x] CDN fetch+sha256 path when `artifacts[].url` set
 - [x] Placeholder rows in `cli-releases.json` beta channel
-- [ ] Publish real zip/tar.gz + fill url/sha256
-- [ ] Auto extract + install into `~/.deep` / PATH
+- [x] `npm run pack:release` → zip + sha256 for upload
+- [ ] Upload zip to GitHub Release / CDN host
+- [ ] Fill real url+sha256 in `cli-releases.json`
+- [ ] Auto extract + install into PATH

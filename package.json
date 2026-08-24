@@ -27,9 +27,10 @@
     "test:coverage": "node scripts/coverage-gate.mjs",
     "smoke:guest": "node scripts/smoke-guest.mjs",
     "smoke:e2e": "node scripts/smoke-e2e.mjs",
+    "pack:release": "node scripts/pack-release.mjs",
     "audit": "node scripts/audit-run.mjs --gate=pre-alpha",
     "audit:alpha": "node scripts/audit-run.mjs --gate=alpha",
     "infra:check": "node scripts/infra-check.mjs"
   },
-  "license": "MIT"
+  "license": "CC-BY-NC-SA-4.0"
 }
