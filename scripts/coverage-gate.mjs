@@ -41,6 +41,8 @@ const TESTS = [
   'test/memory-budget.test.js',
   'test/lsp-cli.test.js',
   'test/daemon.test.js',
+  'test/tool-search.test.js',
+  'test/mcp-server.test.js',
 ]
 
 const r = spawnSync(

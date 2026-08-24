@@ -6,4 +6,5 @@
 - [x] `deep risk classify`
 - [x] `deep daemon start|stop|status|tick`
 - [ ] Live API smoke with real key (manual)
-- [ ] Proactive Kairos chat ticks (deferred)
+- [x] Proactive Kairos chat ticks (deferred)
+  - Writes `.deep/PROACTIVE.md` + `proactive.jsonl` (no LLM chat spam yet)

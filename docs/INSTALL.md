@@ -71,7 +71,7 @@ Env keys also work (`DEEPSEEK_API_KEY`, `OPENAI_API_KEY`, …). Do not pass `--g
    - enable Desktop integration for your distro, or
    - `docker save deep-guest:0.2-beta -o guest.tar` on Windows → `docker load -i guest.tar` in WSL, or
    - install `docker-buildx-plugin` and rebuild (`DOCKER_BUILDKIT=1`).
-4. **llama.cpp** — linux/darwin/win CPU (and win CUDA) binaries are auto-fetched with pinned sha256 (`manifests/llama-binaries.json`). Shared libs need the binary dir on `LD_LIBRARY_PATH` (Deep sets this on start).
+4. **llama.cpp** — linux/darwin/win CPU (win CUDA, linux **Vulkan**, darwin Metal) binaries are auto-fetched with pinned sha256 (`manifests/llama-binaries.json`). Official ggml has **no Linux CUDA** zip — use Vulkan or set `DEEP_LLAMA_BIN` to a self-built CUDA `llama-server`. Shared libs need the binary dir on `LD_LIBRARY_PATH` (Deep sets this on start).
 5. Field helper: `bash scripts/field-linux-wsl.sh` (from a non-root WSL user).
 
 ## Channels

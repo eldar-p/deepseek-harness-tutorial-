@@ -12,19 +12,24 @@ function exeName() {
 
 /**
  * Pick llama-server manifest row for this OS/arch.
+ * GPU preference: cuda (win) → vulkan (linux) → metal (darwin) → cpu.
  * @param {{ binaries?: object[] }} manifest
- * @param {{ preferCuda?: boolean }} opts
+ * @param {{ preferCuda?: boolean, preferGpu?: boolean }} opts
  * @returns {object|null}
  */
-export function pickBinaryEntry(manifest, { preferCuda }) {
+export function pickBinaryEntry(manifest, { preferCuda, preferGpu } = {}) {
   const bins = manifest.binaries || []
   const plat = process.platform === 'win32' ? 'win32' : process.platform === 'darwin' ? 'darwin' : 'linux'
   const arch = process.arch === 'arm64' ? 'arm64' : 'x64'
   const candidates = bins.filter((b) => b.os === plat && b.arch === arch)
   if (!candidates.length) return null
-  if (preferCuda) {
-    const cuda = candidates.find((b) => b.variant === 'cuda')
-    if (cuda) return cuda
+  const wantGpu = preferGpu ?? preferCuda
+  if (wantGpu) {
+    const order = ['cuda', 'vulkan', 'metal', 'hip', 'rocm']
+    for (const v of order) {
+      const hit = candidates.find((b) => b.variant === v && b.url && b.sha256)
+      if (hit) return hit
+    }
   }
   return candidates.find((b) => b.variant === 'cpu') || candidates[0]
 }
@@ -49,11 +54,11 @@ export async function ensureLlamaBinary({ device = 'cpu', fetch = true } = {}) {
   }
 
   const man = loadManifest('llama-binaries.json')
-  const preferCuda = device === 'gpu' && detectGpu().kind === 'nvidia'
-  let entry = pickBinaryEntry(man, { preferCuda })
+  const preferGpu = device === 'gpu' && detectGpu().discrete === true
+  let entry = pickBinaryEntry(man, { preferGpu })
   // Only auto-fetch entries with pinned sha256 (trust). Else fall back to CPU pin.
   if (!entry?.url || !entry.sha256) {
-    entry = pickBinaryEntry(man, { preferCuda: false })
+    entry = pickBinaryEntry(man, { preferGpu: false })
   }
   if (!entry?.url || !entry.sha256) {
     throw new Error('llama-binaries.json has no verified url+sha256 for this OS — place llama-server manually')

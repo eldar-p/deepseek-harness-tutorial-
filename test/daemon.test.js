@@ -18,9 +18,31 @@ test('daemonTick probes urls from runstate', async () => {
       if (String(url).includes('/health')) return { ok: true, status: 200 }
       return { ok: true, status: 200 }
     }
-    const summary = await daemonTick('default', { fetchFn, timeoutMs: 500 })
+    const summary = await daemonTick('default', { fetchFn, timeoutMs: 500, proactive: false })
     assert.equal(summary.ok, true)
     assert.equal(summary.checks.length, 2)
+  } finally {
+    if (prevHome === undefined) delete process.env.DEEP_HOME
+    else process.env.DEEP_HOME = prevHome
+    fs.rmSync(home, { recursive: true, force: true })
+  }
+})
+
+test('writeProactiveNudge on unhealthy', async () => {
+  const prevHome = process.env.DEEP_HOME
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-proactive-'))
+  process.env.DEEP_HOME = home
+  try {
+    const { writeProactiveNudge, proactivePath } = await import('../src/daemon.js')
+    const f = writeProactiveNudge({
+      at: 't',
+      stack: 'default',
+      ok: false,
+      checks: [{ name: 'llama', ok: false, detail: 'down' }],
+    })
+    assert.ok(f)
+    assert.ok(fs.existsSync(proactivePath('default')))
+    assert.match(fs.readFileSync(proactivePath('default'), 'utf8'), /UNHEALTHY/)
   } finally {
     if (prevHome === undefined) delete process.env.DEEP_HOME
     else process.env.DEEP_HOME = prevHome

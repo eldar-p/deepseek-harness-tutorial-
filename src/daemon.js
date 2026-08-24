@@ -1,6 +1,6 @@
 /**
  * Lightweight stack health daemon (Kairos-lite).
- * Polls llama/DSH URLs from run state; optional tick log. No proactive LLM chat yet.
+ * Polls llama/DSH URLs; optional proactive nudge file for the agent (DEEP_PROACTIVE=1).
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -10,6 +10,10 @@ import { isPidAlive, killTree, spawnDetached, runLogPath } from './proc.js'
 
 export function daemonStatePath(stack = 'default') {
   return path.join(paths(stack).run, 'daemon.json')
+}
+
+export function proactivePath(stack = 'default') {
+  return path.join(paths(stack).workspace, '.deep', 'PROACTIVE.md')
 }
 
 export function readDaemonState(stack = 'default') {
@@ -30,9 +34,47 @@ export function writeDaemonState(stack, state) {
 }
 
 /**
+ * Write agent-visible nudge under workspace/.deep/PROACTIVE.md
+ * @param {object} summary from daemonTick
+ * @param {{ force?: boolean }} [opts]
+ */
+export function writeProactiveNudge(summary, opts = {}) {
+  const enabled =
+    opts.force ||
+    process.env.DEEP_PROACTIVE === '1' ||
+    process.env.DEEP_PROACTIVE === 'true' ||
+    !summary.ok
+  if (!enabled) return null
+
+  const failed = (summary.checks || []).filter((c) => !c.ok)
+  const lines = [
+    `# Proactive tick (${summary.at})`,
+    '',
+    `Stack: **${summary.stack}** — ${summary.ok ? 'healthy' : 'UNHEALTHY'}`,
+    '',
+  ]
+  if (failed.length) {
+    lines.push('Issues:')
+    for (const c of failed) lines.push(`- ${c.name}: ${c.detail}`)
+    lines.push('', 'Next: `deep status` · `deep start` · `deep daemon tick`')
+  } else {
+    lines.push('All probes OK. Continue current task; no restart needed.')
+  }
+  lines.push('')
+
+  const f = proactivePath(summary.stack)
+  fs.mkdirSync(path.dirname(f), { recursive: true })
+  fs.writeFileSync(f, lines.join('\n'), 'utf8')
+  const jsonl = path.join(paths(summary.stack).run, 'proactive.jsonl')
+  fs.mkdirSync(path.dirname(jsonl), { recursive: true })
+  fs.appendFileSync(jsonl, `${JSON.stringify({ ...summary, nudge: true })}\n`, 'utf8')
+  return f
+}
+
+/**
  * One health probe against runstate URLs.
  * @param {string} [stack]
- * @param {{ fetchFn?: typeof fetch, timeoutMs?: number }} [opts]
+ * @param {{ fetchFn?: typeof fetch, timeoutMs?: number, proactive?: boolean }} [opts]
  */
 export async function daemonTick(stack = 'default', opts = {}) {
   const run = readRunState(stack)
@@ -60,7 +102,6 @@ export async function daemonTick(stack = 'default', opts = {}) {
   const llama = run?.urls?.llama
   const dsh = run?.urls?.dsh
   await probe('llama', llama ? `${String(llama).replace(/\/$/, '')}/health` : null)
-  // DSH may not have /health — root is enough
   await probe('dsh', dsh || null)
 
   const summary = {
@@ -70,6 +111,9 @@ export async function daemonTick(stack = 'default', opts = {}) {
     ok: checks.every((c) => c.ok),
   }
   appendLog(`event=daemon_tick stack=${stack} ok=${summary.ok}`)
+  if (opts.proactive !== false) {
+    writeProactiveNudge(summary, { force: opts.proactive === true })
+  }
   return summary
 }
 
@@ -78,7 +122,9 @@ export async function cmdDaemon(flags = {}, args = []) {
   const sub = (args[0] || 'status').toLowerCase()
 
   if (sub === 'tick') {
-    const summary = await daemonTick(stack)
+    const summary = await daemonTick(stack, {
+      proactive: flags.proactive === true || flags.proactive === '',
+    })
     console.log(JSON.stringify(summary, null, 2))
     process.exitCode = summary.ok ? 0 : 1
     return summary
@@ -118,9 +164,13 @@ export async function cmdDaemon(flags = {}, args = []) {
     const interval = Number(flags.interval || process.env.DEEP_DAEMON_INTERVAL_MS || 30_000)
     const logFile = runLogPath(stack, 'daemon')
     const loop = path.join(PKG_ROOT, 'scripts', 'deep-daemon.mjs')
+    const wantProactive = flags.proactive === true || flags.proactive === ''
     const pid = spawnDetached(process.execPath, [loop, '--name', stack, '--interval', String(interval)], {
       cwd: PKG_ROOT,
       logFile,
+      env: {
+        DEEP_PROACTIVE: process.env.DEEP_PROACTIVE || (wantProactive ? '1' : ''),
+      },
     })
     writeDaemonState(stack, {
       pid,
@@ -132,6 +182,6 @@ export async function cmdDaemon(flags = {}, args = []) {
     return
   }
 
-  console.error('Usage: deep daemon start|stop|status|tick [--name STACK] [--interval MS]')
+  console.error('Usage: deep daemon start|stop|status|tick [--name STACK] [--interval MS] [--proactive]')
   process.exitCode = 2
 }

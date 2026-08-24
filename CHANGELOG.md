@@ -13,6 +13,10 @@
 - Memory/CONTEXT budget checks in `bootstrap` / `doctor`
 - Auto-mode LLM classifier: `deep risk classify` + `DEEP_AUTO_MODE=llm` (heuristic first; LLM only on `confirm`)
 - Stack health daemon: `deep daemon start|stop|status|tick` (Kairos-lite)
+- Proactive nudge: `.deep/PROACTIVE.md` on unhealthy ticks (`DEEP_PROACTIVE=1` / `--proactive`)
+- ToolSearch deferred catalog: `src/tool-search.js` + MCP `tool_search` / `tool_select`
+- `deep mcp` stdio server (index + stack + risk + daemon tools)
+- Linux GPU: pinned **Vulkan** llama binary (official ggml has no Linux CUDA zip)
 - Beginner guide `README_BEGINNER.md`, `docs/OS-COMPAT.md`
 - ASCII banner (`assets/banner.txt`) on `help` / `start` / first run
 - `deep version` — local vs CDN freshness
