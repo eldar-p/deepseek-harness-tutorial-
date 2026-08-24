@@ -21,7 +21,7 @@ Gate: **alpha**
 | 15 | Кросс-платформенные пути | PASS | Win path helpers present |
 | 16 | GPU | PASS | detect + lock file |
 | 17 | Терминал RGB | PASS | status-ui one-screen |
-| 18 | TTY | WARN | Limited TTY handling |
+| 18 | Интерактивность | PASS | TTY checks in cli |
 | 19 | Ошибки | PASS | Structured exitCode |
 | 20 | Помощь | PASS | deep help command |
 | 21 | Multi-stack | PASS | listStacks + --name |
@@ -34,6 +34,6 @@ Gate: **alpha**
 ## Gate summary
 
 - FAIL: 0
-- WARN: 1
+- WARN: 0
 
 **Gate alpha: OK** (no FAIL)

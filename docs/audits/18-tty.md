@@ -1,7 +1,7 @@
-# 18. TTY
+# 18. Интерактивность
 
-**Status:** WARN
+**Status:** PASS
 
-Limited TTY handling
+TTY checks in cli
 
 _Auto-generated 2026-08-24. Re-run: `npm run audit`_

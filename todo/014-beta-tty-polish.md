@@ -1,5 +1,10 @@
 # 014 — TTY polish
 
-**Status:** ⏳ pending · **Stage:** beta
+**Status:** ✅ done (alpha follow-up) · **Stage:** beta → done early  
+**Audit:** #18 PASS
 
-Clear audit #18 WARN (limited TTY handling) — progress bars / raw mode / width detect.
+## Checklist
+
+- [x] `process.stdout.isTTY` + columns in `cmdHelp`
+- [x] status-ui already uses `isTTY` for ANSI
+- [x] `npm run audit:alpha` — 0 WARN
