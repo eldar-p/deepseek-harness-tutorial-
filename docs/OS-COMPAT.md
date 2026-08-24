@@ -66,3 +66,8 @@ deep doctor --readiness --stage=field
 | Cloud | `--api deepseek` / `openai` / `openrouter` |
 
 See [README.md](../README.md) · [HARNESS-TEST-PACK.md](./HARNESS-TEST-PACK.md) · [INSTALL.md](./INSTALL.md).
+
+## macOS without hardware
+
+See [MACOS-WITHOUT-HARDWARE.md](./MACOS-WITHOUT-HARDWARE.md). Physical Mac e2e is **out of scope**; CI macos-latest field-lite is the accepted bar.
+

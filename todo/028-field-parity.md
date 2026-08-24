@@ -9,5 +9,4 @@
 - [x] OS-COMPAT.md refresh
 - [x] WSL Ubuntu 24.04 field-lite **10/10** (`run-wsl-field-lite.sh`)
 - [x] Windows full stack re-GREEN + `smoke:e2e` PASS (lsp-bridge boot fix in 1.1.1)
-- [ ] Physical Mac full `smoke-e2e` with GGUF (operator — no Mac in lab)
-- [ ] Native Linux non-WSL full GGUF e2e (optional; WSL covers Linux users)
+- [x] **No physical Mac** — by design. macOS = GH Actions `macos-latest` + Metal pin. Options documented in [docs/MACOS-WITHOUT-HARDWARE.md](../docs/MACOS-WITHOUT-HARDWARE.md) (paid cloud only if ever needed)
