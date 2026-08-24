@@ -100,6 +100,7 @@ node bin/deep.js bootstrap --api custom --api-base https://llm.example.com/v1 --
 | `deep stop` | Остановить (не спамить Ctrl+C) |
 | `deep status` | DSH URL + модель |
 | `deep index build \| search \| status` | Семантический поиск по коду |
+| `deep lsp servers \| query …` | Host LSP (definition/hover/…) |
 | `deep api` | Список API-провайдеров |
 
 ---
