@@ -31,6 +31,7 @@ export function printStatusScreen(s) {
   const modelLabel = s.apiMode ? 'API' : 'Llama'
   console.log(row(modelLabel, s.llama.level, s.llama.detail))
   console.log(row('DSH', s.dsh.level, s.dsh.detail))
+  if (s.quant) console.log(row('Quant', s.quant.level, s.quant.detail))
   console.log(row('GPU/RAM', s.gpu.level, s.gpu.detail))
   console.log(row('Net', s.net.level, s.net.detail))
   console.log(row('Reboot', s.reboot.level, s.reboot.detail))

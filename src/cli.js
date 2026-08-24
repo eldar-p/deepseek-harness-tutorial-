@@ -37,7 +37,7 @@ import {
   listApiProviderIds,
 } from './api-provider.js'
 import { rotateLogIfLarge, cleanStalePartFiles } from './io-policy.js'
-import { assessGgufQuant, formatQuantWarning } from './quant-warn.js'
+import { assessGgufQuant, formatQuantWarning, quantStatusRow } from './quant-warn.js'
 import { cmdUpdate } from './update.js'
 import { assessReadiness, formatReadinessReport } from './readiness.js'
 import { printBanner, maybePrintFirstRunWelcome } from './banner.js'
@@ -119,6 +119,11 @@ export async function cmdDoctor(flags = {}) {
   console.log(`  llama    ${llamaBin || 'not found (will fetch on start)'}`)
   console.log(`  config   ${cfg ? paths().config : 'missing — run deep bootstrap'}`)
   if (cfg?.gguf) console.log(`  gguf     ${cfg.gguf}`)
+  {
+    const apiMode = !!(cfg?.api?.provider)
+    const q = quantStatusRow(apiMode ? null : cfg?.gguf, { apiMode })
+    console.log(`  quant    ${q.level.toUpperCase()}  ${q.detail}`)
+  }
   if (cfg?.rebootRequired) console.log('  reboot   REQUIRED before start')
 
   try {
@@ -309,6 +314,9 @@ export async function cmdStatus(flags) {
   const guestLevel = guestOk ? 'green' : 'red'
   const guestDetail = guestOk ? `deep-guest-${stack}` : run?.guestSkip || 'not started'
 
+  const apiMode = !!(run?.apiProfile || cfg?.api?.provider)
+  const quant = quantStatusRow(apiMode ? null : cfg?.gguf, { apiMode })
+
   printStatusScreen({
     stack,
     preset: cfg.preset,
@@ -319,6 +327,7 @@ export async function cmdStatus(flags) {
     guest: { level: guestLevel, detail: guestDetail },
     llama: { level: llamaLevel, detail: llamaDetail },
     dsh: { level: dshLevel, detail: dshDetail },
+    quant,
     gpu: {
       level: gpu.discrete ? 'green' : 'yellow',
       detail: `${gpu.kind} ${gpu.detail} | RAM free ${host.freememGb}G`,
@@ -332,7 +341,7 @@ export async function cmdStatus(flags) {
       detail: cfg.rebootRequired ? 'REQUIRED' : 'ok',
     },
     urls: run?.urls || null,
-    apiMode: !!(run?.apiProfile || cfg?.api?.provider),
+    apiMode,
   })
 }
 
@@ -485,7 +494,9 @@ export async function cmdStart(flags) {
   }
 
   const qwarn = formatQuantWarning(assessGgufQuant(gguf))
-  if (qwarn) console.log(qwarn)
+  if (qwarn) {
+    for (const line of qwarn.split('\n')) console.log(line)
+  }
 
   const device = flags.cpu ? 'cpu' : detectGpu().discrete ? 'gpu' : 'cpu'
   if (!flags.cpu && device === 'cpu') {

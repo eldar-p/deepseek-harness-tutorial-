@@ -59,11 +59,16 @@ deep doctor --readiness --stage=field
 
 ## Recommended models (quick)
 
+Prefer **Q4_K_M+** for tool-heavy agents (`deep start` / `status` / `doctor` warn below that). Q3 fits VRAM but degrades tool calls.
+
 | Mode | Recommendation |
 |------|----------------|
-| Local coding (16GB VRAM) | Qwen3-Coder-30B Q3_K_M |
-| Local spare / smaller | gpt-oss-20b Q8 or Qwen3-4B Q4 |
+| Local coding (~16GB VRAM) | Qwen3-Coder-30B-A3B **Q4_K_M** if it fits; else smaller coder at Q4/Q5 |
+| Local tight VRAM / spare | Qwen3-4B / 8B **Q4_K_M+** (better tools than 30B-Q3) |
+| Avoid for agents | Q3_K_M and below (chat OK; tools flaky) |
 | Cloud | `--api deepseek` / `openai` / `openrouter` |
+
+Switch: `deep start --gguf /path/model.Q4_K_M.gguf` (or set `gguf` in config).
 
 See [README.md](../README.md) · [HARNESS-TEST-PACK.md](./HARNESS-TEST-PACK.md) · [INSTALL.md](./INSTALL.md).
 

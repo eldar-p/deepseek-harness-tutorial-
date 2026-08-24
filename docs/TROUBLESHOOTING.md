@@ -67,7 +67,11 @@ Check `~/.deep/dsh-home/profiles/web/cordis.patch.yml` — duplicate ids break D
 
 ## Q3 quant warnings
 
-Prefer **Q4_K_M** or higher for tool-heavy agents. See audit #26 / `deep start` yellow lines.
+Prefer **Q4_K_M** or higher for tool-heavy agents. See audit #26.
+
+- `deep start` prints `[YELLOW]` + `[HINT]` when quant is weak
+- `deep status` / `deep doctor` show a **Quant** row (YELLOW/RED)
+- Fix: download same model at Q4_K_M+ (or a smaller Q4/Q5 coder), then `deep start --gguf PATH`
 
 ## Long sessions / context full
 

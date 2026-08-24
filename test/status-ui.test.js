@@ -29,9 +29,37 @@ test('printStatusScreen prints urls', () => {
     guest: { level: 'yellow', detail: 'n/a' },
     llama: { level: 'red', detail: 'off' },
     dsh: { level: 'red', detail: 'off' },
+    quant: { level: 'yellow', detail: 'Q3_K_M — weak for tools' },
     gpu: { level: 'green', detail: 'free' },
     net: { level: 'green', detail: 'allowlist' },
     reboot: { level: 'green', detail: 'no' },
     urls: { dsh: 'http://127.0.0.1:1/', llama: 'http://127.0.0.1:2/v1' },
   })
+})
+
+test('printStatusScreen includes Quant row when set', () => {
+  let buf = ''
+  const orig = console.log
+  console.log = (...a) => {
+    buf += a.join(' ') + '\n'
+  }
+  try {
+    printStatusScreen({
+      stack: 't',
+      preset: 'dev',
+      engine: { level: 'green', detail: 'ok' },
+      guest: { level: 'green', detail: 'ok' },
+      llama: { level: 'green', detail: 'ok' },
+      dsh: { level: 'green', detail: 'ok' },
+      quant: { level: 'yellow', detail: 'Q3_K_M weak' },
+      gpu: { level: 'green', detail: 'ok' },
+      net: { level: 'green', detail: 'ok' },
+      reboot: { level: 'green', detail: 'ok' },
+      urls: null,
+    })
+  } finally {
+    console.log = orig
+  }
+  assert.match(buf, /Quant/)
+  assert.match(buf, /Q3_K_M/)
 })
