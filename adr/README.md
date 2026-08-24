@@ -10,6 +10,7 @@
 | [0004](./0004-docker-engine-path-on-windows.md) | `engineEnv()` PATH на Windows | Accepted |
 | [0005](./0005-workspace-jail-for-fs-tools.md) | Workspace jail для FS tools | Accepted |
 | [0006](./0006-context-layers-and-memory.md) | Слои контекста и memory.json | Accepted |
+| [0007](./0007-guest-network-env-policy.md) | Guest network policy via env | Accepted |
 
 ## Шаблон нового ADR
 

@@ -27,12 +27,16 @@
 
 **Следующий этап:** Alpha (`0.2.x-alpha`) — см. [../todo/README.md](../todo/README.md) и [../adr/README.md](../adr/README.md).
 
-- [x] Jail wire + memory template (001–003)
-- [x] Coverage gate 30% (src ~65%)
-- [x] CI smoke-guest + local PASS
-- [x] Audit gate alpha OK (1 WARN TTY)
-- [ ] Alpha readiness score (006)
+**Alpha** (`0.2.0-alpha`) — **in progress** (readiness 100/100 on dev machine, Aug 2026).
+
+- [x] Jail + memory + compact/prune
+- [x] Coverage 30% gate (~69% src)
+- [x] CI smoke-guest + audit:alpha
+- [x] `doctor --readiness --stage=alpha`
+- [x] Multi-stack (`deep stacks`, GPU lock)
+- [x] Network allowlist env (hard proxy → beta)
 - [ ] E2E DSH chat sign-off
+- [ ] Alpha tag release
 
 ## Команды
 

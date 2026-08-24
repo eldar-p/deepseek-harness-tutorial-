@@ -1,6 +1,9 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { loadPreset, defaultConfig, applyPreset, PRESET_NAMES } from '../src/config.js'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+import { loadPreset, defaultConfig, applyPreset, registerStack, PRESET_NAMES } from '../src/config.js'
 
 test('PRESET_NAMES includes balanced', () => {
   assert.ok(PRESET_NAMES.includes('balanced'))
@@ -20,4 +23,22 @@ test('defaultConfig merges preset', () => {
   const c = defaultConfig({ preset: 'offline' })
   assert.equal(c.preset, 'offline')
   assert.equal(c.guestNetwork, 'none')
+})
+
+test('registerStack records stack metadata', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-cfg-'))
+  const prev = process.env.DEEP_HOME
+  process.env.DEEP_HOME = home
+  try {
+    const cfg = defaultConfig()
+    const out = registerStack(cfg, 'dev', { preset: 'dev', device: 'cpu' })
+    assert.equal(out.defaultStack, 'dev')
+    assert.equal(out.stacks.dev.preset, 'dev')
+    assert.ok(out.stacks.dev.updatedAt)
+    assert.ok(fs.existsSync(path.join(home, 'config.json')))
+  } finally {
+    if (prev === undefined) delete process.env.DEEP_HOME
+    else process.env.DEEP_HOME = prev
+    fs.rmSync(home, { recursive: true, force: true })
+  }
 })

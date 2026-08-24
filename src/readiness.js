@@ -4,42 +4,130 @@ import { PKG_ROOT, paths } from './paths.js'
 import { readConfig } from './config.js'
 import { detectContainerEngine, detectGpu, nodeOk, which } from './detect.js'
 import { findFileRecursive } from './proc.js'
+import { loadManifest } from './download.js'
 
 /** Pre-alpha milestone weights (sum = 100). */
 export const PREALPHA_MILESTONES = [
   { id: 'cli', label: 'CLI commands', weight: 10, check: () => fs.existsSync(path.join(PKG_ROOT, 'bin/deep.js')) },
   { id: 'config', label: 'Bootstrap / config', weight: 8, check: () => fs.existsSync(paths().config) },
-  { id: 'llama-bin', label: 'llama-server binary', weight: 12, check: () => {
-    if (which('llama-server') || process.env.DEEP_LLAMA_BIN) return true
-    const exe = process.platform === 'win32' ? 'llama-server.exe' : 'llama-server'
-    return !!findFileRecursive(paths().runtimeLlama, [exe])
-  }},
-  { id: 'gguf', label: 'GGUF configured', weight: 10, check: () => {
-    const cfg = readConfig()
-    if (cfg?.gguf && fs.existsSync(cfg.gguf)) return true
-    const models = paths().models
-    if (!fs.existsSync(models)) return false
-    return walkGguf(models).length > 0
-  }},
+  {
+    id: 'llama-bin',
+    label: 'llama-server binary',
+    weight: 12,
+    check: () => {
+      if (which('llama-server') || process.env.DEEP_LLAMA_BIN) return true
+      const exe = process.platform === 'win32' ? 'llama-server.exe' : 'llama-server'
+      return !!findFileRecursive(paths().runtimeLlama, [exe])
+    },
+  },
+  {
+    id: 'gguf',
+    label: 'GGUF configured',
+    weight: 10,
+    check: () => {
+      const cfg = readConfig()
+      if (cfg?.gguf && fs.existsSync(cfg.gguf)) return true
+      const models = paths().models
+      if (!fs.existsSync(models)) return false
+      return walkGguf(models).length > 0
+    },
+  },
   { id: 'llama-run', label: 'Llama spawn tested', weight: 15, check: () => stackWasStarted('llama') },
   { id: 'dsh', label: 'DSH on PATH', weight: 8, check: () => !!which('dsh') },
   { id: 'dsh-run', label: 'DSH spawn tested', weight: 10, check: () => stackWasStarted('dsh') },
   { id: 'guest-engine', label: 'Container engine', weight: 10, check: () => detectContainerEngine().ok },
-  { id: 'guest-run', label: 'Guest container smoke', weight: 12, check: () => {
-    const st = path.join(paths('default').run, 'state.json')
-    if (!fs.existsSync(st)) return false
-    try {
-      const s = JSON.parse(fs.readFileSync(st, 'utf8'))
-      return s.guestRunning === true
-    } catch {
-      return false
-    }
-  }},
-  { id: 'infra', label: 'Infra docs + LICENSE', weight: 5, check: () =>
-    fs.existsSync(path.join(PKG_ROOT, 'LICENSE')) &&
-    fs.existsSync(path.join(PKG_ROOT, 'docs/INFRASTRUCTURE.md')),
+  {
+    id: 'guest-run',
+    label: 'Guest container smoke',
+    weight: 12,
+    check: () => {
+      const st = path.join(paths('default').run, 'state.json')
+      if (!fs.existsSync(st)) return false
+      try {
+        const s = JSON.parse(fs.readFileSync(st, 'utf8'))
+        return s.guestRunning === true
+      } catch {
+        return false
+      }
+    },
+  },
+  {
+    id: 'infra',
+    label: 'Infra docs + LICENSE',
+    weight: 5,
+    check: () =>
+      fs.existsSync(path.join(PKG_ROOT, 'LICENSE')) &&
+      fs.existsSync(path.join(PKG_ROOT, 'docs/INFRASTRUCTURE.md')),
   },
 ]
+
+/** Alpha milestone weights (sum = 100). */
+export const ALPHA_MILESTONES = [
+  {
+    id: 'jail',
+    label: 'Workspace jail wired',
+    weight: 15,
+    check: () => cordisIncludes('workspace-jail-fs'),
+  },
+  {
+    id: 'memory',
+    label: 'memory.json template',
+    weight: 10,
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'assets/memory.template.json')),
+  },
+  {
+    id: 'compact',
+    label: 'Compaction + pruner',
+    weight: 10,
+    check: () => cordisIncludes('compaction-basic') && cordisIncludes('tool-result-pruner'),
+  },
+  {
+    id: 'coverage',
+    label: 'Coverage gate ≥30%',
+    weight: 10,
+    check: () => {
+      const gate = fs.readFileSync(path.join(PKG_ROOT, 'scripts/coverage-gate.mjs'), 'utf8')
+      return /DEEP_COVERAGE_MIN\s*\|\|\s*['"]30['"]/.test(gate)
+    },
+  },
+  {
+    id: 'smoke-ci',
+    label: 'Guest smoke script',
+    weight: 10,
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'scripts/smoke-guest.mjs')),
+  },
+  { id: 'engine', label: 'Container engine', weight: 10, check: () => detectContainerEngine().ok },
+  { id: 'guest-run', label: 'Guest smoke on host', weight: 12, check: () => anyStackGuestRunning() },
+  {
+    id: 'allowlist',
+    label: 'Network allowlist manifest',
+    weight: 8,
+    check: () => {
+      const a = loadManifest('allowlists.json')
+      return Array.isArray(a.balanced) && a.balanced.length > 0
+    },
+  },
+  {
+    id: 'multistack',
+    label: 'Multi-stack CLI',
+    weight: 10,
+    check: () => fs.readFileSync(path.join(PKG_ROOT, 'src/cli.js'), 'utf8').includes("case 'stacks'"),
+  },
+  {
+    id: 'audit-alpha',
+    label: 'Alpha audit script',
+    weight: 5,
+    check: () => {
+      const pkg = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'package.json'), 'utf8'))
+      return !!pkg.scripts?.['audit:alpha']
+    },
+  },
+]
+
+function cordisIncludes(needle) {
+  const p = path.join(PKG_ROOT, 'assets/cordis.deep.patch.yml')
+  return fs.existsSync(p) && fs.readFileSync(p, 'utf8').includes(needle)
+}
 
 function walkGguf(dir) {
   const out = []
@@ -51,21 +139,31 @@ function walkGguf(dir) {
   return out
 }
 
-function stackWasStarted(which) {
-  const st = path.join(paths('default').run, 'state.json')
+function stackWasStarted(which, stack = 'default') {
+  const st = path.join(paths(stack).run, 'state.json')
   if (!fs.existsSync(st)) return false
   try {
     const s = JSON.parse(fs.readFileSync(st, 'utf8'))
     if (which === 'llama') return !!s.pids?.llama
     if (which === 'dsh') return !!s.pids?.dsh
+    if (which === 'guest') return s.guestRunning === true
   } catch {
     return false
   }
   return false
 }
 
-export function assessPreAlphaReadiness() {
-  const items = PREALPHA_MILESTONES.map((m) => {
+function anyStackGuestRunning() {
+  const runRoot = path.join(paths().home, 'run')
+  if (!fs.existsSync(runRoot)) return false
+  for (const ent of fs.readdirSync(runRoot, { withFileTypes: true })) {
+    if (ent.isDirectory() && stackWasStarted('guest', ent.name)) return true
+  }
+  return stackWasStarted('guest', 'default')
+}
+
+function assessMilestones(milestones) {
+  const items = milestones.map((m) => {
     let ok = false
     try {
       ok = !!m.check()
@@ -84,10 +182,24 @@ export function assessPreAlphaReadiness() {
   return { items, score, max, pct, stage }
 }
 
-export function formatReadinessReport(r, { host, engine, gpu } = {}) {
+export function assessPreAlphaReadiness() {
+  return assessMilestones(PREALPHA_MILESTONES)
+}
+
+export function assessAlphaReadiness() {
+  return assessMilestones(ALPHA_MILESTONES)
+}
+
+export function assessReadiness(stage = 'pre-alpha') {
+  if (stage === 'alpha') return assessAlphaReadiness()
+  return assessPreAlphaReadiness()
+}
+
+export function formatReadinessReport(r, { host, engine, gpu, stage = 'pre-alpha' } = {}) {
+  const label = stage === 'alpha' ? 'Alpha' : 'Pre-alpha'
   const lines = []
   lines.push('')
-  lines.push(`Pre-alpha readiness: ${r.pct}% (${r.score}/${r.max}) — stage: ${r.stage}`)
+  lines.push(`${label} readiness: ${r.pct}% (${r.score}/${r.max}) — stage: ${r.stage}`)
   lines.push('─'.repeat(48))
   for (const i of r.items) {
     const tag = i.ok ? 'DONE' : 'TODO'
@@ -102,6 +214,13 @@ export function formatReadinessReport(r, { host, engine, gpu } = {}) {
     }
   }
   if (host) lines.push(`\nHost: ${host.platform}/${host.arch}  node=${host.node}  gpu=${gpu?.kind}`)
-  if (engine && !engine.ok) lines.push(`Hint: install Docker/Podman for guest milestone (+${PREALPHA_MILESTONES.find((m) => m.id === 'guest-run')?.weight || 12}%)`)
+  if (engine && !engine.ok && stage === 'pre-alpha') {
+    lines.push(
+      `Hint: install Docker/Podman for guest milestone (+${PREALPHA_MILESTONES.find((m) => m.id === 'guest-run')?.weight || 12}%)`,
+    )
+  }
+  if (engine && !engine.ok && stage === 'alpha') {
+    lines.push('Hint: start Docker Desktop for guest + engine milestones')
+  }
   return lines.join('\n')
 }

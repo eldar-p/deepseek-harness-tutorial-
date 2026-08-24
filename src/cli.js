@@ -1,12 +1,12 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { PKG_ROOT, paths, ensureDirs, appendLog } from './paths.js'
-import { getOrInitConfig, readConfig, writeConfig, applyPreset, PRESET_NAMES } from './config.js'
+import { getOrInitConfig, readConfig, writeConfig, applyPreset, registerStack, PRESET_NAMES } from './config.js'
 import { detectContainerEngine, detectGpu, hostSummary, nodeOk, isRoot, which } from './detect.js'
 import { printStatusScreen } from './status-ui.js'
-import { readRunState, writeRunState, clearRunState } from './runstate.js'
+import { readRunState, writeRunState, clearRunState, summarizeStacks } from './runstate.js'
 import { allocateStackPorts } from './ports.js'
-import { withGpuLock } from './gpu-lock.js'
+import { withGpuLock, gpuLockHolder } from './gpu-lock.js'
 import { materializeAssets } from './materialize.js'
 import {
   ensureLlamaBinary,
@@ -22,7 +22,7 @@ import { isPidAlive, killTree } from './proc.js'
 import { rotateLogIfLarge, cleanStalePartFiles } from './io-policy.js'
 import { assessGgufQuant, formatQuantWarning } from './quant-warn.js'
 import { cmdUpdate } from './update.js'
-import { assessPreAlphaReadiness, formatReadinessReport } from './readiness.js'
+import { assessReadiness, formatReadinessReport } from './readiness.js'
 
 function parseArgs(argv) {
   const flags = {}
@@ -40,7 +40,8 @@ function parseArgs(argv) {
         a === '--wipe-workspace' ||
         a === '--watch' ||
         a === '--dry-run' ||
-        a === '--readiness'
+        a === '--readiness' ||
+        a === '--all'
       ) {
         flags[a.slice(2)] = true
       } else {
@@ -89,8 +90,9 @@ export async function cmdDoctor(flags = {}) {
   if (cfg?.rebootRequired) console.log('  reboot   REQUIRED before start')
 
   if (flags.readiness) {
-    const r = assessPreAlphaReadiness()
-    console.log(formatReadinessReport(r, { host, engine, gpu: gpu }))
+    const stage = flags.stage === 'alpha' ? 'alpha' : 'pre-alpha'
+    const r = assessReadiness(stage)
+    console.log(formatReadinessReport(r, { host, engine, gpu: gpu, stage }))
   }
 
   appendLog('event=doctor')
@@ -175,6 +177,24 @@ export async function cmdBootstrap(flags) {
 }
 
 export async function cmdStatus(flags) {
+  if (flags.all) {
+    const rows = summarizeStacks()
+    console.log(`Deep stacks (${rows.length})`)
+    console.log('─'.repeat(56))
+    for (const row of rows) {
+      const parts = []
+      if (row.llama) parts.push('llama')
+      if (row.guest) parts.push('guest')
+      if (row.dsh) parts.push('dsh')
+      const state = row.active ? parts.join('+') || 'active' : 'stopped'
+      const url = row.urls?.dsh ? `  ${row.urls.dsh}` : ''
+      console.log(`  ${row.name.padEnd(14)} ${state.padEnd(12)}${url}`)
+    }
+    console.log('─'.repeat(56))
+    console.log('Detail: deep status --name STACK')
+    return
+  }
+
   const stack = flags.name || readConfig()?.defaultStack || 'default'
   const cfg = readConfig() || getOrInitConfig({})
   const engine = detectContainerEngine()
@@ -273,6 +293,16 @@ export async function cmdStart(flags) {
   const device = flags.cpu ? 'cpu' : detectGpu().discrete ? 'gpu' : 'cpu'
   if (!flags.cpu && device === 'cpu') {
     console.log('[YELLOW] No discrete GPU — using CPU+RAM')
+  }
+
+  if (device === 'gpu') {
+    const holder = gpuLockHolder(stack)
+    if (holder) {
+      const msg = holder.startsWith('pid:')
+        ? `GPU in use by process ${holder.slice(4)} — stop other stacks or use --cpu`
+        : `GPU in use by stack "${holder}" — run deep stop --name ${holder} or use --cpu`
+      throw Object.assign(new Error(msg), { exitCode: 3 })
+    }
   }
 
   await withGpuLock(async () => {
@@ -385,8 +415,14 @@ export async function cmdStart(flags) {
     console.log(`DSH:   ${urls.dsh}${dsh.ok ? '' : ' (not up)'}`)
     console.log(`Llama: ${urls.llama}`)
     console.log(`Stack: ${stack}  device=${llamaDevice}  preset=${cfg.preset}`)
+    registerStack(cfg, stack, {
+      preset: cfg.preset,
+      device: llamaDevice,
+      guestNetwork: cfg.guestNetwork,
+      urls,
+    })
     appendLog(`event=start stack=${stack} device=${llamaDevice} dshPort=${dshPort} llamaPort=${llamaPort}`)
-  })
+  }, { stack })
 }
 
 export async function cmdStop(flags) {
@@ -430,15 +466,38 @@ export async function cmdStop(flags) {
   appendLog(`event=stop stack=${stack} emergency=${!!flags.emergency}`)
 }
 
+export async function cmdStacks() {
+  const rows = summarizeStacks()
+  const cfg = readConfig()
+  console.log('Deep stacks')
+  console.log('─'.repeat(60))
+  for (const row of rows) {
+    const meta = cfg?.stacks?.[row.name]
+    const preset = meta?.preset || cfg?.preset || '?'
+    const parts = []
+    if (row.llama) parts.push('llama')
+    if (row.guest) parts.push('guest')
+    if (row.dsh) parts.push('dsh')
+    const state = row.active ? parts.join('+') || 'active' : 'stopped'
+    console.log(`  ${row.name.padEnd(12)} ${state.padEnd(14)} preset=${preset}`)
+    if (row.urls?.dsh) console.log(`    DSH:   ${row.urls.dsh}`)
+    if (row.urls?.llama) console.log(`    Llama: ${row.urls.llama}`)
+  }
+  console.log('─'.repeat(60))
+  console.log('Start:  deep start --name STACK')
+  console.log('Status: deep status --name STACK | deep status --all')
+}
+
 export function cmdHelp() {
   console.log(`Deep CLI ${JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'package.json'), 'utf8')).version}
 
 Usage:
-  deep doctor [--readiness]
+  deep doctor [--readiness] [--stage pre-alpha|alpha]
   deep bootstrap [--gguf PATH] [--preset NAME] [--channel stable|beta|edge]
   deep start [--name STACK] [--gguf PATH] [--cpu] [--preset NAME]
   deep stop [--name STACK] [--emergency] [--wipe-session]
-  deep status [--name STACK]
+  deep status [--name STACK] [--all]
+  deep stacks
   deep update [--channel stable|beta|edge]
   deep presets
 
@@ -468,6 +527,8 @@ export async function main(argv) {
         return await cmdStop(flags)
       case 'status':
         return await cmdStatus(flags)
+      case 'stacks':
+        return await cmdStacks()
       case 'update':
         return await cmdUpdate(flags)
       case 'presets':
