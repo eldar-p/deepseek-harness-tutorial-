@@ -1,10 +1,19 @@
 # Changelog
 
-## [Unreleased]
+## [1.1.3] — 2026-08-25
 
 ### Added
 
-- **Index sidecar scaffold** — `manifests/index-sidecar.json`, `gim index sidecar`, JS sidecar script with native binary fallback path (`GIM_INDEX_SIDECAR`)
+- **Diagnostics service** — `gim diagnose` with error codes (`GIM-COLIBRI-001`, etc.), hints, `~/.gim/diagnostics/<stack>.jsonl`
+- [docs/DIAGNOSTICS.md](./docs/DIAGNOSTICS.md) and `assets/diagnostics-catalog.json`
+- Auto `[HINT]` on CLI failures; Colibri/LLM start errors recorded
+- **Index sidecar scaffold** — `manifests/index-sidecar.json`, `gim index sidecar`, native `gim-index` fallback path
+- MCP resource **watch** (`gim mcp watch`), llm-fetch keep-alive pool, capability probe TTL
+
+### Changed
+
+- `gim start` uses unified `spawnCodeIndexService` (JS or native sidecar)
+- CDN channel revisions → 1.1.3
 
 ## [1.1.2] — 2026-08-24
 

@@ -10,7 +10,7 @@ import { daemonTick } from './daemon.js'
 import { loadAiInstructionsBlock, readAiInstructionsMeta } from './instructions.js'
 
 export const MCP_PROTOCOL = '2024-11-05'
-export const MCP_SERVER_INFO = { name: 'gim-cli', version: '1.1.2' }
+export const MCP_SERVER_INFO = { name: 'gim-cli', version: '1.1.3' }
 
 export const MCP_TOOLS = [
   {

@@ -73,6 +73,13 @@ export const DEFERRED_TOOLS = [
     when: 'New repo, monorepo onboarding, publish AGENTS.md',
   },
   {
+    id: 'diagnose',
+    keywords: ['diagnose', 'diagnostics', 'error', 'failed', 'broken', 'hint', 'GIM-COLIBRI'],
+    summary: 'Structured error diagnostics service',
+    detail: 'gim diagnose [--logs] [--last N] — health scan + error codes + fixes. Log: ~/.gim/diagnostics/<stack>.jsonl',
+    when: 'gim start failed, colibri warming, guest/MCP/index issues',
+  },
+  {
     id: 'doctor_release',
     keywords: ['release', 'tag', 'rc', 'pre-beta', 'ship'],
     summary: 'Pre-tag release gate',

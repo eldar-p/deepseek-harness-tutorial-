@@ -47,6 +47,7 @@ export function ensureDirs(stack = 'default') {
     p.logs,
     p.manifestsCache,
     p.presets,
+    path.join(p.home, 'diagnostics'),
   ]) {
     fs.mkdirSync(d, { recursive: true })
   }

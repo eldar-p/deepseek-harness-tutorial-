@@ -71,7 +71,7 @@ export class McpStdioClient {
     await this.request('initialize', {
       protocolVersion: MCP_CLIENT_PROTOCOL,
       capabilities: {},
-      clientInfo: { name: 'gim-cli', version: '1.1.2' },
+      clientInfo: { name: 'gim-cli', version: '1.1.3' },
     })
     await this.notify('notifications/initialized', {})
     this.ready = true

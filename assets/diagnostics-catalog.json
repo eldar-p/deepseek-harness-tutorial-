@@ -1,0 +1,101 @@
+{
+  "version": "1",
+  "codes": {
+    "GIM-DOCKER-001": {
+      "title": "Container engine not ready",
+      "component": "docker",
+      "severity": "error",
+      "match": ["docker not running", "Container engine", "no container engine", "start Docker"],
+      "cause": "Docker Desktop / Podman is not running or not on PATH.",
+      "fix": "Start Docker Desktop, wait until green, then: gim doctor"
+    },
+    "GIM-COLIBRI-001": {
+      "title": "Colibri Linux ELF engine missing",
+      "component": "colibri",
+      "severity": "error",
+      "match": ["Linux engine", "ELF", "deepseek_v4.exe for host only", "engine is not built"],
+      "cause": "Docker Colibri needs Linux binary deepseek_v4 in GIM_COLIBRI_ROOT, not Windows .exe only.",
+      "fix": "Install ELF deepseek_v4 into colibri root, OR: gim start --gguf PATH"
+    },
+    "GIM-COLIBRI-002": {
+      "title": "Colibri model path invalid",
+      "component": "colibri",
+      "severity": "error",
+      "match": ["model not found", "GIM_LLM_MODEL", "modelReady"],
+      "cause": "Safetensors model directory missing or incomplete.",
+      "fix": "Set GIM_LLM_MODEL or bootstrap with valid model path; gim doctor"
+    },
+    "GIM-COLIBRI-003": {
+      "title": "Colibri warming timeout",
+      "component": "colibri",
+      "severity": "warn",
+      "match": ["warming", "timeout", "600"],
+      "cause": "MoE weights + expert tier promote can exceed patience; often engine/disk issue.",
+      "fix": "Check colibri container logs; fix GIM-COLIBRI-001 first; use NVMe for model tree"
+    },
+    "GIM-LLM-001": {
+      "title": "LLM backend start failed",
+      "component": "llm",
+      "severity": "error",
+      "match": ["LLM Docker", "start failed", "Llama failed", "colibri start"],
+      "cause": "LLM container or llama-server did not become healthy.",
+      "fix": "gim diagnose --logs; gim stop --full-stop; gim start again"
+    },
+    "GIM-GGUF-001": {
+      "title": "GGUF not found",
+      "component": "gguf",
+      "severity": "error",
+      "match": ["GGUF not found", "gguf not found"],
+      "cause": "Configured GGUF path does not exist.",
+      "fix": "gim bootstrap --gguf PATH or fix ~/.gim/config.json gguf field"
+    },
+    "GIM-GUEST-001": {
+      "title": "Guest container not running",
+      "component": "guest",
+      "severity": "warn",
+      "match": ["guest not running", "Guest skipped", "Guest mount"],
+      "cause": "Docker guest failed to start or mount workspace.",
+      "fix": "gim doctor; ensure Docker OK; gim start (guest needs engine)"
+    },
+    "GIM-INDEX-001": {
+      "title": "Code index not built",
+      "component": "index",
+      "severity": "info",
+      "match": ["index not built", "index empty", "no hits"],
+      "cause": "Semantic index never built for this workspace.",
+      "fix": "gim index build --name STACK"
+    },
+    "GIM-MCP-001": {
+      "title": "MCP server connection failed",
+      "component": "mcp",
+      "severity": "warn",
+      "match": ["MCP timeout", "MCP server exited", "unknown MCP server"],
+      "cause": "External MCP server in mcp-servers.json failed to start or respond.",
+      "fix": "gim mcp doctor; fix command/args in ~/.gim/mcp-servers.json"
+    },
+    "GIM-CONFIG-001": {
+      "title": "Config missing or invalid",
+      "component": "config",
+      "severity": "error",
+      "match": ["run gim bootstrap", "config missing", "not found — run gim bootstrap"],
+      "cause": "No ~/.gim/config.json — stack not bootstrapped.",
+      "fix": "gim bootstrap --gguf PATH or --api PROVIDER"
+    },
+    "GIM-API-001": {
+      "title": "Cloud API misconfigured",
+      "component": "api",
+      "severity": "error",
+      "match": ["api key", "401", "API profile", "provider"],
+      "cause": "Missing or invalid API key / provider profile.",
+      "fix": "gim bootstrap --api deepseek --api-key sk-... or set env from api-providers.json"
+    },
+    "GIM-START-001": {
+      "title": "Stack start failed",
+      "component": "start",
+      "severity": "error",
+      "match": [],
+      "cause": "Generic start failure — see detail and logs.",
+      "fix": "gim diagnose --logs; gim doctor --speed"
+    }
+  }
+}

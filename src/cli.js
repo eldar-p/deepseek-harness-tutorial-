@@ -77,6 +77,7 @@ import { validateDeepPlugins, formatPluginValidation } from './plugin-validate.j
 import { resolveDshBin } from './dsh.js'
 import { cmdMcp } from './mcp-cli.js'
 import { cmdInstructions } from './instructions-cli.js'
+import { cmdDiagnose, recordError } from './diagnostics-cli.js'
 
 /** Legacy DSH UI — off by default; enable with --dsh or GIM_USE_DSH=1 */
 export function wantDsh(flags = {}) {
@@ -622,6 +623,10 @@ async function startStackLlmDocker({ stack, cfg, flags, engine, backend }) {
   if (backend === 'colibri') {
     const dockerEng = colibriNativeEngineReady(st.root, modelPath, { docker: true })
     if (!dockerEng.ok) {
+      recordError(Object.assign(new Error(dockerEng.detail), { exitCode: 2 }), {
+        stack,
+        component: 'colibri',
+      })
       throw Object.assign(new Error(dockerEng.detail), { exitCode: 2 })
     }
   }
@@ -683,9 +688,11 @@ async function startStackLlmDocker({ stack, cfg, flags, engine, backend }) {
     ctx,
     cfg,
   })
-  if (!llm.ok) {
-    throw Object.assign(new Error(llm.detail || `LLM Docker (${backend}) start failed`), { exitCode: 1 })
-  }
+    if (!llm.ok) {
+      const err = Object.assign(new Error(llm.detail || `LLM Docker (${backend}) start failed`), { exitCode: 1 })
+      recordError(err, { stack, component: 'llm' })
+      throw err
+    }
   state.llmDocker.container = llm.containerName
   state.llmDocker.cacheId = llm.cacheId
   state.warming = !!llm.warming
@@ -1191,6 +1198,7 @@ export function cmdHelp(topic) {
   gim mcp | gim mcp client list
   gim instructions init
   gim instructions refresh
+  gim diagnose [--name STACK] [--logs] [--last N] [--json] [--clear]
   gim coord --task="fix A; fix B"
   gim risk classify "cmd" [--llm]
   gim risk write-path PATH
@@ -1354,6 +1362,9 @@ export async function main(argv) {
       }
       case 'instructions':
         return await cmdInstructions(flags, args)
+      case 'diagnose':
+      case 'diagnostics':
+        return await cmdDiagnose(flags)
       case 'coord':
       case 'coordinator':
         return await cmdCoord(flags, args)
@@ -1404,6 +1415,15 @@ export async function main(argv) {
     }
   } catch (e) {
     console.error(`[ERR] ${e.message}`)
+    try {
+      const rec = recordError(e, {
+        stack: flags.name || 'default',
+        command: [cmd, ...args].join(' '),
+      })
+      if (rec?.code) console.error(`[HINT] ${rec.code}: ${rec.hint || 'gim diagnose'}`)
+    } catch {
+      /* */
+    }
     appendLog(`event=error msg=${JSON.stringify(e.message)}`)
     process.exitCode = e.exitCode || 1
   }
