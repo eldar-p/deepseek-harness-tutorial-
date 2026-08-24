@@ -20,8 +20,9 @@
 | [023](./023-v1-release.md) | Ship 1.0.0 | ✅ done | 1.0 |
 | [024](./024-automode-daemon.md) | Auto-mode LLM + daemon | ✅ done | post-1.0 |
 | [025](./025-toolsearch-mcp-vulkan.md) | ToolSearch + MCP + Vulkan | ✅ done | post-1.0 |
+| [026](./026-ship-1.1.md) | Ship 1.1.0 | ✅ done | 1.1 |
 
-**1.0** (`1.0.1`) — hybrid + LSP + auto-mode/daemon/MCP · coverage ~82% (gate 80 / floor 78)  
-Readiness: `deep doctor --readiness --stage=1.0` · [RELEASE.md](../RELEASE.md)
+**1.1** (`1.1.0`) — coord + mcp config + write-risk + readiness 1.1 · coverage ~82%  
+Readiness: `deep doctor --readiness --stage=1.1` · [RELEASE-1.1.md](../RELEASE-1.1.md)
 
 Alpha archive: [README.md](./README.md)

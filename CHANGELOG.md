@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.0] — 2026-08-24
+
+### Added
+
+- `deep coord --task=…` — parallel index-search coordinator
+- `deep mcp config` — Cursor/Claude Desktop MCP JSON snippet
+- `npm run smoke:api` — mock (or live) API provider smoke
+- Write-path risk: `deep risk write-path` + one-shot-guard deny for `.env`/keys/`secrets.json`
+- Readiness stage `1.1` (`deep doctor --readiness --stage=1.1`)
+
+### Changed
+
+- Version **1.1.0** (post-1.0 hybrid/MCP/auto-mode track)
+
 ## [1.0.1] — 2026-08-24
 
 ### Added

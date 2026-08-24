@@ -11,7 +11,7 @@
 export const name = 'one-shot-guard'
 export const inject = []
 
-import { shouldDenyBash, shouldDenyBashAsync } from './permission-risk.mjs'
+import { shouldDenyBash, shouldDenyBashAsync, shouldDenyWrite } from './permission-risk.mjs'
 
 const DENY_TOOLS = new Set(['todo_write', 'TodoWrite', 'todoWrite'])
 
@@ -176,6 +176,9 @@ export function apply(ctx) {
         if (tool === 'write' || tool === 'Write' || tool === 'edit' || tool === 'Edit') {
           const path = writePath(exec)
           const content = writeContent(exec)
+          if (shouldDenyWrite(path)) {
+            return Promise.resolve(deny(tool, 'blocked path (secrets/VCS/system)'))
+          }
           if (pathHasEmoji(path)) {
             return Promise.resolve(deny(tool, 'emoji in filename'))
           }

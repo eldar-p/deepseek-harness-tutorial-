@@ -43,6 +43,8 @@ const TESTS = [
   'test/daemon.test.js',
   'test/tool-search.test.js',
   'test/mcp-server.test.js',
+  'test/coordinator.test.js',
+  'test/mcp-config.test.js',
 ]
 
 const r = spawnSync(
