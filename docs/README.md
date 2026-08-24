@@ -4,6 +4,7 @@
 |----------|----------|
 | [../PRE-ALPHA.md](../PRE-ALPHA.md) | Pre-alpha статус |
 | [../ALPHA.md](../ALPHA.md) | Alpha 0.2 **complete** |
+| [TYPES.md](./TYPES.md) | JSDoc / TS policy |
 | [../BETA.md](../BETA.md) | Beta track + CDN install |
 | [../todo/README.md](../todo/README.md) | Alpha backlog (archive) |
 | [../todo/README-beta.md](../todo/README-beta.md) | Beta backlog |

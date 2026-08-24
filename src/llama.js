@@ -10,7 +10,13 @@ function exeName() {
   return process.platform === 'win32' ? 'llama-server.exe' : 'llama-server'
 }
 
-function pickBinaryEntry(manifest, { preferCuda }) {
+/**
+ * Pick llama-server manifest row for this OS/arch.
+ * @param {{ binaries?: object[] }} manifest
+ * @param {{ preferCuda?: boolean }} opts
+ * @returns {object|null}
+ */
+export function pickBinaryEntry(manifest, { preferCuda }) {
   const bins = manifest.binaries || []
   const plat = process.platform === 'win32' ? 'win32' : process.platform === 'darwin' ? 'darwin' : 'linux'
   const arch = process.arch === 'arm64' ? 'arm64' : 'x64'
@@ -81,6 +87,10 @@ export async function ensureLlamaBinary({ device = 'cpu', fetch = true } = {}) {
   return { bin, source: 'fetch', variant: entry.variant }
 }
 
+/**
+ * @param {{ flagsGguf?: string, configGguf?: string }} [opts]
+ * @returns {string|{ needsDownload: boolean, manifest: object }}
+ */
 export function resolveGguf({ flagsGguf, configGguf } = {}) {
   if (flagsGguf) {
     const p = path.resolve(flagsGguf)

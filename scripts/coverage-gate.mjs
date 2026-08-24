@@ -24,6 +24,9 @@ const TESTS = [
   'test/materialize.test.js',
   'test/guest-net.test.js',
   'test/cli-install.test.js',
+  'test/proc.test.js',
+  'test/llama.test.js',
+  'test/shutdown-extra.test.js',
 ]
 
 const r = spawnSync(

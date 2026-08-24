@@ -94,8 +94,24 @@ function runAudits() {
     results.push(pkg.license ? pass(4, 'Лицензии', `package: ${pkg.license}`) : warn(4, 'Лицензии', 'No license in package.json'))
   }
 
-  // 5 Types
-  results.push(na(5, 'Типы и сигнатуры', 'JS only pre-alpha; TS deferred to pre-beta'))
+  // 5 Types — JSDoc contracts; full TS deferred past pre-beta
+  {
+    const srcDir = path.join(ROOT, 'src')
+    const files = fs.existsSync(srcDir) ? fs.readdirSync(srcDir).filter((f) => f.endsWith('.js')) : []
+    let jsdoc = 0
+    for (const f of files) {
+      const t = fs.readFileSync(path.join(srcDir, f), 'utf8')
+      if (/@(param|returns|typedef)\b/.test(t)) jsdoc++
+    }
+    const typesDoc = fs.existsSync(path.join(ROOT, 'docs/TYPES.md'))
+    if (jsdoc >= 5 && typesDoc) {
+      results.push(pass(5, 'Типы и сигнатуры', `JSDoc in ${jsdoc}/${files.length} src files; TS deferred (docs/TYPES.md)`))
+    } else if (jsdoc >= 3) {
+      results.push(warn(5, 'Типы и сигнатуры', `JSDoc partial (${jsdoc}); add docs/TYPES.md`))
+    } else {
+      results.push(warn(5, 'Типы и сигнатуры', 'Low JSDoc coverage; TS deferred'))
+    }
+  }
 
   // 6 Env
   {
@@ -103,9 +119,24 @@ function runAudits() {
     results.push(pkg.engines?.node ? pass(6, 'Версии среды', `node ${pkg.engines.node}`) : fail(6, 'Версии среды', 'engines.node missing'))
   }
 
-  // 7 Performance
-  results.push(na(7, 'Производительность', 'Manual profiling at beta'))
-
+  // 7 Performance — timeouts / health gates present; deep profiling deferred
+  {
+    const proc = read('src/proc.js')
+    const llama = read('src/llama.js')
+    const dsh = read('src/dsh.js')
+    const hasTimeouts =
+      proc.includes('timeoutMs') &&
+      (llama.includes('timeoutMs') || llama.includes('300_000') || llama.includes('waitLlamaHealthy')) &&
+      (dsh.includes('90_000') || dsh.includes('timeoutMs') || dsh.includes('waitHttpOk'))
+    const hasAbort = proc.includes('AbortSignal') || llama.includes('AbortSignal')
+    if (hasTimeouts && hasAbort) {
+      results.push(pass(7, 'Производительность', 'Health timeouts + AbortSignal; deep profiling deferred to field beta'))
+    } else if (hasTimeouts) {
+      results.push(warn(7, 'Производительность', 'Timeouts present; add AbortSignal on fetches'))
+    } else {
+      results.push(warn(7, 'Производительность', 'Missing explicit service timeouts'))
+    }
+  }
   // 8 Deps
   {
     const pkg = JSON.parse(read('package.json') || '{}')

@@ -1,5 +1,10 @@
 # 016 — Coverage for cli/llama/guest
 
-**Status:** ⏳ pending · **Stage:** pre-beta
+**Status:** ✅ done (first pass) · **Stage:** pre-beta
 
-Raise line coverage on low files (`cli.js`, `llama.js`, `guest.js`, `proc.js`) toward pre-beta ≥50% plan and eventual 60% beta field target.
+## Checklist
+
+- [x] `test/proc.test.js` — isPidAlive, findFileRecursive, runLogPath
+- [x] `test/llama.test.js` — pickBinaryEntry, resolveGguf, status helpers
+- [x] `test/shutdown-extra.test.js` — stopAllStacks empty
+- [ ] Deeper `cli.js` / `startLlama` integration (later)
