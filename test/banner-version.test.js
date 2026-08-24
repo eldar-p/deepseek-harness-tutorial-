@@ -1,5 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import { compareVersions, assessVersionFreshness, checkDependencies } from '../src/version-check.js'
 import { loadAsciiArt, bannerEnabled } from '../src/banner.js'
 
@@ -37,5 +40,39 @@ test('bannerEnabled respects DEEP_NO_BANNER', () => {
   } finally {
     if (prev === undefined) delete process.env.DEEP_NO_BANNER
     else process.env.DEEP_NO_BANNER = prev
+  }
+})
+
+test('printBanner and welcome helpers', async () => {
+  const prevHome = process.env.DEEP_HOME
+  const prevBanner = process.env.DEEP_NO_BANNER
+  const prevCi = process.env.CI
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-ban-'))
+  process.env.DEEP_HOME = home
+  delete process.env.DEEP_NO_BANNER
+  delete process.env.CI
+  try {
+    const {
+      printBanner,
+      maybePrintFirstRunWelcome,
+      isFirstRun,
+      markWelcomed,
+      readPkgVersion,
+    } = await import('../src/banner.js')
+    assert.ok(readPkgVersion())
+    assert.equal(isFirstRun(), true)
+    printBanner({ tagline: true })
+    assert.equal(maybePrintFirstRunWelcome(), true)
+    assert.equal(isFirstRun(), false)
+    markWelcomed()
+    assert.equal(maybePrintFirstRunWelcome(), false)
+  } finally {
+    if (prevHome === undefined) delete process.env.DEEP_HOME
+    else process.env.DEEP_HOME = prevHome
+    if (prevBanner === undefined) delete process.env.DEEP_NO_BANNER
+    else process.env.DEEP_NO_BANNER = prevBanner
+    if (prevCi === undefined) delete process.env.CI
+    else process.env.CI = prevCi
+    fs.rmSync(home, { recursive: true, force: true })
   }
 })

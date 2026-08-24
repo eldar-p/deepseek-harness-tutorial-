@@ -31,7 +31,7 @@ jobs:
         run: npm run test:coverage
         shell: bash
         env:
-          DEEP_COVERAGE_MIN: '65'
+          DEEP_COVERAGE_MIN: '80'
 
       - name: Audit gate (pre-alpha)
         run: node scripts/audit-run.mjs --gate=pre-alpha

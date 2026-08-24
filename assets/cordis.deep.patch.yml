@@ -18,6 +18,7 @@
       Shell = tool bash only, runs inside the deep-guest container at /workspace.
       Host paths for Read/Write/Edit are under the Deep workspace only.
       Large repos: use `deep index search "query"` before bulk Read/Grep (see code-search skill).
+      For precise navigation use lsp_query when language servers are installed (see lsp skill).
       No emoji. Prefer STRUCTURE.txt and .deep/memory.json. Stop after one short answer.
 
 - id: sandbox-policy
@@ -68,3 +69,6 @@
 
   - id: code-search
     name: 'file:///__PLUGIN_DIR__/code-search/index.mjs'
+
+  - id: lsp-bridge
+    name: 'file:///__PLUGIN_DIR__/lsp-bridge/index.mjs'
