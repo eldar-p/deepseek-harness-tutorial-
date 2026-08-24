@@ -103,6 +103,19 @@ export async function cmdMcp(flags, args) {
     return
   }
 
+  if (sub === 'watch') {
+    const server = args[1]
+    const uri = args[2]
+    if (!server || !uri) {
+      throw Object.assign(new Error('Usage: gim mcp watch SERVER URI [--timeout MS]'), { exitCode: 2 })
+    }
+    const { watchMcpResource } = await import('./mcp-client.js')
+    const timeoutMs = flags.timeout ? Number(flags.timeout) : 30_000
+    const r = await watchMcpResource(server, uri, { timeoutMs })
+    console.log(JSON.stringify(r, null, 2))
+    return
+  }
+
   if (sub === 'call') {
     const server = args[1]
     const tool = args[2]

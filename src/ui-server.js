@@ -18,18 +18,26 @@ import { compactMessagesIfNeeded } from './context-compact.js'
 import { probeLlmCapabilities } from './llm-capabilities.js'
 import { DEFAULT_KV_SLOTS, releaseCacheSlot } from './llm-session.js'
 
-/** Per-stack capability cache — probe once, not on every chat turn. */
+/** Per-stack capability cache — probe once per TTL, not every chat turn. */
+const CAP_PROBE_TTL_MS = Number(process.env.GIM_CAP_PROBE_TTL_MS) || 300_000
+/** @type {Map<string, { caps: object, at: number }>} */
 const stackCapabilities = new Map()
 
 async function getStackCapabilities(stack, target) {
-  if (stackCapabilities.has(stack)) return stackCapabilities.get(stack)
+  const cached = stackCapabilities.get(stack)
+  if (cached && Date.now() - cached.at < CAP_PROBE_TTL_MS) return cached.caps
   const caps = await probeLlmCapabilities(target).catch(() => ({
     tools: true,
     streaming: true,
     openaiCompletions: true,
   }))
-  stackCapabilities.set(stack, caps)
+  stackCapabilities.set(stack, { caps, at: Date.now() })
   return caps
+}
+
+export function clearStackCapabilityCache(stack) {
+  if (stack) stackCapabilities.delete(stack)
+  else stackCapabilities.clear()
 }
 
 const UI_ROOT = path.join(PKG_ROOT, 'ui')

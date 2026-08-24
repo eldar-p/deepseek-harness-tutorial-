@@ -34,7 +34,12 @@ gim index status [--name default]
 4. Changed/new files → chunk + embed only those.
 5. Deleted files → dropped from `files.json` and chunks.
 
-Single-file updates after agent writes: `indexFile()` (HTTP `POST /touch` on index server).
+Single-file updates after agent writes: `indexFile()` / debounced `GIM_INDEX_TOUCH` (default on).
+
+| Env | Effect |
+|-----|--------|
+| `GIM_INDEX_TOUCH=0` | Disable auto re-index on agent `write_file` |
+| `GIM_INDEX_TOUCH_MS` | Debounce ms (default `1500`) |
 
 ## Search pipeline
 

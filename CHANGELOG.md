@@ -10,11 +10,18 @@
 - `gim doctor --release`, `npm run smoke:egress`, `npm run test:honest`
 - Skills rework: `gim-workspace`, `gim-security`, `network-egress`; index [skills/README.md](./skills/README.md)
 - Tool-search catalog: `doctor_release`, `doctor_security`, `colibri_speed`
+- **Incremental code index** — content hashes, Worker cosine search, lazy `status`, touch on `write_file`
+- **External MCP client** — `gim mcp client/doctor/tools/resources/prompts/watch`; agent `mcp_list_tools` / `mcp_call` (tools, resources, prompts)
+- **AI instructions** — `.gim/ai-instructions.md`, `gim instructions init|refresh|sync`, agent + MCP `project_instructions`
+- [docs/CODE-INDEX.md](./docs/CODE-INDEX.md), [docs/ARCHITECTURE-GUIDE.md](./docs/ARCHITECTURE-GUIDE.md), [sidecar/README.md](./sidecar/README.md)
 
 ### Changed
 
 - Release gate in CI; coverage ≥80%; adaptive ctx cap (<64 GB RAM → 128K)
 - Agent defaults: `GIM_TOOL_MAX_READ` 8 KB; batch tool results on
+- Universal Colibri Docker: `--colibri` / `llm: colibri` over `cfg.gguf`; Linux ELF engine preflight; entrypoint CRLF fix
+- Context meter includes ai-instructions + MCP servers; capability probe TTL per stack (`GIM_CAP_PROBE_TTL_MS`)
+- `gim index build` refreshes ai-instructions when file exists (`GIM_INSTRUCTIONS_ON_INDEX=0` to disable)
 - Version **1.1.2** (fixes/tuning release track)
 
 ## [2.0.0] — 2026-08-24

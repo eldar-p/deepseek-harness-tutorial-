@@ -49,6 +49,8 @@ export class McpStdioClient {
     this.pending = new Map()
     this.buffer = ''
     this.ready = false
+    /** @type {((msg: object) => void) | null} */
+    this.onNotification = null
   }
 
   async connect() {
@@ -96,6 +98,10 @@ export class McpStdioClient {
         clearTimeout(p.timer)
         if (msg.error) p.reject(new Error(msg.error.message || JSON.stringify(msg.error)))
         else p.resolve(msg.result)
+        continue
+      }
+      if (msg.method && msg.id == null && this.onNotification) {
+        this.onNotification(msg)
       }
     }
   }
@@ -170,6 +176,22 @@ export class McpStdioClient {
   async getPrompt(name, args = {}) {
     await this.connect()
     return this.request('prompts/get', { name, arguments: args })
+  }
+
+  /**
+   * @param {string} uri
+   */
+  async subscribeResource(uri) {
+    await this.connect()
+    return this.request('resources/subscribe', { uri })
+  }
+
+  /**
+   * @param {string} uri
+   */
+  async unsubscribeResource(uri) {
+    await this.connect()
+    return this.request('resources/unsubscribe', { uri })
   }
 
   /**
@@ -294,6 +316,47 @@ export async function getMcpServerPrompt(serverName, promptName, args = {}, conf
   const client = getMcpClient(serverName, configPath)
   const result = await client.getPrompt(promptName, args)
   return normalizeMcpPromptResult(result)
+}
+
+/**
+ * Subscribe to resource updates; resolves on first notification or timeout.
+ * @param {string} serverName
+ * @param {string} uri
+ * @param {{ timeoutMs?: number, configPath?: string }} [opts]
+ */
+export async function watchMcpResource(serverName, uri, opts = {}) {
+  const servers = loadEnabledMcpServers(opts.configPath)
+  const spec = servers[serverName]
+  if (!spec) throw new Error(`unknown MCP server: ${serverName}`)
+  const client = new McpStdioClient(spec, { timeoutMs: opts.timeoutMs ?? 60_000 })
+  const timeoutMs = opts.timeoutMs ?? 60_000
+  try {
+    await client.connect()
+    await client.subscribeResource(uri)
+    return await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        client.onNotification = null
+        resolve({ ok: true, subscribed: true, uri, timeout: true, notifications: [] })
+      }, timeoutMs)
+      /** @type {object[]} */
+      const notes = []
+      client.onNotification = (msg) => {
+        if (msg.method === 'notifications/resources/updated') {
+          notes.push(msg.params || {})
+          clearTimeout(timer)
+          client.onNotification = null
+          resolve({ ok: true, subscribed: true, uri, notifications: notes })
+        }
+      }
+    })
+  } finally {
+    try {
+      await client.unsubscribeResource(uri)
+    } catch {
+      /* */
+    }
+    client.close()
+  }
 }
 
 /**
