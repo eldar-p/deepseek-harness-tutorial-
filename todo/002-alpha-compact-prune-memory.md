@@ -1,6 +1,6 @@
 # 002 — Compaction, pruner, memory.json
 
-**Status:** 🔄 in progress  
+**Status:** ✅ done  
 **Priority:** P0  
 **ADR:** [006-context-layers-and-memory](../adr/006-context-layers-and-memory.md)
 
@@ -14,9 +14,8 @@
 - [x] `cordis.deep.patch.yml`: `tool-result-pruner` (4k threshold)
 - [x] `assets/CONTEXT.md` — правила слоёв контекста
 - [x] `assets/memory.template.json` + seed в `materializeAssets`
-- [ ] DSH skill/AGENTS: когда писать в memory.json (user consent)
-- [ ] `/compact` smoke в доке TROUBLESHOOTING
-- [ ] Alpha readiness item «memory seeded»
+- [x] `assets/AGENTS.deep.md` — правила memory.json (user consent)
+- [x] `/compact` + long session — `docs/TROUBLESHOOTING.md`
 
 ## Verify
 

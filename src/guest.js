@@ -17,10 +17,35 @@ export function toContainerHostPath(hostPath) {
   return resolved.replace(/\\/g, '/')
 }
 
+export function resolveAllowlist(presetNet) {
+  const allow = loadManifest('allowlists.json')
+  if (presetNet === 'none' || presetNet === 'offline') return []
+  if (presetNet === 'open') return ['*']
+  if (presetNet === 'allowlist') return allow.balanced || allow.allowlist || []
+  if (presetNet === 'dev') return allow.dev || allow.balanced || []
+  return allow[presetNet] || allow.balanced || []
+}
+
 export function guestNetworkArgs(presetNet, allowlistDomains = []) {
-  // Pre-alpha: offline → --network none; others → bridge (allowlist enforcement later via proxy)
   if (presetNet === 'none' || presetNet === 'offline') return ['--network', 'none']
+  if (presetNet === 'open') return ['--network', 'bridge']
   return ['--network', 'bridge']
+}
+
+/** Env vars passed into guest for network policy (enforcement via sidecar deferred). */
+export function guestNetworkEnv(presetNet, allowlistDomains = []) {
+  const domains = allowlistDomains.length ? allowlistDomains : resolveAllowlist(presetNet)
+  return {
+    DEEP_NET_MODE: presetNet,
+    DEEP_NET_ALLOWLIST: domains.join(','),
+  }
+}
+
+export function formatAllowlistLog(presetNet, domains) {
+  if (presetNet === 'none' || presetNet === 'offline') return 'network=none (no egress)'
+  if (presetNet === 'open') return 'network=open (full egress — WARN)'
+  const n = domains.length
+  return `network=allowlist (${n} domain${n === 1 ? '' : 's'}; bridge + env policy)`
 }
 
 export async function ensureGuestImage() {
@@ -66,8 +91,10 @@ export async function startGuest({ stack, presetNet = 'allowlist' }) {
 
   spawnSync(engine.bin, ['rm', '-f', name], { encoding: 'utf8', windowsHide: true, env: engineEnv(engine.bin) })
 
-  const allow = loadManifest('allowlists.json')
-  const domains = allow[presetNet] || allow.balanced || []
+  const resolved = resolveAllowlist(presetNet)
+  const netEnv = guestNetworkEnv(presetNet, resolved)
+  console.log(`[INFO] Guest net: ${formatAllowlistLog(presetNet, resolved)}`)
+  const envArgs = Object.entries(netEnv).flatMap(([k, v]) => ['-e', `${k}=${v}`])
   const args = [
     'run',
     '-d',
@@ -75,7 +102,8 @@ export async function startGuest({ stack, presetNet = 'allowlist' }) {
     name,
     '--hostname',
     'sandbox',
-    ...guestNetworkArgs(presetNet, domains),
+    ...guestNetworkArgs(presetNet, resolved),
+    ...envArgs,
     '-v',
     mount,
     '-w',

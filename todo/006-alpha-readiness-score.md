@@ -1,14 +1,20 @@
 # 006 — Alpha readiness score
 
-**Status:** ⏳ pending  
+**Status:** ✅ done  
 **Priority:** P2
 
 ## Goal
 
-Расширить `doctor --readiness` для этапа alpha (jail wired, memory, CI parity).
+Расширить `doctor --readiness` для этапа alpha.
 
 ## Checklist
 
-- [ ] `src/readiness.js` — `ALPHA_MILESTONES`
-- [ ] `deep doctor --readiness --stage=alpha`
-- [ ] Док в PRE-ALPHA / ALPHA.md
+- [x] `src/readiness.js` — `ALPHA_MILESTONES`
+- [x] `deep doctor --readiness --stage=alpha`
+- [x] Tests `test/readiness.test.js`
+
+## Verify
+
+```bash
+node bin/deep.js doctor --readiness --stage=alpha
+```

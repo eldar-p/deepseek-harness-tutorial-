@@ -10,7 +10,14 @@
 - `assets/memory.template.json` seeded at bootstrap
 - `scripts/smoke-guest.mjs` + CI job `smoke-guest` (ubuntu)
 - Coverage gate raised to **30%** (src ~65%)
-- `npm run audit:alpha`, `npm run smoke:guest`
+### Added (continued)
+
+- `deep doctor --readiness --stage=alpha` — 10 alpha milestones
+- `deep stacks`, `deep status --all`, `registerStack()` in config
+- Guest network env: `DEEP_NET_MODE`, `DEEP_NET_ALLOWLIST`
+- GPU lock tracks stack name; blocks second GPU stack
+- ADR-0007 guest network env policy
+- AGENTS.deep.md memory/consent rules; TROUBLESHOOTING compact/multistack
 
 ## [0.1.0-prealpha] — 2026-08-24
 

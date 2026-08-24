@@ -22,6 +22,7 @@ const TESTS = [
   'test/readiness.test.js',
   'test/jail.test.js',
   'test/materialize.test.js',
+  'test/guest-net.test.js',
 ]
 
 const r = spawnSync(

@@ -34,3 +34,33 @@ export function listStacks() {
     .filter((d) => d.isDirectory() && !d.name.startsWith('.'))
     .map((d) => d.name)
 }
+
+export function stackIsActive(stack) {
+  const run = readRunState(stack)
+  if (!run) return false
+  return !!(run.pids?.llama || run.pids?.dsh || run.guestRunning)
+}
+
+/** @returns {{ name: string, active: boolean, llama: boolean, dsh: boolean, guest: boolean, urls: object|null }[]} */
+export function summarizeStacks() {
+  const names = new Set(listStacks())
+  try {
+    const cfg = JSON.parse(fs.readFileSync(paths().config, 'utf8'))
+    for (const n of Object.keys(cfg.stacks || {})) names.add(n)
+  } catch {
+    /* no config */
+  }
+  if (names.size === 0) names.add('default')
+
+  return [...names].sort().map((name) => {
+    const run = readRunState(name)
+    return {
+      name,
+      active: stackIsActive(name),
+      llama: !!(run?.pids?.llama),
+      dsh: !!(run?.pids?.dsh),
+      guest: run?.guestRunning === true,
+      urls: run?.urls || null,
+    }
+  })
+}

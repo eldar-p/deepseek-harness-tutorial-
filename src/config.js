@@ -78,4 +78,16 @@ export function applyPreset(cfg, presetName) {
   return writeConfig(cfg)
 }
 
+export function registerStack(cfg, name, meta = {}) {
+  if (!name) return cfg
+  cfg.stacks = cfg.stacks || {}
+  cfg.stacks[name] = {
+    ...(cfg.stacks[name] || {}),
+    ...meta,
+    updatedAt: new Date().toISOString(),
+  }
+  cfg.defaultStack = name
+  return writeConfig(cfg)
+}
+
 export { PRESET_NAMES }

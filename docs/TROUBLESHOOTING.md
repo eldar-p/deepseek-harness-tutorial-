@@ -69,6 +69,38 @@ Check `~/.deep/dsh-home/profiles/web/cordis.patch.yml` — duplicate ids break D
 
 Prefer **Q4_K_M** or higher for tool-heavy agents. See audit #26 / `deep start` yellow lines.
 
+## Long sessions / context full
+
+DSH auto-compacts at ~50% of the context window (see `cordis.deep.patch.yml`).
+
+- In DSH chat, run **`/compact`** to force a summary now
+- Large tool output is pruned at 4k chars — full logs belong in `workspace/logs/`
+- Durable facts (with user consent) → `.deep/memory.json` (see `AGENTS.md`)
+
+After compaction, re-read files instead of relying on old tool output in history.
+
+## Multi-stack
+
+```bash
+deep start --name dev
+deep status --name dev
+deep status --all
+deep stacks
+deep stop --name dev
+```
+
+Only one **GPU** stack at a time. If start fails with GPU lock, stop the other stack or use `--cpu`.
+
+## Guest network allowlist
+
+Preset `balanced` / `dev` pass `DEEP_NET_ALLOWLIST` into the guest container (domains from `manifests/allowlists.json`).
+
+- `offline` / `paranoia` → `--network none` (no egress)
+- `open` → full bridge egress (WARN)
+- Hard egress filter (proxy) — beta; env policy is alpha baseline
+
+Check at start: `[INFO] Guest net: network=allowlist (N domains...)`
+
 ## Port already in use
 
 `deep stop` then `deep start`. Stacks use random ports in 13000–14000 (DSH) and 18000–19000 (llama).

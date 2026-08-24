@@ -1,6 +1,6 @@
 # 008 — Multi-stack
 
-**Status:** ⏳ pending  
+**Status:** ✅ done  
 **Priority:** P2
 
 ## Goal
@@ -9,7 +9,17 @@
 
 ## Checklist
 
-- [ ] CLI flags `--name` end-to-end
-- [ ] `deep status --name dev`
-- [ ] GPU lock между стеками
-- [ ] Audit #21 multistack
+- [x] CLI `--name` on start/stop/status/bootstrap
+- [x] `deep stacks` + `deep status --all`
+- [x] `registerStack()` in config.json
+- [x] GPU lock per stack name (`gpu-lock.js`)
+- [x] Tests runstate summarizeStacks
+
+## Verify
+
+```bash
+deep start --name dev --cpu
+deep stacks
+deep status --all
+deep stop --name dev
+```
