@@ -19,11 +19,11 @@ test('pickCliArtifact beta has win32 url', () => {
   assert.match(a.sha256, /^[a-f0-9]{64}$/i)
 })
 
-test('pickCliArtifact stable empty without DEEP_CLI_ZIP', () => {
+test('pickCliArtifact edge empty without DEEP_CLI_ZIP', () => {
   const prev = process.env.DEEP_CLI_ZIP
   delete process.env.DEEP_CLI_ZIP
   try {
-    assert.equal(pickCliArtifact('stable', { platform: 'win32', arch: 'x64' }), null)
+    assert.equal(pickCliArtifact('edge', { platform: 'win32', arch: 'x64' }), null)
   } finally {
     if (prev !== undefined) process.env.DEEP_CLI_ZIP = prev
   }

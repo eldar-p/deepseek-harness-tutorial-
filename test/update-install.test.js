@@ -65,11 +65,11 @@ test('cmdUpdate installs from local DEEP_CLI_ZIP', async () => {
   }
 })
 
-test('cmdUpdate stable without artifact prints git hint', async () => {
+test('cmdUpdate stable dry-run with CDN pins', async () => {
   const prev = process.env.DEEP_CLI_ZIP
   delete process.env.DEEP_CLI_ZIP
   try {
-    await cmdUpdate({ channel: 'stable' })
+    await cmdUpdate({ channel: 'stable', 'dry-run': true })
   } finally {
     if (prev !== undefined) process.env.DEEP_CLI_ZIP = prev
   }
