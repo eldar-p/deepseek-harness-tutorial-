@@ -59,6 +59,12 @@ Started with stack (`code-index/server.js`), localhost only:
 - `POST /search` — `{ query, limit? }`
 - `POST /touch` — `{ path }` re-index one file
 
-## Future: Rust sidecar
+## Future: native sidecar
 
-When JSON + Worker is not enough (100k+ chunks), replace search/build hot path with native `gim-index` binary; keep same directory layout and HTTP contract.
+When JSON + Worker is not enough (100k+ chunks), optional **`gim-index`** binary replaces the hot path. Same HTTP contract and on-disk layout.
+
+```bash
+gim index sidecar    # js fallback vs native binary
+```
+
+See [sidecar/README.md](../sidecar/README.md) and `manifests/index-sidecar.json`.

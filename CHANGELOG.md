@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- **Index sidecar scaffold** — `manifests/index-sidecar.json`, `gim index sidecar`, JS sidecar script with native binary fallback path (`GIM_INDEX_SIDECAR`)
+
 ## [1.1.2] — 2026-08-24
 
 ### Added

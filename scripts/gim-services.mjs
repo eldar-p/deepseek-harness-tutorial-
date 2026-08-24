@@ -1,24 +1,13 @@
 #!/usr/bin/env node
 /** Detached stack services (code index HTTP, egress proxy). */
-import { startCodeIndexServer } from '../src/code-index/server.js'
 import { startEgressProxy } from '../src/egress-proxy.js'
 import { resolveAllowlist } from '../src/guest.js'
+import { startCodeIndexFromEnv } from '../src/index-sidecar.js'
 
 const svc = process.argv[2]
 
 if (svc === 'index') {
-  const port = Number(process.env.GIM_INDEX_PORT || 14150)
-  const workspaceRoot = process.env.GIM_WORKSPACE
-  if (!workspaceRoot) {
-    console.error('GIM_WORKSPACE required')
-    process.exit(2)
-  }
-  const r = await startCodeIndexServer({
-    port,
-    workspaceRoot,
-    llamaBase: process.env.GIM_LLAMA_URL,
-  })
-  console.log(`[code-index] listening ${r.url}`)
+  await startCodeIndexFromEnv()
 }
 
 if (svc === 'egress-proxy') {

@@ -23,8 +23,24 @@ Unchanged — read/write under `<workspace>/.gim/code-index/`:
 
 ## Rollout
 
-1. Ship sidecar as optional download (manifest pin + sha256).
-2. `gim start` probes binary; falls back to JS indexer if missing.
-3. No per-OS logic in harness — one sidecar binary per platform in manifest.
+1. Ship sidecar as optional download (`manifests/index-sidecar.json` pin + sha256).
+2. `gim start` / `spawnCodeIndexService` probes native binary; falls back to JS (`scripts/gim-index-sidecar.mjs`).
+3. No per-OS logic in harness — manifest row per platform.
 
-Until then: JS incremental index + Worker cosine (`docs/CODE-INDEX.md`).
+### Native CLI (when binary ships)
+
+```bash
+gim-index --port 14150 --workspace /path/to/workspace [--llama-url http://127.0.0.1:18000/v1]
+```
+
+Env equivalent: `GIM_INDEX_PORT`, `GIM_WORKSPACE`, `GIM_LLAMA_URL`.
+
+### GIM commands
+
+```bash
+gim index sidecar          # backend js|native, manifest pin status
+GIM_INDEX_SIDECAR=js       # force JS
+GIM_INDEX_SIDECAR=/path/to/gim-index   # explicit native binary
+```
+
+Until native ships: JS incremental index + Worker cosine (`docs/CODE-INDEX.md`).

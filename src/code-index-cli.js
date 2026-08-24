@@ -70,3 +70,9 @@ export async function cmdIndexStatus(flags) {
   }
   console.log(`Built: ${s.builtAt || 'never'}`)
 }
+
+export async function cmdIndexSidecar() {
+  const { assessIndexSidecar, formatIndexSidecarReport } = await import('./index-sidecar.js')
+  const report = await assessIndexSidecar()
+  console.log(formatIndexSidecarReport(report))
+}

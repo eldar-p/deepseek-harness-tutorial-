@@ -48,7 +48,8 @@ import {
   llmContainerName,
 } from './llm-docker.js'
 import { formatSpeedReport, assessSpeedHints } from './colibri-speed.js'
-import { cmdIndexBuild, cmdIndexSearch, cmdIndexStatus } from './code-index-cli.js'
+import { cmdIndexBuild, cmdIndexSearch, cmdIndexStatus, cmdIndexSidecar } from './code-index-cli.js'
+import { spawnCodeIndexService } from './index-sidecar.js'
 import { ensureSecretsTemplate } from './secrets.js'
 import {
   isApiMode,
@@ -523,13 +524,12 @@ async function startStackApi({ stack, cfg, flags, engine }) {
     console.log(`[GREEN] Egress proxy :${proxyPort} (${allow.length} hosts)`)
   }
 
-  state.pids.index = spawnDetached(process.execPath, [path.join(PKG_ROOT, 'scripts', 'gim-services.mjs'), 'index'], {
-    env: {
-      GIM_INDEX_PORT: String(indexPort),
-      GIM_WORKSPACE: paths(stack).workspace,
-    },
+  state.pids.index = spawnCodeIndexService({
+    stack,
+    indexPort,
+    llamaUrl: urls.llama,
     logFile: runLogPath(stack, 'code-index'),
-  })
+  }).pid
   console.log(`[GREEN] Code index ${urls.index}`)
 
   if (engine.ok) {
@@ -709,10 +709,12 @@ async function startStackLlmDocker({ stack, cfg, flags, engine, backend }) {
     console.log(`[GREEN] Egress proxy :${proxyPort} (${allow.length} hosts)`)
   }
 
-  state.pids.index = spawnDetached(process.execPath, [path.join(PKG_ROOT, 'scripts', 'gim-services.mjs'), 'index'], {
-    env: { GIM_INDEX_PORT: String(indexPort), GIM_WORKSPACE: paths(stack).workspace },
+  state.pids.index = spawnCodeIndexService({
+    stack,
+    indexPort,
+    llamaUrl: state.urls?.llama || urls.llama,
     logFile: runLogPath(stack, 'code-index'),
-  })
+  }).pid
   console.log(`[GREEN] Code index ${urls.index}`)
 
   if (engine.ok) {
@@ -933,15 +935,12 @@ export async function cmdStart(flags) {
     }
 
     // Code index HTTP service
-    const indexPid = spawnDetached(process.execPath, [path.join(PKG_ROOT, 'scripts', 'gim-services.mjs'), 'index'], {
-      env: {
-        GIM_INDEX_PORT: String(indexPort),
-        GIM_WORKSPACE: paths(stack).workspace,
-        GIM_LLAMA_URL: urls.llama,
-      },
+    state.pids.index = spawnCodeIndexService({
+      stack,
+      indexPort,
+      llamaUrl: urls.llama,
       logFile: runLogPath(stack, 'code-index'),
-    })
-    state.pids.index = indexPid
+    }).pid
     console.log(`[GREEN] Code index ${urls.index}`)
 
     // Guest (optional if no engine)
@@ -1140,7 +1139,7 @@ export function cmdHelp(topic) {
   List built-in presets.`,
     api: `gim api
   List cloud API providers for --api.`,
-    index: `gim index build|search|status [--name STACK]
+    index: `gim index build|search|status|sidecar [--name STACK]
   Semantic code index over the stack workspace.`,
     lsp: `gim lsp servers|query|hover|definition|references|symbols
   Host language-server helpers (typescript-language-server / pyright / …).`,
@@ -1186,7 +1185,7 @@ export function cmdHelp(topic) {
   gim stacks
   gim update [--channel stable|beta|edge] [--dry-run]
   gim presets
-  gim index build|search|status [--name STACK]
+  gim index build|search|status|sidecar [--name STACK]
   gim lsp servers|query …
   gim daemon start|stop|status|tick [--name STACK] [--proactive]
   gim mcp | gim mcp client list
@@ -1325,7 +1324,8 @@ export async function main(argv) {
         if (sub === 'build') return await cmdIndexBuild(flags)
         if (sub === 'search') return await cmdIndexSearch(flags, rest)
         if (sub === 'status') return await cmdIndexStatus(flags)
-        console.error('Usage: gim index build|search|status')
+        if (sub === 'sidecar') return await cmdIndexSidecar()
+        console.error('Usage: gim index build|search|status|sidecar')
         process.exitCode = 2
         return
       }

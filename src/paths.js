@@ -38,6 +38,7 @@ export function ensureDirs(stack = 'default') {
     p.home,
     p.models,
     p.runtimeLlama,
+    path.join(p.home, 'runtime', 'gim-index'),
     p.dshHome,
     p.workspace,
     path.dirname(p.memory),

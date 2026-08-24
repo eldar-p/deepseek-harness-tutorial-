@@ -1,0 +1,42 @@
+{
+  "version": "0.1.0",
+  "note": "Optional native gim-index sidecar. url=null → JS fallback (scripts/gim-index-sidecar.mjs). Pin URL+sha256 when binaries ship.",
+  "binaries": [
+    {
+      "os": "win32",
+      "arch": "x64",
+      "url": null,
+      "sha256": null,
+      "cacheName": "gim-index-win-x64.exe",
+      "binaryName": "gim-index.exe"
+    },
+    {
+      "os": "linux",
+      "arch": "x64",
+      "url": null,
+      "sha256": null,
+      "cacheName": "gim-index-linux-x64",
+      "binaryName": "gim-index"
+    },
+    {
+      "os": "darwin",
+      "arch": "arm64",
+      "url": null,
+      "sha256": null,
+      "cacheName": "gim-index-darwin-arm64",
+      "binaryName": "gim-index"
+    },
+    {
+      "os": "darwin",
+      "arch": "x64",
+      "url": null,
+      "sha256": null,
+      "cacheName": "gim-index-darwin-x64",
+      "binaryName": "gim-index"
+    }
+  ],
+  "jsFallback": {
+    "script": "scripts/gim-index-sidecar.mjs",
+    "backend": "js"
+  }
+}
