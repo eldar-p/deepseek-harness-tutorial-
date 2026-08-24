@@ -35,7 +35,8 @@
 - [x] `doctor --readiness --stage=alpha`
 - [x] Multi-stack (`deep stacks`, GPU lock)
 - [x] Network allowlist env (hard proxy → beta)
-- [ ] E2E DSH chat sign-off
+- [x] `npm run smoke:e2e` PASS (jail + HTTP + guest)
+- [ ] Ручной DSH chat sign-off
 - [ ] Alpha tag release
 
 ## Команды

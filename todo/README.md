@@ -11,8 +11,9 @@
 | [004](./004-alpha-ci-docker-smoke.md) | CI smoke guest на ubuntu | ✅ done | P0 |
 | [005](./005-alpha-audit-gate.md) | Audit gate alpha (21 check) | ✅ done | P1 |
 | [006](./006-alpha-readiness-score.md) | `doctor --readiness` для alpha | ✅ done | P2 |
-| [007](./007-alpha-network-allowlist.md) | Guest egress env policy | 🔄 in progress | P2 |
+| [007](./007-alpha-network-allowlist.md) | Guest egress env policy | ✅ done | P2 |
 | [008](./008-alpha-multistack.md) | `--name` stacks + status | ✅ done | P2 |
+| [009](./009-alpha-e2e-signoff.md) | E2E smoke + chat sign-off | 🔄 in progress | P0 |
 
 **Легенда:** ✅ done · 🔄 in progress · ⏳ pending · ❌ blocked
 
@@ -22,7 +23,7 @@
 2. `npm run test:coverage` ≥30%  
 3. `npm run audit:alpha` — без FAIL  
 4. CI: ubuntu job `smoke-guest` green  
-5. Один полный цикл `start → DSH chat → stop` с jail (ручной sign-off)
+5. `npm run smoke:e2e` на живом стеке + ручной DSH chat (см. [009](./009-alpha-e2e-signoff.md))
 
 ## Команды
 
@@ -30,6 +31,7 @@
 npm test
 npm run test:coverage      # min 30%
 npm run smoke:guest        # локально, нужен Docker
+npm run smoke:e2e          # живой стек (deep start)
 npm run audit:alpha
-node bin/deep.js doctor --readiness
+node bin/deep.js doctor --readiness --stage=alpha
 ```

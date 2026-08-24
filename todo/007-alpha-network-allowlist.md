@@ -1,6 +1,6 @@
 # 007 — Network allowlist
 
-**Status:** 🔄 in progress  
+**Status:** ✅ done (alpha scope)  
 **Priority:** P2  
 **ADR:** [0007-guest-network-env-policy](../adr/0007-guest-network-env-policy.md)
 
@@ -14,12 +14,13 @@ Preset `balanced`: guest egress policy documented + env at start.
 - [x] `DEEP_NET_MODE` / `DEEP_NET_ALLOWLIST` in guest container
 - [x] Log line at `deep start`
 - [x] Tests `test/guest-net.test.js`
-- [ ] Hard enforcement (proxy sidecar) — beta
+- [x] Verified via `smoke:e2e` (`DEEP_NET_MODE=allowlist`)
+- [ ] Hard enforcement (proxy sidecar) — **beta**
 
 ## Verify
 
 ```bash
 npm test -- test/guest-net.test.js
-deep start --cpu   # see [INFO] Guest net: ...
+npm run smoke:e2e
 docker exec deep-guest-default printenv DEEP_NET_ALLOWLIST
 ```
