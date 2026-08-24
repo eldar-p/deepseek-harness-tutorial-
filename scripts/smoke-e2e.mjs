@@ -48,8 +48,9 @@ async function main() {
   console.log(`[e2e] stack=${stack}`)
   const run = readRunState(stack)
   if (!run?.urls?.llama || !run?.pids?.llama) {
-    fail('no running stack — deep start first')
-    process.exit(process.env.CI ? 1 : 2)
+    // Local: skip cleanly (not a product failure). CI: fail — e2e needs a live stack job.
+    console.log('[SKIP] no running stack — run `deep start` then smoke:e2e')
+    process.exit(process.env.CI ? 1 : 0)
   }
 
   if (!isPidAlive(run.pids.llama)) fail(`llama pid ${run.pids.llama} dead`)
