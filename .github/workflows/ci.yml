@@ -26,7 +26,7 @@ jobs:
       - name: Unit tests
         run: npm test
 
-      - name: Coverage gate (alpha 30%)
+      - name: Coverage gate (beta 50%)
         run: npm run test:coverage
         shell: bash
 

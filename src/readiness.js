@@ -87,7 +87,7 @@ export const ALPHA_MILESTONES = [
     weight: 10,
     check: () => {
       const gate = fs.readFileSync(path.join(PKG_ROOT, 'scripts/coverage-gate.mjs'), 'utf8')
-      return /DEEP_COVERAGE_MIN\s*\|\|\s*['"]30['"]/.test(gate)
+      return /DEEP_COVERAGE_MIN\s*\|\|\s*['"](?:30|50)['"]/.test(gate)
     },
   },
   {
