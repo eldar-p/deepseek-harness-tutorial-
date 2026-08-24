@@ -22,7 +22,7 @@ npm run audit:prebeta
 
 ## Field matrix (manual)
 
-- [ ] Windows + Docker Desktop + NVIDIA start/stop
+- [x] Windows + Docker Desktop + NVIDIA start/stop (2026-08-24: all GREEN on this host)
 - [ ] macOS Docker/Colima smoke (CPU)
 - [ ] Linux Docker + CPU llama
 - [ ] `deep update --channel beta` from Release asset

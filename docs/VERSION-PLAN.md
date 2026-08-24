@@ -53,12 +53,13 @@
 - [x] Field beta: gpu-lock/dsh tests (019), coverage gate 60% (020)
 - [x] Version bump `0.4.0-beta`
 - [x] RC readiness `0.9.0-rc.0` (021), coverage gate 70%
+- [x] Core freeze `0.5.0` (022), Windows field GREEN, coverage gate 75%
 
-**Текущий этап:** RC (`0.9.0-rc.0`) — readiness **100/100**. Next: CDN Release upload, field matrix sign-off → `0.5` / `1.0`.
+**Текущий этап:** `0.5.0` — readiness **100/100**. Next: CDN Release + multi-OS field → `1.0.0`.
 
 ```bash
 npm test
-npm run test:coverage    # ≥70%
+npm run test:coverage    # ≥75%
 npm run audit:prebeta
-node bin/deep.js doctor --readiness --stage=rc
+node bin/deep.js doctor --readiness --stage=0.5
 ```

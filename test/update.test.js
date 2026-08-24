@@ -4,7 +4,7 @@ import { readLocalVersion, getChannelRevision, pickCliArtifact, cmdUpdate } from
 
 test('readLocalVersion matches package', () => {
   const v = readLocalVersion()
-  assert.match(v, /prealpha|alpha|beta|prebeta|rc/)
+  assert.match(v, /prealpha|alpha|beta|prebeta|rc|^0\.\d/)
 })
 
 test('getChannelRevision stable', () => {

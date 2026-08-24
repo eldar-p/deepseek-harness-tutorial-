@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.5.0] — 2026-08-24
+
+### Added
+
+- Windows field sign-off (Engine/Guest/Llama/DSH GREEN)
+- `doctor --stage=0.5` / CORE_MILESTONES (100/100)
+- `CORE.md`; tests for waitHttpOk, extractArchive, spawnDetached, ensureGuestImage, GGUF cache
+
+### Changed
+
+- Coverage gate **75%** (src ~79%)
+- Version **0.5.0** (core freeze)
+
 ## [0.9.0-rc.0] — 2026-08-24
 
 ### Added

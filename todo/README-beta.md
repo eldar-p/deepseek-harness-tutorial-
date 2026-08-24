@@ -16,9 +16,10 @@
 | [019](./019-field-gpu-dsh-tests.md) | gpu-lock + dsh + status-ui tests | ✅ done | field beta |
 | [020](./020-field-coverage-60.md) | Coverage gate ≥60% | ✅ done | field beta |
 | [021](./021-rc-readiness.md) | RC readiness + more CLI tests | ✅ done | RC |
+| [022](./022-core-05.md) | 0.5 core + Windows field | ✅ done | 0.5 |
 
-**RC** (`0.9.0-rc.0`) — readiness 100/100 · coverage gate 70% (~76%)  
-**CDN:** upload Release after `gh auth login`  
-Readiness: `deep doctor --readiness --stage=rc` · [RC.md](../RC.md)
+**0.5** (`0.5.0`) — readiness 100/100 · coverage ~79% (gate 75%) · Windows field GREEN  
+**Next:** macOS/Linux matrix, CDN upload, then `1.0.0`  
+Readiness: `deep doctor --readiness --stage=0.5` · [CORE.md](../CORE.md)
 
 Alpha archive: [README.md](./README.md)
