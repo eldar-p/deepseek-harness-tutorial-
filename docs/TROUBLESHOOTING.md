@@ -1,0 +1,82 @@
+# Troubleshooting
+
+## Engine RED — docker/podman not found
+
+1. **Run the Docker Desktop installer** (not just download — finish setup).
+2. Reboot if the installer asks.
+3. Start **Docker Desktop** from Start menu; wait until the whale icon is steady/green.
+4. Verify:
+
+```powershell
+powershell -File .\scripts\wait-docker.ps1
+docker version
+deep doctor
+```
+
+If `docker` works in a **new** terminal but `deep doctor` still fails, set:
+
+```powershell
+$env:DEEP_DOCKER_BIN = "C:\Users\<you>\AppData\Local\Programs\DockerDesktop\resources\bin\docker.exe"
+# or legacy install:
+# $env:DEEP_DOCKER_BIN = "C:\Program Files\Docker\Docker\resources\bin\docker.exe"
+```
+
+Then `deep start` again — guest should build `deep-guest:prealpha` on first run (~1 min).
+
+## Guest build fails — docker-credential-desktop not found
+
+Symptom during `deep start`:
+
+```text
+error getting credentials - err: exec: "docker-credential-desktop": executable file not found in %PATH%
+```
+
+**Cause:** Node spawns `docker` without Docker Desktop's `resources\bin` on PATH (credential helper lives there).
+
+**Fix (built-in):** Deep CLI prepends the docker bin directory to PATH for all container commands (`engineEnv` in `src/detect.js`). Update to latest `main` and retry.
+
+**Manual workaround:**
+
+```powershell
+$env:PATH = "$env:LOCALAPPDATA\Programs\DockerDesktop\resources\bin;$env:PATH"
+deep start --cpu
+```
+
+## Llama RED / health timeout
+
+```bash
+# Logs
+type %USERPROFILE%\.deep\run\default\llama.log   # Windows
+cat ~/.deep/run/default/llama.log               # Unix
+
+# CPU fallback
+deep start --cpu --gguf PATH
+```
+
+CUDA build needs pinned zip or `DEEP_LLAMA_BIN`.
+
+## DSH RED / plugin tree failed
+
+Re-materialize:
+
+```bash
+deep bootstrap
+```
+
+Check `~/.deep/dsh-home/profiles/web/cordis.patch.yml` — duplicate ids break DSH 0.1.1-rc.2.
+
+## Q3 quant warnings
+
+Prefer **Q4_K_M** or higher for tool-heavy agents. See audit #26 / `deep start` yellow lines.
+
+## Port already in use
+
+`deep stop` then `deep start`. Stacks use random ports in 13000–14000 (DSH) and 18000–19000 (llama).
+
+## Ctrl+C left processes
+
+Pre-alpha: signal handler runs `deep stop`. If hung: `deep stop --emergency`.
+
+## GitHub / push
+
+Auth is user-side; local work does not require push for pre-alpha.

@@ -1,0 +1,7 @@
+{
+  "name": "balanced",
+  "guestNetwork": "allowlist",
+  "zeroTraces": "soft",
+  "telemetry": false,
+  "description": "Default: allowlisted egress, soft wipe on stop"
+}

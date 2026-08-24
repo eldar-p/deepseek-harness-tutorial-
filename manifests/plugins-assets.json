@@ -1,0 +1,6 @@
+{
+  "bundle": "dsh-plugins+skills+assets",
+  "note": "Pre-alpha: local copy from repo at materialize; CDN hash at beta",
+  "sha256": null,
+  "paths": ["dsh-plugins/", "skills/", "assets/"]
+}

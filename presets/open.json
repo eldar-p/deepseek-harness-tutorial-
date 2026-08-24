@@ -1,0 +1,7 @@
+{
+  "name": "open",
+  "guestNetwork": "open",
+  "zeroTraces": "off",
+  "telemetry": false,
+  "description": "Full guest NAT — WARN footprint"
+}

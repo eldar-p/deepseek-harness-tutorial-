@@ -1,0 +1,7 @@
+{
+  "name": "dev",
+  "guestNetwork": "allowlist",
+  "zeroTraces": "off",
+  "telemetry": false,
+  "description": "Dev-friendly; keep logs"
+}

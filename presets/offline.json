@@ -1,0 +1,7 @@
+{
+  "name": "offline",
+  "guestNetwork": "none",
+  "zeroTraces": "soft",
+  "telemetry": false,
+  "description": "No guest egress"
+}

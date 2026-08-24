@@ -1,0 +1,5 @@
+{
+  "package": "@deepseek-ai/dsh",
+  "version": "0.1.1-rc.2",
+  "note": "Pin verified at materialize time in later alpha"
+}

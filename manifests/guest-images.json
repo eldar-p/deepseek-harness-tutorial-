@@ -1,0 +1,6 @@
+{
+  "image": "deep-guest:prealpha",
+  "digest": null,
+  "build": "Dockerfile.guest",
+  "note": "Local build via deep start when engine available; CDN digest later"
+}

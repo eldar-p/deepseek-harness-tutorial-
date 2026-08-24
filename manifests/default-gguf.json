@@ -1,0 +1,16 @@
+{
+  "name": "Llama-3-8B-Instruct-Q4_K_M",
+  "note": "Canonical default — Q4_K_M minimum for agent/tool reliability",
+  "url": null,
+  "sha256": null,
+  "params": "8B",
+  "quant": "Q4_K_M",
+  "recommendedMinQuant": "Q4_K_M",
+  "degradationNotes": {
+    "Q4_K_M": "recommended default for coding agents",
+    "Q3_K_M": "degraded tool use; shorter context tolerance",
+    "Q2_K": "severe degradation — chat only, not for Deep agent stack",
+    "below_Q4": "doctor/start will WARN; prefer Q4_K_M or Q5+ for multi-step tools"
+  },
+  "licenseNote": "Pin official/trusted mirror URL+sha before public CDN release"
+}

@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: ['22']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Coverage gate (pre-alpha 10%)
+        run: npm run test:coverage
+        shell: bash
+
+      - name: Audit gate (pre-alpha)
+        run: node scripts/audit-run.mjs --gate=pre-alpha
+
+      - name: Infrastructure check
+        run: npm run infra:check
+
+      - name: deep doctor
+        run: node bin/deep.js doctor
+
+      - name: deep help
+        run: node bin/deep.js help
