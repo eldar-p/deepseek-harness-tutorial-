@@ -13,17 +13,19 @@
 | [006](./006-alpha-readiness-score.md) | `doctor --readiness` для alpha | ✅ done | P2 |
 | [007](./007-alpha-network-allowlist.md) | Guest egress env policy | ✅ done | P2 |
 | [008](./008-alpha-multistack.md) | `--name` stacks + status | ✅ done | P2 |
-| [009](./009-alpha-e2e-signoff.md) | E2E smoke + chat sign-off | 🔄 in progress | P0 |
+| [009](./009-alpha-e2e-signoff.md) | E2E smoke + chat sign-off | ✅ done | P0 |
 
 **Легенда:** ✅ done · 🔄 in progress · ⏳ pending · ❌ blocked
+
+**Alpha complete:** `v0.2.0-alpha` (2026-08-24). Дальше → [README-beta.md](./README-beta.md)
 
 ## Критерий alpha complete
 
 1. Все P0 — ✅  
-2. `npm run test:coverage` ≥30%  
-3. `npm run audit:alpha` — без FAIL  
-4. CI: ubuntu job `smoke-guest` green  
-5. `npm run smoke:e2e` на живом стеке + ручной DSH chat (см. [009](./009-alpha-e2e-signoff.md))
+2. `npm run test:coverage` ≥30% — ✅  
+3. `npm run audit:alpha` — без FAIL — ✅  
+4. CI: ubuntu job `smoke-guest` — ✅  
+5. `npm run smoke:e2e` — ✅ (llama chat path)
 
 ## Команды
 

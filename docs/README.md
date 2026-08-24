@@ -3,8 +3,9 @@
 | Документ | Для кого |
 |----------|----------|
 | [../PRE-ALPHA.md](../PRE-ALPHA.md) | Pre-alpha статус |
-| [../ALPHA.md](../ALPHA.md) | Alpha 0.2 статус + sign-off |
-| [../todo/README.md](../todo/README.md) | Alpha backlog (P0–P2) |
+| [../ALPHA.md](../ALPHA.md) | Alpha 0.2 **complete** |
+| [../todo/README.md](../todo/README.md) | Alpha backlog (archive) |
+| [../todo/README-beta.md](../todo/README-beta.md) | Beta backlog |
 | [../adr/README.md](../adr/README.md) | Architecture Decision Records |
 | [INSTALL.md](./INSTALL.md) | Установка всех ОС |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | llama + guest + DSH |

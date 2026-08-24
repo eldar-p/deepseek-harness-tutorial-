@@ -1,6 +1,6 @@
 ﻿# DeepSeek Harness — туториал + Deep CLI
 
-**Продукт:** [Deep CLI](./PRE-ALPHA.md) · [Alpha](./ALPHA.md) — [документация](./docs/README.md) · [todo](./todo/README.md) · [ADR](./adr/README.md) · [инфраструктура](./docs/INFRASTRUCTURE.md)
+**Продукт:** [Deep CLI Alpha](./ALPHA.md) · [Pre-alpha](./PRE-ALPHA.md) — [документация](./docs/README.md) · [todo](./todo/README.md) · [beta](./todo/README-beta.md) · [ADR](./adr/README.md)
 
 | ОС | Deep CLI | Legacy |
 |----|----------|--------|
