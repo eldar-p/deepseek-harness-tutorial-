@@ -44,3 +44,7 @@ Use GitHub issue templates: bug / feature. Include OS, Node version, `deep docto
 ## Conduct
 
 See [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
+
+## License
+
+Contributions are accepted under [CC BY-NC-SA 4.0](./LICENSE) (same as the project). By opening a PR you agree your contribution is licensed under those terms.

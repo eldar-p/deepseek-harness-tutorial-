@@ -11,6 +11,7 @@
 | [0005](./0005-workspace-jail-for-fs-tools.md) | Workspace jail для FS tools | Accepted |
 | [0006](./0006-context-layers-and-memory.md) | Слои контекста и memory.json | Accepted |
 | [0007](./0007-guest-network-env-policy.md) | Guest network policy via env | Accepted |
+| [0008](./0008-license-cc-by-nc-sa-4.0.md) | License CC BY-NC-SA 4.0 | Accepted |
 
 ## Шаблон нового ADR
 

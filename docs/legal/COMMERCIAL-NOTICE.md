@@ -1,16 +1,28 @@
 # Commercial notice
 
-**Deep CLI** (pre-alpha) is open source under [MIT](../../LICENSE).
+**Deep CLI** is licensed under [CC BY-NC-SA 4.0](../../LICENSE)  
+(Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International /  
+«С указанием авторства — Некоммерческая — С сохранением условий»).
 
-## What you may do
+SPDX: `CC-BY-NC-SA-4.0` · Summary: https://creativecommons.org/licenses/by-nc-sa/4.0/ · [deed.ru](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.ru)
 
-- Use, modify, and distribute per MIT terms
-- Run locally for personal or commercial workflows
-- Ship internal forks with copyright notice preserved
+## What you may do (NonCommercial)
 
-## What we do not provide (pre-alpha)
+- Use, study, and modify for **non-commercial** purposes
+- Share copies with attribution
+- Share adapted works under the **same** license (ShareAlike)
 
-- SLA, paid support, or hosted inference
+## What you may not do under this license
+
+- Use primarily for commercial advantage or monetary compensation (see CC definition of NonCommercial)
+- Remove attribution or license notices
+- Re-license adaptations under incompatible terms
+
+Commercial use requires a **separate written agreement** with the copyright holders.
+
+## What we do not provide
+
+- SLA, paid support, or hosted inference (unless separately contracted)
 - Warranty or indemnification
 - Legal review of your GGUF model licenses
 
@@ -26,6 +38,6 @@ You are responsible for:
 
 "DeepSeek", "DSH", "llama.cpp" are third-party names; this project is not officially affiliated unless stated.
 
-## Future commercial offerings
+## Third-party code
 
-If a paid channel or support tier is added, it will be documented separately without removing MIT for the OSS core.
+Upstream components (llama.cpp, DSH, Debian base, etc.) keep **their own** licenses — see [THIRD-PARTY.md](./THIRD-PARTY.md). This notice covers Deep CLI project sources in this repository.
