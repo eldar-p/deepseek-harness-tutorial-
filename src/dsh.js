@@ -114,6 +114,7 @@ export async function startDsh({ stack, port, llamaPort, guestName = null, engin
     DSH_HOME: dshHome,
     DEEP_LLAMA_API_KEY: process.env.DEEP_LLAMA_API_KEY || 'sk-deep-local',
     DEEP_WORKSPACE: workspace,
+    DEEP_PKG_ROOT: PKG_ROOT,
     HOST_SHARE: workspace,
     DEEP_GUEST_NAME: guestName || `deep-guest-${stack}`,
     DEEP_ENGINE: engineBin || process.env.DEEP_ENGINE || 'docker',

@@ -4,11 +4,25 @@
 
 ### Added
 
+- Hybrid cloud mode: `deep bootstrap|start --api PROVIDER` (openai/deepseek/openrouter/groq/together/custom)
+- Semantic code index: `deep index build|search|status` + optional LanceDB
+- Host egress proxy + `secrets.json` (never mounted into guest)
+- MCP stdio server: `scripts/deep-mcp.mjs`
+- LSP bridge: `deep lsp` + `dsh-plugins/lsp-bridge` + skill
+- Coordinator: `scripts/coordinator.mjs` (parallel index workers)
+- Memory/CONTEXT budget checks in `bootstrap` / `doctor`
+- Beginner guide `README_BEGINNER.md`, `docs/OS-COMPAT.md`
 - ASCII banner (`assets/banner.txt`) on `help` / `start` / first run
 - `deep version` — local vs CDN freshness
 - `deep deps` / `deep check` — dependency + version probe
 - `deep help [command]` topic help
 - `DEEP_NO_BANNER=1` to silence art
+- Pinned llama.cpp sha256 for win32 / linux / darwin (b9771)
+
+### Changed
+
+- Coverage gate **80%** (CI floor 79% for OS branch skew)
+- Product positioning: hybrid local GGUF **or** cloud API (not local-only)
 
 ## [1.0.0] — 2026-08-24
 
