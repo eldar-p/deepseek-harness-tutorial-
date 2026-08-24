@@ -188,8 +188,17 @@ function runAudits() {
   // 14 CDN
   {
     const man = JSON.parse(read('manifests/llama-binaries.json') || '{}')
-    const cpu = (man.binaries || []).find((b) => b.variant === 'cpu' && b.os === 'win32')
-    results.push(cpu?.sha256 ? pass(14, 'CDN / manifests', 'CPU win sha256 pinned') : warn(14, 'CDN', 'Some manifests lack sha256'))
+    const bins = man.binaries || []
+    const cpu = bins.find((b) => b.variant === 'cpu' && b.os === 'win32')
+    const linux = bins.find((b) => b.os === 'linux' && b.sha256)
+    const darwin = bins.find((b) => b.os === 'darwin' && b.sha256)
+    results.push(
+      cpu?.sha256 && linux && darwin
+        ? pass(14, 'CDN / manifests', 'win/linux/darwin sha256 pinned')
+        : cpu?.sha256
+          ? warn(14, 'CDN', `win ok; linux=${!!linux} darwin=${!!darwin}`)
+          : warn(14, 'CDN', 'Some manifests lack sha256'),
+    )
   }
 
   // 15 Paths

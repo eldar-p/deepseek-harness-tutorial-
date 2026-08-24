@@ -99,14 +99,37 @@ export async function ensureGuestImage() {
     return { ok: false, reason: `image ${image} missing and no Dockerfile.guest` }
   }
   console.log(`[INFO] Building guest image ${image}…`)
-  const build = spawnSync(engine.bin, ['build', '-t', image, '-f', dockerfile, PKG_ROOT], {
-    encoding: 'utf8',
-    windowsHide: true,
-    maxBuffer: 10 * 1024 * 1024,
-    env: engineEnv(engine.bin),
-  })
+  const baseEnv = engineEnv(engine.bin)
+  const attempts = [
+    {
+      args: ['build', '-t', image, '-f', dockerfile, PKG_ROOT],
+      env: { ...baseEnv, DOCKER_BUILDKIT: process.env.DOCKER_BUILDKIT || '1' },
+    },
+    {
+      args: ['buildx', 'build', '--load', '-t', image, '-f', dockerfile, PKG_ROOT],
+      env: { ...baseEnv, DOCKER_BUILDKIT: '1' },
+    },
+    {
+      args: ['build', '-t', image, '-f', dockerfile, PKG_ROOT],
+      env: { ...baseEnv, DOCKER_BUILDKIT: '0' },
+    },
+  ]
+  let build = null
+  for (const attempt of attempts) {
+    build = spawnSync(engine.bin, attempt.args, {
+      encoding: 'utf8',
+      windowsHide: true,
+      maxBuffer: 10 * 1024 * 1024,
+      env: attempt.env,
+    })
+    if (build.status === 0) break
+  }
   if (build.status !== 0) {
-    return { ok: false, reason: (build.stderr || build.stdout || 'build failed').slice(0, 200) }
+    const detail = (build.stderr || build.stdout || 'build failed').slice(0, 240)
+    return {
+      ok: false,
+      reason: `${detail} (hint: install docker-buildx-plugin, or build image on a host with BuildKit then reuse the same Docker engine)`,
+    }
   }
   appendLog(`event=guest_image_built image=${image}`)
   return { ok: true, image, engine }

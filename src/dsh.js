@@ -15,6 +15,12 @@ export function resolveDshBin() {
     if (fs.existsSync(cmd)) return cmd
     // npm shim without extension — prefer adjacent .cmd
     if (fs.existsSync(`${found}.cmd`)) return `${found}.cmd`
+  } else {
+    // WSL often sees the Windows npm shim on PATH via /mnt/c — reject it.
+    const norm = found.replace(/\\/g, '/')
+    if (/^\/mnt\/[a-z]\//i.test(norm) || /AppData\/Roaming\/npm/i.test(norm)) {
+      return null
+    }
   }
   return found
 }
