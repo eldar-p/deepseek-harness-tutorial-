@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.1] — 2026-08-24
+
+### Fixed
+
+- `lsp-bridge` DSH plugin: use `defineTool` + `ctx.tools.register` (was crashing boot with `ctx.tool` / missing `output.render`)
+- Channel revisions in `manifests/channels.json` aligned to **1.1**
+
+### Added
+
+- WSL field-lite runner `scripts/run-wsl-field-lite.sh` (LF); Linux WSL field-lite **10/10 PASS**
+- Windows full-stack re-verified: Engine/Guest/Llama/DSH **GREEN**, `smoke:e2e` PASS
+
 ## [1.1.0] — 2026-08-24
 
 ### Added

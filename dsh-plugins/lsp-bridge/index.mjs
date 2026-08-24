@@ -8,6 +8,7 @@ export const inject = ['tools']
 import fs from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { defineTool } from '@deepseek-ai/dsh-tools'
 
 function hostRoot() {
   return process.env.DEEP_WORKSPACE || process.cwd()
@@ -37,54 +38,75 @@ async function loadLsp() {
   }
 }
 
+const textOut = {
+  schema: {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      text: { type: 'string', required: true },
+      isError: { type: 'boolean' },
+    },
+  },
+  render: (_args, value) => [{ type: 'text', text: String(value?.text ?? '') }],
+}
+
 /**
  * @param {import('@deepseek-ai/cordis').Context} ctx
  */
 export function apply(ctx) {
-  ctx.tool('lsp_query', {
-    description:
-      'Language intelligence: hover, definition, references, or document symbols via host LSP. Paths relative to /workspace.',
-    parameters: {
-      type: 'object',
-      properties: {
-        op: { type: 'string', enum: ['hover', 'definition', 'references', 'symbols'] },
-        path: { type: 'string', description: 'File path relative to workspace' },
+  ctx.tools.register(
+    defineTool({
+      name: 'lsp_query',
+      description:
+        'Language intelligence: hover, definition, references, or document symbols via host LSP. Paths relative to /workspace.',
+      parameters: {
+        op: {
+          type: 'string',
+          required: true,
+          enum: ['hover', 'definition', 'references', 'symbols'],
+          description: 'LSP operation',
+        },
+        path: { type: 'string', required: true, description: 'File path relative to workspace' },
         line: { type: 'number', description: '0-based line' },
         character: { type: 'number', description: '0-based column' },
       },
-      required: ['op', 'path'],
-    },
-    async execute(args) {
-      const lsp = await loadLsp()
-      if (!lsp?.lspQuery) {
-        return { content: 'lsp-bridge module unavailable on host', isError: true }
-      }
-      const r = await lsp.lspQuery({
-        op: args.op,
-        file: toHostPath(args.path),
-        line: args.line ?? 0,
-        character: args.character ?? 0,
-        workspace: hostRoot(),
-      })
-      if (!r.ok) {
-        return {
-          content: `LSP unavailable: ${r.error}${r.server ? ` (server=${r.server})` : ''}. Install typescript-language-server / pyright on the host.`,
-          isError: true,
+      output: textOut,
+      async execute(args) {
+        const lsp = await loadLsp()
+        if (!lsp?.lspQuery) {
+          return { text: 'lsp-bridge module unavailable on host', isError: true }
         }
-      }
-      return { content: JSON.stringify(r.result ?? null, null, 2).slice(0, 8000) }
-    },
-  })
+        const r = await lsp.lspQuery({
+          op: args.op,
+          file: toHostPath(args.path),
+          line: args.line ?? 0,
+          character: args.character ?? 0,
+          workspace: hostRoot(),
+        })
+        if (!r.ok) {
+          return {
+            text: `LSP unavailable: ${r.error}${r.server ? ` (server=${r.server})` : ''}. Install typescript-language-server / pyright on the host.`,
+            isError: true,
+          }
+        }
+        return { text: JSON.stringify(r.result ?? null, null, 2).slice(0, 8000) }
+      },
+    }),
+  )
 
-  ctx.tool('lsp_servers', {
-    description: 'List host language servers detected on PATH',
-    parameters: { type: 'object', properties: {} },
-    async execute() {
-      const lsp = await loadLsp()
-      if (!lsp?.listAvailableServers) return { content: '[]', isError: true }
-      return { content: JSON.stringify(lsp.listAvailableServers(), null, 2) }
-    },
-  })
+  ctx.tools.register(
+    defineTool({
+      name: 'lsp_servers',
+      description: 'List host language servers detected on PATH',
+      parameters: {},
+      output: textOut,
+      async execute() {
+        const lsp = await loadLsp()
+        if (!lsp?.listAvailableServers) return { text: '[]', isError: true }
+        return { text: JSON.stringify(lsp.listAvailableServers(), null, 2) }
+      },
+    }),
+  )
 }
 
 export default { name, inject, apply }
