@@ -31,7 +31,7 @@ const TESTS = [
   'test/checksums.test.js',
   'test/gpu-lock.test.js',
   'test/dsh.test.js',
-  'test/update-install.test.js',
+  'test/banner-version.test.js',
 ]
 
 const r = spawnSync(

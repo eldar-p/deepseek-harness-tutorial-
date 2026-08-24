@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.0.1] — 2026-08-24
+
+### Added
+
+- ASCII banner (`assets/banner.txt`) on `help` / `start` / first run
+- `deep version` — local vs CDN freshness
+- `deep deps` / `deep check` — dependency + version probe
+- `deep help [command]` topic help
+- `DEEP_NO_BANNER=1` to silence art
+
 ## [1.0.0] — 2026-08-24
 
 ### Added
