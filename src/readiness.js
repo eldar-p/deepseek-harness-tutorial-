@@ -182,6 +182,85 @@ function assessMilestones(milestones) {
   return { items, score, max, pct, stage }
 }
 
+/** Beta milestone weights (sum = 100). */
+export const BETA_MILESTONES = [
+  {
+    id: 'coverage50',
+    label: 'Coverage gate ≥50%',
+    weight: 12,
+    check: () => {
+      const gate = fs.readFileSync(path.join(PKG_ROOT, 'scripts/coverage-gate.mjs'), 'utf8')
+      return /DEEP_COVERAGE_MIN\s*\|\|\s*['"]50['"]/.test(gate)
+    },
+  },
+  {
+    id: 'egress',
+    label: 'Guest iptables enforce',
+    weight: 12,
+    check: () =>
+      fs.existsSync(path.join(PKG_ROOT, 'guest/deep-net-enforce.sh')) &&
+      fs.readFileSync(path.join(PKG_ROOT, 'Dockerfile.guest'), 'utf8').includes('deep-net-enforce'),
+  },
+  {
+    id: 'context22',
+    label: 'Audit #22 context wired',
+    weight: 10,
+    check: () => {
+      const a = fs.readFileSync(path.join(PKG_ROOT, 'scripts/audit-run.mjs'), 'utf8')
+      return a.includes('compaction-basic') && a.includes('Деградация контекста')
+    },
+  },
+  {
+    id: 'cdn-manifest',
+    label: 'CDN artifacts pinned',
+    weight: 12,
+    check: () => {
+      const rel = loadManifest('cli-releases.json')
+      const arts = rel.channels?.beta?.cli?.artifacts || []
+      return arts.some((x) => x.url && x.sha256 && /^[a-f0-9]{64}$/i.test(x.sha256))
+    },
+  },
+  {
+    id: 'cdn-install',
+    label: 'CLI install from zip',
+    weight: 10,
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'src/cli-install.js')),
+  },
+  {
+    id: 'license',
+    label: 'CC BY-NC-SA 4.0',
+    weight: 8,
+    check: () => {
+      const pkg = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'package.json'), 'utf8'))
+      return pkg.license === 'CC-BY-NC-SA-4.0' && fs.readFileSync(path.join(PKG_ROOT, 'LICENSE'), 'utf8').includes('CC-BY-NC-SA-4.0')
+    },
+  },
+  {
+    id: 'e2e',
+    label: 'smoke:e2e script',
+    weight: 10,
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'scripts/smoke-e2e.mjs')),
+  },
+  {
+    id: 'pack',
+    label: 'pack:release script',
+    weight: 8,
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'scripts/pack-release.mjs')),
+  },
+  {
+    id: 'tty',
+    label: 'TTY isTTY in CLI',
+    weight: 8,
+    check: () => fs.readFileSync(path.join(PKG_ROOT, 'src/cli.js'), 'utf8').includes('isTTY'),
+  },
+  {
+    id: 'engine',
+    label: 'Container engine',
+    weight: 10,
+    check: () => detectContainerEngine().ok,
+  },
+]
+
 export function assessPreAlphaReadiness() {
   return assessMilestones(PREALPHA_MILESTONES)
 }
@@ -190,13 +269,18 @@ export function assessAlphaReadiness() {
   return assessMilestones(ALPHA_MILESTONES)
 }
 
+export function assessBetaReadiness() {
+  return assessMilestones(BETA_MILESTONES)
+}
+
 export function assessReadiness(stage = 'pre-alpha') {
+  if (stage === 'beta') return assessBetaReadiness()
   if (stage === 'alpha') return assessAlphaReadiness()
   return assessPreAlphaReadiness()
 }
 
 export function formatReadinessReport(r, { host, engine, gpu, stage = 'pre-alpha' } = {}) {
-  const label = stage === 'alpha' ? 'Alpha' : 'Pre-alpha'
+  const label = stage === 'beta' ? 'Beta' : stage === 'alpha' ? 'Alpha' : 'Pre-alpha'
   const lines = []
   lines.push('')
   lines.push(`${label} readiness: ${r.pct}% (${r.score}/${r.max}) — stage: ${r.stage}`)

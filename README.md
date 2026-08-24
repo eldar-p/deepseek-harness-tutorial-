@@ -1,7 +1,7 @@
 ﻿# Deep CLI
 
 Локальный стек: **llama.cpp** + **Docker guest** + **DSH**.  
-**Стадия:** [Alpha `v0.2.0-alpha`](./ALPHA.md) · complete · revision `2026.08.24-alpha`  
+**Стадия:** [Alpha](./ALPHA.md) + [Beta](./BETA.md) · tag [`v0.2.0-alpha`](https://github.com/eldar-p/deepseek-harness-tutorial-/releases/tag/v0.2.0-alpha)  
 **Лицензия:** [CC BY-NC-SA 4.0](./LICENSE) — Attribution-NonCommercial-ShareAlike / «С указанием авторства — Некоммерческая — С сохранением условий»
 
 [Документация](./docs/README.md) · [Установка](./docs/INSTALL.md) · [Troubleshooting](./docs/TROUBLESHOOTING.md) · [ADR](./adr/README.md) · [Alpha todo](./todo/README.md) · [Beta todo](./todo/README-beta.md) · [Changelog](./CHANGELOG.md)
@@ -122,4 +122,4 @@ docs/                install, audits, legal
 
 ---
 
-**Лицензия:** [CC BY-NC-SA 4.0](./LICENSE) (некоммерческая, с указанием авторства и ShareAlike) · **Тег:** [`v0.2.0-alpha`](https://github.com/eldar-p/deepseek-harness-tutorial-/releases/tag/v0.2.0-alpha)
+**Лицензия:** [CC BY-NC-SA 4.0](./LICENSE) (некоммерческая, с указанием авторства и ShareAlike) · **Тег / zip:** [`v0.2.0-alpha`](https://github.com/eldar-p/deepseek-harness-tutorial-/releases/tag/v0.2.0-alpha)
