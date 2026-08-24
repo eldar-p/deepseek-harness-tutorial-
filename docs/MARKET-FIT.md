@@ -74,7 +74,7 @@ User → deep CLI
 
 Приоритет по gap map и текущим дырам:
 
-1. **Trust path (CDN Release + подписи)** — закрыть 404 на `deep update`; опционально cosign/GPG поверх sha256.  
+1. **Trust path (CDN Release + подписи)** — ✅ Release [v1.1.0](https://github.com/eldar-p/deepseek-harness-tutorial-/releases/tag/v1.1.0) + sha256 in `cli-releases.json` (cosign optional later)  
 2. **Linux/macOS field parity** — без этого Snap/brew и «local for everyone» неубедительны.  
 3. **AI testing kit** — ✅ `deep test harness` + [HARNESS-TEST-PACK.md](./HARNESS-TEST-PACK.md)  
 4. **Guardrails UX** — ✅ `deep doctor --policy` isolation grade; пресеты paranoia/offline уже в CLI  
