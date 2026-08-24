@@ -11,7 +11,7 @@
 export const name = 'one-shot-guard'
 export const inject = []
 
-import { shouldDenyBash } from './permission-risk.mjs'
+import { shouldDenyBash, shouldDenyBashAsync } from './permission-risk.mjs'
 
 const DENY_TOOLS = new Set(['todo_write', 'TodoWrite', 'todoWrite'])
 
@@ -146,24 +146,31 @@ export function apply(ctx) {
 
         if (tool === 'bash' || tool === 'Bash') {
           const command = bashCommand(exec)
-          if (shouldDenyBash(command)) {
-            return Promise.resolve(
-              deny('bash', 'destructive or high-risk command blocked (auto-mode lite)'),
-            )
-          }
-          if (isWastefulBash(command)) {
-            return Promise.resolve(
-              deny('bash', 'wasteful probe (' + String(command).slice(0, 100) + ')'),
-            )
-          }
-          if (isBadPip(command)) {
-            return Promise.resolve(
-              deny(
+          const mode = (process.env.DEEP_AUTO_MODE || 'heuristic').toLowerCase()
+          const denyP =
+            mode === 'llm' || mode === 'auto'
+              ? shouldDenyBashAsync(command, { mode: 'llm' })
+              : Promise.resolve(shouldDenyBash(command))
+          return denyP.then((blocked) => {
+            if (blocked) {
+              return deny(
+                'bash',
+                mode === 'llm' || mode === 'auto'
+                  ? 'destructive or high-risk command blocked (auto-mode llm)'
+                  : 'destructive or high-risk command blocked (auto-mode lite)',
+              )
+            }
+            if (isWastefulBash(command)) {
+              return deny('bash', 'wasteful probe (' + String(command).slice(0, 100) + ')')
+            }
+            if (isBadPip(command)) {
+              return deny(
                 'bash',
                 'pip outside projects/*/venv or --break-system-packages; prefer stdlib or venv under /mnt/hostshare/projects/<slug>/.venv',
-              ),
-            )
-          }
+              )
+            }
+            return next()
+          })
         }
 
         if (tool === 'write' || tool === 'Write' || tool === 'edit' || tool === 'Edit') {

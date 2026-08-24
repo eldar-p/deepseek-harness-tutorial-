@@ -40,7 +40,7 @@ Claude Code keeps **hundreds of tool schemas out of context** until `ToolSearch`
 
 ### 3. Auto mode classifier
 `yoloClassifier.ts`: second LLM call classifies tool use into allow / confirm / deny using rule templates.  
-**Deep action:** `src/permission-risk.js` — regex tiers (safe read vs destructive rm/curl). Future: `--auto-mode` uses local llama for classify.
+**Deep action:** `src/permission-risk.js` — regex tiers + optional LLM second-pass (`DEEP_AUTO_MODE=llm`, `deep risk classify --llm`).
 
 ### 4. memdir memory budget
 `memdir.ts`: hard caps on MEMORY.md, one-line index entries, «move detail to topic files».  
@@ -71,10 +71,10 @@ git clone --depth 1 https://github.com/vseeliu/claude-code-source.git
 | Codebase semantic search | ✅ `deep index search` + LanceDB optional |
 | MCP tools | ✅ `node scripts/deep-mcp.mjs` (stdio) |
 | Egress proxy + secrets | ✅ `egress-proxy` sidecar |
-| Auto approve bash | 🟡 `permission-risk.js` + one-shot-guard |
+| Auto approve bash | ✅ heuristic + optional LLM (`DEEP_AUTO_MODE=llm`) |
 | Coordinator subagents | ✅ `scripts/coordinator.mjs` (index-parallel workers) |
 | LSP integration | ✅ `dsh-plugins/lsp-bridge` + `src/lsp-bridge.js` |
-| Kairos daemon | 📋 `deep daemon` backlog |
+| Kairos daemon | ✅ `deep daemon` health poller (no proactive chat yet) |
 | Undercover commits | ❌ rejected |
 
 See [0008-code-index-egress-proxy.md](../adr/0008-code-index-egress-proxy.md).

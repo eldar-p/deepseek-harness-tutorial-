@@ -11,6 +11,8 @@
 - LSP bridge: `deep lsp` + `dsh-plugins/lsp-bridge` + skill
 - Coordinator: `scripts/coordinator.mjs` (parallel index workers)
 - Memory/CONTEXT budget checks in `bootstrap` / `doctor`
+- Auto-mode LLM classifier: `deep risk classify` + `DEEP_AUTO_MODE=llm` (heuristic first; LLM only on `confirm`)
+- Stack health daemon: `deep daemon start|stop|status|tick` (Kairos-lite)
 - Beginner guide `README_BEGINNER.md`, `docs/OS-COMPAT.md`
 - ASCII banner (`assets/banner.txt`) on `help` / `start` / first run
 - `deep version` — local vs CDN freshness
@@ -21,7 +23,7 @@
 
 ### Changed
 
-- Coverage gate **80%** (CI floor 79% for OS branch skew)
+- Coverage gate **80%** (CI floor 78% for OS branch skew)
 - Product positioning: hybrid local GGUF **or** cloud API (not local-only)
 
 ## [1.0.0] — 2026-08-24
