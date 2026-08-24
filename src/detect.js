@@ -55,10 +55,31 @@ export function engineEnv(bin) {
   if (!bin) return process.env
   const dir = path.dirname(bin)
   const sep = process.platform === 'win32' ? ';' : ':'
-  const pathKey = process.platform === 'win32' ? 'Path' : 'PATH'
-  const cur = process.env[pathKey] || ''
-  if (cur.toLowerCase().includes(dir.toLowerCase())) return process.env
-  return { ...process.env, [pathKey]: `${dir}${sep}${cur}` }
+  const cur = process.env.Path || process.env.PATH || ''
+  const already =
+    cur.toLowerCase().includes(dir.toLowerCase()) &&
+    String(process.env.PATH || '')
+      .toLowerCase()
+      .includes(dir.toLowerCase())
+  if (already && process.platform === 'win32' && process.env.Path && process.env.PATH) {
+    return process.env
+  }
+  const next = `${dir}${sep}${cur}`
+  if (process.platform === 'win32') {
+    // Node + some children read Path; others (and Unix-style tools) read PATH.
+    return { ...process.env, Path: next, PATH: next }
+  }
+  return { ...process.env, PATH: next }
+}
+
+/** True when running under WSL (Linux kernel with Microsoft in /proc/version). */
+export function isWsl() {
+  if (process.platform !== 'linux') return false
+  try {
+    return /microsoft|wsl/i.test(fs.readFileSync('/proc/version', 'utf8'))
+  } catch {
+    return false
+  }
 }
 
 export function detectContainerEngine() {

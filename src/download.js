@@ -4,13 +4,14 @@ import { createHash } from 'node:crypto'
 import { pipeline } from 'node:stream/promises'
 import { createWriteStream } from 'node:fs'
 import { PKG_ROOT, paths, chmodOwnerOnly, appendLog } from './paths.js'
+import { readJsonFile } from './json-io.js'
 
 export function loadManifest(name) {
   const local = path.join(PKG_ROOT, 'manifests', name)
   const cached = path.join(paths().manifestsCache, name)
   const file = fs.existsSync(cached) ? cached : local
   if (!fs.existsSync(file)) throw new Error(`manifest missing: ${name}`)
-  return JSON.parse(fs.readFileSync(file, 'utf8'))
+  return readJsonFile(file)
 }
 
 export function sha256File(filePath) {

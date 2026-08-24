@@ -31,14 +31,15 @@ Symptom during `deep start`:
 error getting credentials - err: exec: "docker-credential-desktop": executable file not found in %PATH%
 ```
 
-**Cause:** Node spawns `docker` without Docker Desktop's `resources\bin` on PATH (credential helper lives there).
+**Cause:** Node/DSH spawned `docker` without Docker Desktop's `resources\bin` on PATH (credential helper lives there).
 
-**Fix (built-in):** Deep CLI prepends the docker bin directory to PATH for all container commands (`engineEnv` in `src/detect.js`). Update to latest `main` and retry.
+**Fix (built-in):** Deep CLI prepends the docker bin directory to **both** `Path` and `PATH` (`engineEnv` in `src/detect.js`) for guest ops **and** the DSH process. Update to latest `main` and retry.
 
 **Manual workaround:**
 
 ```powershell
-$env:PATH = "$env:LOCALAPPDATA\Programs\DockerDesktop\resources\bin;$env:PATH"
+powershell -File .\scripts\wait-docker.ps1   # also prepends resources\bin
+$env:DEEP_DOCKER_BIN = "$env:LOCALAPPDATA\Programs\DockerDesktop\resources\bin\docker.exe"
 deep start --cpu
 ```
 
@@ -64,6 +65,20 @@ deep bootstrap
 ```
 
 Check `~/.deep/dsh-home/profiles/web/cordis.patch.yml` — duplicate ids break DSH 0.1.1-rc.2.
+
+`deep doctor` runs **plugin validation** (no `ctx.tool(`, `defineTool` must have `output.render`). Failures here crash DSH at boot (see 1.1.1 lsp-bridge fix).
+
+On Windows, plugin URLs in the patch use `file:///C|/…` form.
+
+## WSL
+
+1. Prefer **Docker Desktop → WSL integration** (not apt `docker` alone).
+2. Install Linux `dsh` under `~/.local` — reject Windows shims on `/mnt/<drive>/…`.
+3. Helpers: `bash scripts/run-wsl-field-lite.sh` / `field-linux-wsl.sh` (auto-detect repo path).
+
+## Manifest JSON / PowerShell BOM
+
+If `channels.json` / config parse fails with `Unexpected token ''`, the file has a UTF-8 BOM. Deep strips BOM on read (`src/json-io.js`). Prefer Node/`writeJsonFile` — avoid `Set-Content` without `-Encoding utf8NoBOM`.
 
 ## Q3 quant warnings
 

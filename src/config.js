@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { PKG_ROOT, paths, ensureDirs, chmodOwnerOnly } from './paths.js'
+import { readJsonFile, writeJsonFile } from './json-io.js'
 
 const PRESET_NAMES = ['balanced', 'dev', 'offline', 'paranoia', 'open']
 
@@ -28,7 +29,7 @@ export function loadPreset(name) {
   if (!fs.existsSync(local)) {
     throw Object.assign(new Error(`Unknown preset: ${n}`), { exitCode: 2 })
   }
-  return JSON.parse(fs.readFileSync(local, 'utf8'))
+  return readJsonFile(local)
 }
 
 export function defaultConfig(overrides = {}) {
@@ -52,12 +53,12 @@ export function defaultConfig(overrides = {}) {
 export function readConfig() {
   const p = paths()
   if (!fs.existsSync(p.config)) return null
-  return JSON.parse(fs.readFileSync(p.config, 'utf8'))
+  return readJsonFile(p.config)
 }
 
 export function writeConfig(cfg) {
   const p = ensureDirs()
-  fs.writeFileSync(p.config, JSON.stringify(cfg, null, 2), 'utf8')
+  writeJsonFile(p.config, cfg)
   chmodOwnerOnly(p.config)
   return cfg
 }

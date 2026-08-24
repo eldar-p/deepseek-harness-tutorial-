@@ -24,7 +24,14 @@ test('materializeAssets seeds memory.json and jail-core sync', () => {
 
     const patch = path.join(base, 'dsh-home', 'profiles', 'web', 'cordis.patch.yml')
     assert.ok(fs.existsSync(patch))
-    assert.match(fs.readFileSync(patch, 'utf8'), /workspace-jail-fs/)
+    const patchText = fs.readFileSync(patch, 'utf8')
+    assert.match(patchText, /workspace-jail-fs/)
+    assert.match(patchText, /lsp-bridge/)
+    if (process.platform === 'win32') {
+      assert.match(patchText, /file:\/\/\/[A-Za-z]\|/)
+    } else {
+      assert.match(patchText, /file:\/\/\//)
+    }
   } finally {
     if (prev === undefined) delete process.env.DEEP_HOME
     else process.env.DEEP_HOME = prev

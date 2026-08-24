@@ -13,6 +13,12 @@ if (-not $docker) {
   Write-Host "FAIL: docker.exe not found. Finish Docker Desktop install and reboot if prompted."
   exit 1
 }
+# Credential helpers (docker-credential-desktop) live next to docker.exe
+$dockerDir = Split-Path -Parent $docker
+if ($env:Path -notlike "*$dockerDir*") {
+  $env:Path = "$dockerDir;$env:Path"
+}
+$env:DEEP_DOCKER_BIN = $docker
 $desktop = "$env:ProgramFiles\Docker\Docker\Docker Desktop.exe"
 if (Test-Path $desktop) {
   $running = Get-Process "Docker Desktop" -ErrorAction SilentlyContinue
@@ -27,10 +33,12 @@ while ((Get-Date) -lt $deadline) {
   & $docker info 2>$null | Out-Null
   if ($LASTEXITCODE -eq 0) {
     Write-Host "OK: Docker engine ready"
+    Write-Host "PATH includes: $dockerDir"
     & $docker version
     exit 0
   }
   Start-Sleep -Seconds 3
 }
 Write-Host "FAIL: Docker not ready — open Docker Desktop manually, wait for whale icon green"
+Write-Host "Hint: `$env:DEEP_DOCKER_BIN = '$docker'"
 exit 1

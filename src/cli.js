@@ -10,7 +10,7 @@ import {
   PRESET_NAMES,
   assertStackName,
 } from './config.js'
-import { detectContainerEngine, detectGpu, hostSummary, nodeOk, isRoot, which } from './detect.js'
+import { detectContainerEngine, detectGpu, hostSummary, nodeOk, isRoot, which, isWsl } from './detect.js'
 import { printStatusScreen } from './status-ui.js'
 import { readRunState, writeRunState, clearRunState, summarizeStacks } from './runstate.js'
 import { allocateStackPorts } from './ports.js'
@@ -48,6 +48,8 @@ import { classifyBashRisk, classifyBashRiskLlm, classifyWriteRisk } from './perm
 import { assessWorkspaceMemoryBudget } from './memory-budget.js'
 import { assessPolicyScore, formatPolicyScoreReport } from './policy-score.js'
 import { cmdCoord } from './coordinator.js'
+import { validateDeepPlugins, formatPluginValidation } from './plugin-validate.js'
+import { resolveDshBin } from './dsh.js'
 import { formatMcpConfigHelp } from './mcp-config.js'
 
 /**
@@ -123,6 +125,20 @@ export async function cmdDoctor(flags = {}) {
     const apiMode = !!(cfg?.api?.provider)
     const q = quantStatusRow(apiMode ? null : cfg?.gguf, { apiMode })
     console.log(`  quant    ${q.level.toUpperCase()}  ${q.detail}`)
+  }
+  console.log(formatPluginValidation(validateDeepPlugins()))
+  if (isWsl()) {
+    const dsh = resolveDshBin()
+    if (!dsh) {
+      console.log('  wsl      WARN  dsh missing or Windows shim — npm i -g --prefix ~/.local @deepseek-ai/dsh@0.1.1-rc.2')
+    } else {
+      console.log(`  wsl      OK  dsh=${dsh}`)
+    }
+    if (!engine.ok) {
+      console.log('  wsl      WARN  docker not ready — prefer Docker Desktop WSL integration (not apt docker alone)')
+    } else {
+      console.log('  wsl      OK  container engine')
+    }
   }
   if (cfg?.rebootRequired) console.log('  reboot   REQUIRED before start')
 

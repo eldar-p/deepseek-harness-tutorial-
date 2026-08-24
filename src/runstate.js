@@ -1,12 +1,13 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { paths, chmodOwnerOnly } from './paths.js'
+import { readJsonFile, writeJsonFile } from './json-io.js'
 
 export function readRunState(stack = 'default') {
   const f = path.join(paths(stack).run, 'state.json')
   if (!fs.existsSync(f)) return null
   try {
-    return JSON.parse(fs.readFileSync(f, 'utf8'))
+    return readJsonFile(f)
   } catch {
     return null
   }
@@ -16,7 +17,7 @@ export function writeRunState(stack, state) {
   const dir = paths(stack).run
   fs.mkdirSync(dir, { recursive: true })
   const f = path.join(dir, 'state.json')
-  fs.writeFileSync(f, JSON.stringify(state, null, 2), 'utf8')
+  writeJsonFile(f, state)
   chmodOwnerOnly(f)
   return state
 }
@@ -45,7 +46,7 @@ export function stackIsActive(stack) {
 export function summarizeStacks() {
   const names = new Set(listStacks())
   try {
-    const cfg = JSON.parse(fs.readFileSync(paths().config, 'utf8'))
+    const cfg = readJsonFile(paths().config)
     for (const n of Object.keys(cfg.stacks || {})) names.add(n)
   } catch {
     /* no config */

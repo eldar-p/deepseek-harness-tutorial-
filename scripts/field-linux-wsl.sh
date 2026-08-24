@@ -30,15 +30,20 @@ export PATH="${HOME}/.local/bin:${PATH}"
 export DEEP_NO_BANNER=1
 export DEEP_LLAMA_CTX="${DEEP_LLAMA_CTX:-8192}"
 
-# Reject Windows npm shim for dsh
+# Reject Windows npm shim for dsh (any /mnt/<drive>/…, not only C:)
 if command -v dsh >/dev/null 2>&1 && file "$(command -v dsh)" 2>/dev/null | grep -qi 'windows\|PE32'; then
   echo "[WARN] dsh looks like a Windows binary — install Linux build:"
   echo "  npm i -g --prefix ~/.local @deepseek-ai/dsh@0.1.1-rc.2"
 fi
-if ! command -v dsh >/dev/null 2>&1 || [[ "$(command -v dsh)" == /mnt/c/* ]]; then
+DSH_BIN="$(command -v dsh 2>/dev/null || true)"
+if [[ -z "$DSH_BIN" || "$DSH_BIN" == /mnt/[a-zA-Z]/* ]]; then
   npm i -g --prefix "${HOME}/.local" "@deepseek-ai/dsh@0.1.1-rc.2"
 fi
 export DEEP_DSH_BIN="${DEEP_DSH_BIN:-${HOME}/.local/bin/dsh}"
+
+if ! docker info >/dev/null 2>&1; then
+  echo "[WARN] docker not ready — prefer Docker Desktop WSL integration (Settings → Resources → WSL)"
+fi
 
 echo "=== field-linux-wsl ==="
 node bin/deep.js doctor --policy

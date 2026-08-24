@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { PKG_ROOT, paths } from './paths.js'
+import { validateDeepPlugins } from './plugin-validate.js'
 
 /** file:///C|/Users/... style for DSH plugin URLs on Windows */
 export function toFileUrl(absPath) {
@@ -59,11 +60,28 @@ export function writeDeepProfilePatch(stack = 'default') {
   const src = path.join(PKG_ROOT, 'assets', 'cordis.deep.patch.yml')
   if (!fs.existsSync(src)) return
   let text = fs.readFileSync(src, 'utf8')
-  const pluginDirPosix = pluginDir.replace(/\\/g, '/')
+  // Windows DSH expects file:///C|/… (pipe) — toFileUrl builds that.
+  text = text.replace(/file:\/\/\/__PLUGIN_DIR__\/([^'\s]+)/g, (_, rel) => {
+    const abs = path.join(pluginDir, ...rel.split('/'))
+    return toFileUrl(abs)
+  })
   const workspacePosix = p.workspace.replace(/\\/g, '/')
-  text = text.replaceAll('__PLUGIN_DIR__', pluginDirPosix)
   text = text.replaceAll('__WORKSPACE__', workspacePosix)
+  text = text.replaceAll('__PLUGIN_DIR__', pluginDir.replace(/\\/g, '/'))
   fs.writeFileSync(path.join(profileDir, 'cordis.patch.yml'), text, 'utf8')
+
+  // Prefer repo tree for validation if materialize hasn't copied yet
+  const root = fs.existsSync(path.join(pluginDir, 'lsp-bridge', 'index.mjs'))
+    ? pluginDir
+    : path.join(PKG_ROOT, 'dsh-plugins')
+  const check = validateDeepPlugins({ pluginRoot: root })
+  if (!check.ok) {
+    const msg = check.issues
+      .filter((i) => i.level === 'fail')
+      .map((i) => `${i.id}: ${i.msg}`)
+      .join('; ')
+    console.log(`[YELLOW] Plugin validation: ${msg}`)
+  }
 }
 
 function syncJailCore(pluginsDst) {

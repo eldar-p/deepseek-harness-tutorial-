@@ -23,8 +23,12 @@ test('engineEnv prepends bin dir', () => {
   fs.mkdirSync(path.dirname(fake), { recursive: true })
   fs.writeFileSync(fake, 'x')
   const env = engineEnv(fake)
-  const key = process.platform === 'win32' ? 'Path' : 'PATH'
-  assert.ok(String(env[key]).toLowerCase().includes(path.dirname(fake).toLowerCase()))
+  const dir = path.dirname(fake).toLowerCase()
+  assert.ok(String(env.Path || env.PATH).toLowerCase().includes(dir))
+  if (process.platform === 'win32') {
+    assert.ok(String(env.PATH).toLowerCase().includes(dir))
+    assert.ok(String(env.Path).toLowerCase().includes(dir))
+  }
 })
 
 test('engineEnv null is identity', () => {

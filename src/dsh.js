@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { which } from './detect.js'
+import { which, engineEnv, resolveEngineBin } from './detect.js'
 import { paths, appendLog, PKG_ROOT } from './paths.js'
 import { spawnDetached, killTree, waitHttpOk, runLogPath, isPidAlive } from './proc.js'
 import { loadManifest } from './download.js'
@@ -110,14 +110,16 @@ export async function startDsh({ stack, port, llamaPort, guestName = null, engin
   const { writeDeepProfilePatch } = await import('./materialize.js')
   writeDeepProfilePatch(stack)
   const logFile = runLogPath(stack, 'dsh')
+  const dockerBin = engineBin || resolveEngineBin('docker') || process.env.DEEP_ENGINE || 'docker'
   const env = {
+    ...engineEnv(typeof dockerBin === 'string' ? dockerBin : null),
     DSH_HOME: dshHome,
     DEEP_LLAMA_API_KEY: process.env.DEEP_LLAMA_API_KEY || 'sk-deep-local',
     DEEP_WORKSPACE: workspace,
     DEEP_PKG_ROOT: PKG_ROOT,
     HOST_SHARE: workspace,
     DEEP_GUEST_NAME: guestName || `deep-guest-${stack}`,
-    DEEP_ENGINE: engineBin || process.env.DEEP_ENGINE || 'docker',
+    DEEP_ENGINE: engineBin || (typeof dockerBin === 'string' ? dockerBin : 'docker'),
     ...(indexPort ? { DEEP_INDEX_URL: `http://127.0.0.1:${indexPort}` } : {}),
     ...(apiProfile?.apiKeyEnv && process.env[apiProfile.apiKeyEnv]
       ? {}
