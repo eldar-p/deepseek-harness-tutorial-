@@ -507,7 +507,72 @@ export function assessV1Readiness() {
   return assessMilestones(V1_MILESTONES)
 }
 
+/** Post-1.0 hybrid / MCP / auto-mode milestones (sum = 100). */
+export const V11_MILESTONES = [
+  {
+    id: 'v1-base',
+    label: '1.0 readiness complete',
+    weight: 20,
+    check: () => assessV1Readiness().pct >= 85,
+  },
+  {
+    id: 'mcp',
+    label: 'MCP server + config',
+    weight: 15,
+    check: () =>
+      fs.existsSync(path.join(PKG_ROOT, 'src/mcp-server.js')) &&
+      fs.existsSync(path.join(PKG_ROOT, 'src/mcp-config.js')),
+  },
+  {
+    id: 'tool-search',
+    label: 'ToolSearch catalog',
+    weight: 12,
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'src/tool-search.js')),
+  },
+  {
+    id: 'auto-mode',
+    label: 'permission-risk LLM path',
+    weight: 12,
+    check: () =>
+      fs.readFileSync(path.join(PKG_ROOT, 'src/permission-risk.js'), 'utf8').includes('classifyBashRiskLlm'),
+  },
+  {
+    id: 'daemon',
+    label: 'daemon + proactive',
+    weight: 12,
+    check: () =>
+      fs.existsSync(path.join(PKG_ROOT, 'src/daemon.js')) &&
+      fs.readFileSync(path.join(PKG_ROOT, 'src/daemon.js'), 'utf8').includes('writeProactiveNudge'),
+  },
+  {
+    id: 'coord',
+    label: 'coordinator CLI',
+    weight: 10,
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'src/coordinator.js')),
+  },
+  {
+    id: 'api-smoke',
+    label: 'API smoke script',
+    weight: 9,
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'scripts/smoke-api.mjs')),
+  },
+  {
+    id: 'vulkan',
+    label: 'Linux Vulkan pin',
+    weight: 10,
+    check: () => {
+      const man = loadManifest('llama-binaries.json')
+      return (man.binaries || []).some((b) => b.os === 'linux' && b.variant === 'vulkan' && b.sha256)
+    },
+  },
+]
+
+export function assessV11Readiness() {
+  return assessMilestones(V11_MILESTONES)
+}
+
 export function assessReadiness(stage = 'pre-alpha') {
+  if (stage === '1.1' || stage === 'v1.1') return assessV11Readiness()
   if (stage === '1.0' || stage === 'v1') return assessV1Readiness()
   if (stage === '0.5' || stage === 'core') return assessCoreReadiness()
   if (stage === 'rc') return assessRcReadiness()
@@ -518,17 +583,19 @@ export function assessReadiness(stage = 'pre-alpha') {
 
 export function formatReadinessReport(r, { host, engine, gpu, stage = 'pre-alpha' } = {}) {
   const label =
-    stage === '1.0' || stage === 'v1'
-      ? '1.0'
-      : stage === '0.5' || stage === 'core'
-        ? '0.5'
-        : stage === 'rc'
-          ? 'RC'
-          : stage === 'beta'
-            ? 'Beta'
-            : stage === 'alpha'
-              ? 'Alpha'
-              : 'Pre-alpha'
+    stage === '1.1' || stage === 'v1.1'
+      ? '1.1'
+      : stage === '1.0' || stage === 'v1'
+        ? '1.0'
+        : stage === '0.5' || stage === 'core'
+          ? '0.5'
+          : stage === 'rc'
+            ? 'RC'
+            : stage === 'beta'
+              ? 'Beta'
+              : stage === 'alpha'
+                ? 'Alpha'
+                : 'Pre-alpha'
   const lines = []
   lines.push('')
   lines.push(`${label} readiness: ${r.pct}% (${r.score}/${r.max}) — stage: ${r.stage}`)

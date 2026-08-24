@@ -1,51 +1,35 @@
 #!/usr/bin/env node
 /**
- * Lightweight coordinator: split a coding task into parallel host-side workers.
- * Workers share only the index search + file read tools (clean context).
- *
- * Usage: node scripts/coordinator.mjs --stack=default --task="fix auth bug"
+ * Lightweight coordinator CLI shim.
+ * Prefer: deep coord --task="..."
  */
-import { spawn } from 'node:child_process'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { readRunState } from '../src/runstate.js'
-import { searchIndex, defaultIndexDir } from '../src/code-index/indexer.js'
-import { paths } from '../src/paths.js'
+import { cmdCoord } from '../src/coordinator.js'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const arg = (k, d) => process.argv.find((a) => a.startsWith(`--${k}=`))?.split('=')[1] || d
-const stack = arg('stack', 'default')
-const task = arg('task', '')
-if (!task) {
-  console.error('Usage: node scripts/coordinator.mjs --task="..." [--stack=default]')
-  process.exit(2)
+function parse(argv) {
+  const flags = {}
+  const positional = []
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i]
+    if (a.startsWith('--')) {
+      const eq = a.indexOf('=')
+      if (eq !== -1) flags[a.slice(2, eq)] = a.slice(eq + 1)
+      else {
+        const key = a.slice(2)
+        const next = argv[i + 1]
+        if (next && !next.startsWith('--')) {
+          flags[key] = next
+          i++
+        } else flags[key] = true
+      }
+    } else positional.push(a)
+  }
+  return { flags, args: positional }
 }
 
-const ws = paths(stack).workspace
-const indexDir = defaultIndexDir(ws)
-const run = readRunState(stack)
-
-const subtasks = task
-  .split(/\s+and\s+|\s*;\s*|\n/i)
-  .map((s) => s.trim())
-  .filter(Boolean)
-  .slice(0, 4)
-
-console.log(`[coordinator] stack=${stack} workers=${subtasks.length}`)
-
-const results = await Promise.all(
-  subtasks.map(async (q, i) => {
-    const r = await searchIndex({
-      workspaceRoot: ws,
-      indexDir,
-      query: q,
-      llamaBase: run?.urls?.llama,
-      limit: 5,
-    })
-    const hits = r.ok ? r.hits : []
-    console.log(`[worker ${i}] query=${JSON.stringify(q)} hits=${hits.length}`)
-    return { query: q, hits: hits.map((h) => `${h.path}:${h.startLine} ${h.symbol}`) }
-  }),
-)
-
-console.log(JSON.stringify({ task, results }, null, 2))
+const { flags, args } = parse(process.argv.slice(2))
+try {
+  await cmdCoord(flags, args)
+} catch (e) {
+  console.error(e.message)
+  process.exit(e.exitCode || 1)
+}

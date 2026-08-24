@@ -89,6 +89,38 @@ export function shouldDenyBash(command) {
   return classifyBashRisk(command).level === 'deny'
 }
 
+const WRITE_DENY_RE = [
+  /(^|[/\\])\.env(\.|$)/i,
+  /(^|[/\\])id_rsa$/i,
+  /(^|[/\\])id_ed25519$/i,
+  /\.pem$/i,
+  /(^|[/\\])secrets\.json$/i,
+  /(^|[/\\])credentials\.json$/i,
+  /(^|[/\\])\.git([/\\]|$)/i,
+  /(^|[/\\])etc[/\\]passwd$/i,
+]
+
+/**
+ * Classify Write/Edit path risk (secrets / VCS / system).
+ * @param {string} filePath
+ * @returns {RiskVerdict}
+ */
+export function classifyWriteRisk(filePath) {
+  const p = String(filePath || '').replace(/\\/g, '/').trim()
+  if (!p) return { level: 'allow', reason: 'empty', source: 'heuristic' }
+  for (const re of WRITE_DENY_RE) {
+    if (re.test(p)) return { level: 'deny', reason: re.source.slice(0, 40), source: 'heuristic' }
+  }
+  if (/\.(exe|dll|sys|bat|cmd|ps1)$/i.test(p)) {
+    return { level: 'confirm', reason: 'binary/script host path', source: 'heuristic' }
+  }
+  return { level: 'allow', reason: 'workspace write', source: 'heuristic' }
+}
+
+export function shouldDenyWrite(filePath) {
+  return classifyWriteRisk(filePath).level === 'deny'
+}
+
 /**
  * @param {string} text
  * @returns {RiskLevel|null}

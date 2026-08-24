@@ -103,7 +103,10 @@ node bin/deep.js bootstrap --api custom --api-base https://llm.example.com/v1 --
 | `deep lsp servers \| query …` | Host LSP (definition/hover/…) |
 | `deep daemon start \| stop \| status \| tick` | Health poller (llama/DSH) |
 | `deep mcp` | Stdio MCP (tool_search, code_search, …) |
+| `deep mcp config` | JSON для Cursor MCP |
+| `deep coord --task=…` | Параллельный index-search |
 | `deep risk classify "cmd" [--llm]` | Auto-mode risk label |
+| `deep risk write-path PATH` | Deny secrets/VCS paths |
 | `deep api` | Список API-провайдеров |
 
 ---

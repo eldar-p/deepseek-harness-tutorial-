@@ -44,7 +44,9 @@ import { printBanner, maybePrintFirstRunWelcome } from './banner.js'
 import { cmdVersion, cmdDeps, cmdCheck } from './version-check.js'
 import { cmdLsp } from './lsp-cli.js'
 import { cmdDaemon } from './daemon.js'
-import { classifyBashRisk, classifyBashRiskLlm } from './permission-risk.js'
+import { classifyBashRisk, classifyBashRiskLlm, classifyWriteRisk } from './permission-risk.js'
+import { cmdCoord } from './coordinator.js'
+import { formatMcpConfigHelp } from './mcp-config.js'
 import { assessWorkspaceMemoryBudget } from './memory-budget.js'
 
 /**
@@ -130,7 +132,9 @@ export async function cmdDoctor(flags = {}) {
 
   if (flags.readiness) {
     const stage =
-      flags.stage === '1.0' || flags.stage === 'v1'
+      flags.stage === '1.1' || flags.stage === 'v1.1'
+        ? '1.1'
+        : flags.stage === '1.0' || flags.stage === 'v1'
         ? '1.0'
         : flags.stage === '0.5' || flags.stage === 'core'
           ? '0.5'
@@ -714,7 +718,7 @@ export function cmdHelp(topic) {
   const bar = wide ? '─'.repeat(48) : '---'
 
   const topics = {
-    doctor: `deep doctor [--readiness] [--stage pre-alpha|alpha|beta|rc|0.5|1.0]
+    doctor: `deep doctor [--readiness] [--stage pre-alpha|alpha|beta|rc|0.5|1.0|1.1]
   Host/engine/GPU probe. With --readiness prints stage checklist.`,
     bootstrap: `deep bootstrap [--gguf PATH] [--preset NAME] [--channel stable|beta|edge] [--name STACK]
   Create ~/.deep layout, config, workspace seeds.`,
@@ -744,10 +748,13 @@ export function cmdHelp(topic) {
   Host language-server helpers (typescript-language-server / pyright / …).`,
     daemon: `deep daemon start|stop|status|tick [--name STACK] [--interval MS] [--proactive]
   Background health poller for llama/DSH (Kairos-lite). --proactive writes .deep/PROACTIVE.md.`,
-    mcp: `deep mcp
-  Stdio MCP server (tool_search, code_search, stack_status, …). Wire into Cursor MCP config.`,
+    mcp: `deep mcp | deep mcp config
+  Stdio MCP server, or print Cursor MCP JSON snippet.`,
+    coord: `deep coord --task="fix A; fix B" [--name STACK] [--workers N]
+  Parallel index-search workers (coordinator).`,
     risk: `deep risk classify "bash command" [--llm]
-  Heuristic (or optional LLM) auto-mode risk label: allow|confirm|deny.`,
+  Heuristic (or optional LLM) auto-mode risk label: allow|confirm|deny.
+  Also: deep risk write-path PATH`,
     help: `deep help [command]
   This screen, or details for one command.`,
   }
@@ -767,10 +774,9 @@ export function cmdHelp(topic) {
   deep version [--channel stable|beta|edge]
   deep check [--channel …]
   deep deps
-  deep doctor [--readiness] [--stage pre-alpha|alpha|beta|rc|0.5|1.0]
-  deep bootstrap [--gguf PATH] [--preset NAME] [--channel stable|beta|edge]
-  deep start [--name STACK] [--gguf PATH | --api PROVIDER] [--api-model MODEL] [--api-key KEY] [--cpu] [--preset NAME]
+  deep doctor [--readiness] [--stage pre-alpha|alpha|beta|rc|0.5|1.0|1.1]
   deep bootstrap [--gguf PATH | --api PROVIDER] [--api-model MODEL] [--api-key KEY] [--preset NAME]
+  deep start [--name STACK] [--gguf PATH | --api PROVIDER] [--api-model MODEL] [--api-key KEY] [--cpu] [--preset NAME]
   deep api
   deep stop [--name STACK] [--emergency] [--wipe-session]
   deep status [--name STACK] [--all]
@@ -779,16 +785,19 @@ export function cmdHelp(topic) {
   deep presets
   deep index build|search|status [--name STACK]
   deep lsp servers|query …
-  deep daemon start|stop|status|tick [--name STACK]
-  deep mcp
+  deep daemon start|stop|status|tick [--name STACK] [--proactive]
+  deep mcp | deep mcp config
+  deep coord --task="fix A; fix B"
   deep risk classify "cmd" [--llm]
+  deep risk write-path PATH
 
 Tips:
   First run:  deep doctor && deep bootstrap --gguf MODEL.gguf && deep start
   Cloud:      deep bootstrap --api deepseek --api-key sk-... && deep start --api deepseek
   No banner:  set DEEP_NO_BANNER=1
   Local zip:  set DEEP_CLI_ZIP=path\\to\\deep-cli-*.zip
-  Coordinator: node scripts/coordinator.mjs --task="fix A; fix B"
+  MCP:        deep mcp config
+  Coordinator: deep coord --task="fix A; fix B"
 
 Presets: ${PRESET_NAMES.join(', ')}
 Home: ${paths().home}
@@ -858,6 +867,10 @@ export async function main(argv) {
       case 'daemon':
         return await cmdDaemon(flags, args)
       case 'mcp': {
+        if ((args[0] || '').toLowerCase() === 'config') {
+          console.log(formatMcpConfigHelp())
+          return
+        }
         const { spawn } = await import('node:child_process')
         const script = path.join(PKG_ROOT, 'scripts', 'deep-mcp.mjs')
         const child = spawn(process.execPath, [script], {
@@ -873,11 +886,26 @@ export async function main(argv) {
         })
         return
       }
+      case 'coord':
+      case 'coordinator':
+        return await cmdCoord(flags, args)
       case 'risk': {
         const sub = args[0]
+        if (sub === 'write-path' || sub === 'write') {
+          const p = args.slice(1).join(' ').trim()
+          if (!p) {
+            console.error('Usage: deep risk write-path PATH')
+            process.exitCode = 2
+            return
+          }
+          const verdict = classifyWriteRisk(p)
+          console.log(`${verdict.level}\tsource=${verdict.source || 'heuristic'}\t${verdict.reason}`)
+          return
+        }
         const cmdText = args.slice(1).join(' ').trim()
         if (sub !== 'classify' || !cmdText) {
           console.error('Usage: deep risk classify "bash command" [--llm]')
+          console.error('       deep risk write-path PATH')
           process.exitCode = 2
           return
         }

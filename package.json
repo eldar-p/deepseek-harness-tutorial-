@@ -1,7 +1,7 @@
 {
   "name": "@deep-cli/deep",
-  "version": "1.0.1",
-  "description": "Deep CLI — llama.cpp + container guest + DSH (1.0.1)",
+  "version": "1.1.0",
+  "description": "Deep CLI — llama.cpp + container guest + DSH (1.1.0)",
   "type": "module",
   "bin": {
     "deep": "./bin/deep.js"
@@ -27,6 +27,7 @@
     "test:coverage": "node scripts/coverage-gate.mjs",
     "smoke:guest": "node scripts/smoke-guest.mjs",
     "smoke:e2e": "node scripts/smoke-e2e.mjs",
+    "smoke:api": "node scripts/smoke-api.mjs",
     "pack:release": "node scripts/pack-release.mjs",
     "audit": "node scripts/audit-run.mjs --gate=pre-alpha",
     "audit:alpha": "node scripts/audit-run.mjs --gate=alpha",

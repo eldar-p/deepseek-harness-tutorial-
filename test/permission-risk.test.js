@@ -24,6 +24,13 @@ test('confirm on npm install', () => {
   assert.equal(classifyBashRisk('npm install lodash').level, 'confirm')
 })
 
+test('classifyWriteRisk denies secrets and allows src', async () => {
+  const { classifyWriteRisk, shouldDenyWrite } = await import('../src/permission-risk.js')
+  assert.equal(shouldDenyWrite('workspace/.env'), true)
+  assert.equal(classifyWriteRisk('src/cli.js').level, 'allow')
+  assert.equal(classifyWriteRisk('id_rsa').level, 'deny')
+})
+
 test('parseClassifierLabel reads ALLOW/DENY/CONFIRM', () => {
   assert.equal(parseClassifierLabel('ALLOW\nsafe'), 'allow')
   assert.equal(parseClassifierLabel('deny: wipe'), 'deny')
