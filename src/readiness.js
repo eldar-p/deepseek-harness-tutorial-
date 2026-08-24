@@ -351,7 +351,86 @@ export function assessRcReadiness() {
   return assessMilestones(RC_MILESTONES)
 }
 
+/** 0.5 core freeze milestones (sum = 100). */
+export const CORE_MILESTONES = [
+  {
+    id: 'rc-complete',
+    label: 'RC readiness path',
+    weight: 12,
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'RC.md')),
+  },
+  {
+    id: 'cov70',
+    label: 'Coverage gate ≥70%',
+    weight: 12,
+    check: () => {
+      const t = fs.readFileSync(path.join(PKG_ROOT, 'scripts/coverage-gate.mjs'), 'utf8')
+      return t.includes("'70'") || t.includes("'75'") || t.includes("'80'") || t.includes("'90'")
+    },
+  },
+  {
+    id: 'win-field',
+    label: 'Windows field note',
+    weight: 10,
+    check: () => fs.readFileSync(path.join(PKG_ROOT, 'RC.md'), 'utf8').includes('[x] Windows'),
+  },
+  {
+    id: 'proc-http',
+    label: 'waitHttpOk covered',
+    weight: 10,
+    check: () => fs.readFileSync(path.join(PKG_ROOT, 'test/proc.test.js'), 'utf8').includes('waitHttpOk'),
+  },
+  {
+    id: 'guest-image',
+    label: 'ensureGuestImage tested',
+    weight: 10,
+    check: () => fs.readFileSync(path.join(PKG_ROOT, 'test/guest-net.test.js'), 'utf8').includes('ensureGuestImage'),
+  },
+  {
+    id: 'llama-cache',
+    label: 'maybeDownloadDefaultGguf test',
+    weight: 10,
+    check: () => fs.readFileSync(path.join(PKG_ROOT, 'test/llama.test.js'), 'utf8').includes('maybeDownloadDefaultGguf'),
+  },
+  {
+    id: 'cdn',
+    label: 'CDN sha256 pinned',
+    weight: 12,
+    check: () => {
+      const rel = loadManifest('cli-releases.json')
+      const arts = rel.channels?.beta?.cli?.artifacts || []
+      return arts.some((x) => x.url && x.sha256 && /^[a-f0-9]{64}$/i.test(x.sha256))
+    },
+  },
+  {
+    id: 'core-doc',
+    label: 'CORE.md / 0.5 page',
+    weight: 8,
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'CORE.md')),
+  },
+  {
+    id: 'license',
+    label: 'CC BY-NC-SA 4.0',
+    weight: 8,
+    check: () => {
+      const pkg = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'package.json'), 'utf8'))
+      return pkg.license === 'CC-BY-NC-SA-4.0'
+    },
+  },
+  {
+    id: 'engine',
+    label: 'Container engine',
+    weight: 8,
+    check: () => detectContainerEngine().ok,
+  },
+]
+
+export function assessCoreReadiness() {
+  return assessMilestones(CORE_MILESTONES)
+}
+
 export function assessReadiness(stage = 'pre-alpha') {
+  if (stage === '0.5' || stage === 'core') return assessCoreReadiness()
   if (stage === 'rc') return assessRcReadiness()
   if (stage === 'beta') return assessBetaReadiness()
   if (stage === 'alpha') return assessAlphaReadiness()
@@ -360,7 +439,15 @@ export function assessReadiness(stage = 'pre-alpha') {
 
 export function formatReadinessReport(r, { host, engine, gpu, stage = 'pre-alpha' } = {}) {
   const label =
-    stage === 'rc' ? 'RC' : stage === 'beta' ? 'Beta' : stage === 'alpha' ? 'Alpha' : 'Pre-alpha'
+    stage === '0.5' || stage === 'core'
+      ? '0.5'
+      : stage === 'rc'
+        ? 'RC'
+        : stage === 'beta'
+          ? 'Beta'
+          : stage === 'alpha'
+            ? 'Alpha'
+            : 'Pre-alpha'
   const lines = []
   lines.push('')
   lines.push(`${label} readiness: ${r.pct}% (${r.score}/${r.max}) — stage: ${r.stage}`)
