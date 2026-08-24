@@ -45,6 +45,7 @@ const TESTS = [
   'test/mcp-server.test.js',
   'test/coordinator.test.js',
   'test/mcp-config.test.js',
+  'test/policy-score.test.js',
 ]
 
 const r = spawnSync(

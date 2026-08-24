@@ -45,9 +45,10 @@ import { cmdVersion, cmdDeps, cmdCheck } from './version-check.js'
 import { cmdLsp } from './lsp-cli.js'
 import { cmdDaemon } from './daemon.js'
 import { classifyBashRisk, classifyBashRiskLlm, classifyWriteRisk } from './permission-risk.js'
+import { assessWorkspaceMemoryBudget } from './memory-budget.js'
+import { assessPolicyScore, formatPolicyScoreReport } from './policy-score.js'
 import { cmdCoord } from './coordinator.js'
 import { formatMcpConfigHelp } from './mcp-config.js'
-import { assessWorkspaceMemoryBudget } from './memory-budget.js'
 
 /**
  * @param {string[]} argv
@@ -70,6 +71,7 @@ export function parseArgs(argv) {
         a === '--watch' ||
         a === '--dry-run' ||
         a === '--readiness' ||
+        a === '--policy' ||
         a === '--all'
       ) {
         flags[a.slice(2)] = true
@@ -147,6 +149,10 @@ export async function cmdDoctor(flags = {}) {
                 : 'pre-alpha'
     const r = assessReadiness(stage)
     console.log(formatReadinessReport(r, { host, engine, gpu: gpu, stage }))
+  }
+
+  if (flags.policy || flags.readiness) {
+    console.log(formatPolicyScoreReport(assessPolicyScore()))
   }
 
   appendLog('event=doctor')
@@ -718,8 +724,10 @@ export function cmdHelp(topic) {
   const bar = wide ? '─'.repeat(48) : '---'
 
   const topics = {
-    doctor: `deep doctor [--readiness] [--stage pre-alpha|alpha|beta|rc|0.5|1.0|1.1]
-  Host/engine/GPU probe. With --readiness prints stage checklist.`,
+    doctor: `deep doctor [--readiness] [--policy] [--stage pre-alpha|alpha|beta|rc|0.5|1.0|1.1]
+  Host/engine/GPU probe. --readiness checklist; --policy isolation grade.`,
+    test: `deep test harness
+  Offline agent harness test pack (jail, risk, MCP, API mock).`,
     bootstrap: `deep bootstrap [--gguf PATH] [--preset NAME] [--channel stable|beta|edge] [--name STACK]
   Create ~/.deep layout, config, workspace seeds.`,
     start: `deep start [--name STACK] [--gguf PATH] [--cpu] [--preset NAME]
@@ -774,7 +782,8 @@ export function cmdHelp(topic) {
   deep version [--channel stable|beta|edge]
   deep check [--channel …]
   deep deps
-  deep doctor [--readiness] [--stage pre-alpha|alpha|beta|rc|0.5|1.0|1.1]
+  deep doctor [--readiness] [--policy] [--stage …]
+  deep test harness
   deep bootstrap [--gguf PATH | --api PROVIDER] [--api-model MODEL] [--api-key KEY] [--preset NAME]
   deep start [--name STACK] [--gguf PATH | --api PROVIDER] [--api-model MODEL] [--api-key KEY] [--cpu] [--preset NAME]
   deep api
@@ -827,6 +836,29 @@ export async function main(argv) {
     switch (cmd) {
       case 'doctor':
         return await cmdDoctor(flags)
+      case 'test': {
+        const sub = (args[0] || 'harness').toLowerCase()
+        if (sub !== 'harness' && sub !== 'pack') {
+          console.error('Usage: deep test harness')
+          process.exitCode = 2
+          return
+        }
+        const { spawn } = await import('node:child_process')
+        const script = path.join(PKG_ROOT, 'scripts', 'harness-test-pack.mjs')
+        const child = spawn(process.execPath, [script, ...args.slice(1)], {
+          stdio: 'inherit',
+          env: process.env,
+          cwd: PKG_ROOT,
+        })
+        await new Promise((resolve, reject) => {
+          child.on('error', reject)
+          child.on('exit', (code) => {
+            process.exitCode = code ?? 0
+            resolve()
+          })
+        })
+        return
+      }
       case 'bootstrap':
         return await cmdBootstrap(flags)
       case 'start': {

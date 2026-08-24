@@ -54,7 +54,7 @@ User → deep CLI
 |------|----------|-------------|
 | Legacy agents | **we cover** | Прямая замена tutorial-трека (VirtualBox/LM Studio) на управляемый CLI-стек |
 | LLM guardrails | **partial → strong local** | Jail + allowlist + guest-only tools — сильный *локальный* guardrail; нет enterprise policy UI / SIEM / IdP |
-| AI testing | **partial** | smoke:e2e, audits, multi-stack — хорошо для автора стека; нет готового «agent test framework» продукта |
+| AI testing | **cover (author kit)** | `deep test harness` + smoke:guest/e2e/api — документированный pack |
 | Team context orchestrators | **no** | Память/сессия на одном хосте (`~/.deep`, DSH); нет shared team cloud |
 | Local no-code AI | **no** | Требует Node, Docker, GGUF, CLI; DSH — UI поверх стека, не no-code installer |
 
@@ -76,8 +76,8 @@ User → deep CLI
 
 1. **Trust path (CDN Release + подписи)** — закрыть 404 на `deep update`; опционально cosign/GPG поверх sha256.  
 2. **Linux/macOS field parity** — без этого Snap/brew и «local for everyone» неубедительны.  
-3. **AI testing kit** — оформить smoke/e2e + jail/egress сценарии как документированный «agent harness test pack» (закрывает partial → cover).  
-4. **Guardrails UX** — явные пресеты paranoia/offline в UI DSH и отчёт `doctor --readiness` как «policy score».  
+3. **AI testing kit** — ✅ `deep test harness` + [HARNESS-TEST-PACK.md](./HARNESS-TEST-PACK.md)  
+4. **Guardrails UX** — ✅ `deep doctor --policy` isolation grade; пресеты paranoia/offline уже в CLI  
 5. **Не гнаться** за team orchestrator / no-code consumer, пока лицензия NC и стек Docker-heavy; иначе размытие ниши.
 
 Анти-ставки: SaaS multi-tenant, App Store no-code, коммерческий white-label без смены лицензии.

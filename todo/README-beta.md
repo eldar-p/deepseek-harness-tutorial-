@@ -21,8 +21,9 @@
 | [024](./024-automode-daemon.md) | Auto-mode LLM + daemon | ✅ done | post-1.0 |
 | [025](./025-toolsearch-mcp-vulkan.md) | ToolSearch + MCP + Vulkan | ✅ done | post-1.0 |
 | [026](./026-ship-1.1.md) | Ship 1.1.0 | ✅ done | 1.1 |
+| [027](./027-harness-policy.md) | Harness pack + policy score | ✅ done | 1.1 |
 
-**1.1** (`1.1.0`) — coord + mcp config + write-risk + readiness 1.1 · coverage ~82%  
-Readiness: `deep doctor --readiness --stage=1.1` · [RELEASE-1.1.md](../RELEASE-1.1.md)
+**1.1** (`1.1.0`) — coord + mcp + harness pack + policy score · coverage ~83%  
+Readiness: `deep doctor --readiness --stage=1.1` · Policy: `deep doctor --policy` · [RELEASE-1.1.md](../RELEASE-1.1.md)
 
 Alpha archive: [README.md](./README.md)
