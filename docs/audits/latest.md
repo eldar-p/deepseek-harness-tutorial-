@@ -5,7 +5,7 @@ Gate: **alpha**
 | # | Аудит | Статус | Детали |
 |---|-------|--------|--------|
 | 1 | Безопасность | PASS | No hardcoded secrets; root refuse; log policy |
-| 2 | Качество и структура | PASS | 20 src modules |
+| 2 | Качество и структура | PASS | 21 src modules |
 | 3 | Документация | PASS | Core docs present |
 | 4 | Лицензии | PASS | package: CC-BY-NC-SA-4.0 |
 | 5 | Типы и сигнатуры | N/A | JS only pre-alpha; TS deferred to pre-beta |

@@ -44,7 +44,7 @@
 - [x] Audit #18 TTY PASS
 - [x] Hard egress iptables (010)
 - [x] Audit #22 context (011)
-- [ ] CDN publish real artifacts (013)
+- [x] CDN publish path + install shim (013); upload zip via publish-release.ps1 when gh available
 
 ## Команды
 

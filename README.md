@@ -79,6 +79,19 @@ npm run test:coverage    # ≥50% src (beta gate)
 npm run audit:alpha
 npm run smoke:guest      # Docker image + mount
 npm run smoke:e2e        # живой стек: jail, HTTP, chat, guest
+npm run pack:release     # zip + sha256 для Release / CDN
+```
+
+CDN install (после upload zip на GitHub Release, или локально):
+
+```powershell
+# local
+$env:DEEP_CLI_ZIP = (Resolve-Path .\dist\deep-cli-0.2.0-alpha.zip).Path
+node bin/deep.js update --channel beta
+
+# remote (когда артефакт на Release)
+node bin/deep.js update --channel beta
+# shim → %LOCALAPPDATA%\deep\bin  (добавь в PATH)
 ```
 
 ## Структура репо (Deep)

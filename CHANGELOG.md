@@ -27,6 +27,9 @@
 - Guest image `deep-guest:0.2-beta` with iptables allowlist (`deep-net-enforce`)
 - `deep update --dry-run` + CDN fetch path when artifact URLs set
 - `npm run pack:release` packs `dist/deep-cli-*.zip` with sha256 snippet
+- `deep update --channel beta` extracts zip + writes `%LOCALAPPDATA%\deep\bin\deep.cmd`
+- Local override: `DEEP_CLI_ZIP` / `DEEP_CLI_SHA256`
+- `scripts/publish-release.ps1` uploads zip via `gh` (when installed)
 
 ## [0.1.0-prealpha] — 2026-08-24
 
