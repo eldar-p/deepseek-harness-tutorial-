@@ -50,12 +50,14 @@
 - [x] Checksum sidecars (017) + `parseArgs` tests (018)
 - [x] Version bump `0.3.0-prebeta`
 - [x] Nightly CI workflow (3 OS)
+- [x] Field beta: gpu-lock/dsh tests (019), coverage gate 60% (020)
+- [x] Version bump `0.4.0-beta`
 
-**Текущий этап:** Pre-beta (`0.3.0-prebeta`) — **complete** (code + audits). Field beta (`0.4.x`) next: re-upload zip under new tag, coverage ≥60%.
+**Текущий этап:** Field beta (`0.4.0-beta`) — coverage **~73%** (gate 60%). Next: CDN Release upload (`gh auth`), field OS sign-off → RC.
 
 ```bash
 npm test
-npm run test:coverage    # ≥50%
+npm run test:coverage    # ≥60%
 npm run audit:prebeta
 node bin/deep.js doctor --readiness --stage=beta
 ```

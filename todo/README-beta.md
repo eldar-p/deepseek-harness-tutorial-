@@ -13,9 +13,11 @@
 | [016](./016-prebeta-coverage-cli.md) | More tests for cli/llama/guest | ✅ done | pre-beta |
 | [017](./017-checksum-sidecars.md) | Zip `.sha256` sidecar + verify | ✅ done | field beta |
 | [018](./018-cli-parseargs-tests.md) | parseArgs / help / presets tests | ✅ done | field beta |
+| [019](./019-field-gpu-dsh-tests.md) | gpu-lock + dsh + status-ui tests | ✅ done | field beta |
+| [020](./020-field-coverage-60.md) | Coverage gate ≥60% | ✅ done | field beta |
 
-**Pre-beta** (`0.3.0-prebeta`) — code gate closed · CDN still points at `v0.2.0-alpha` zip until retag  
-**Field beta next:** nightly matrix, re-pack + upload `v0.3.0-prebeta`, ≥60% coverage  
-Readiness: `deep doctor --readiness --stage=beta` · [BETA.md](../BETA.md) · [PRE-BETA.md](../PRE-BETA.md)
+**Field beta** (`0.4.0-beta`) — coverage gate 60% (src ~73%), nightly CI  
+**CDN:** upload `v0.4.0-beta` zip after `gh auth login`  
+Readiness: `deep doctor --readiness --stage=beta` · [BETA.md](../BETA.md)
 
 Alpha archive: [README.md](./README.md)

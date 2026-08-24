@@ -1,10 +1,10 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { readLocalVersion, getChannelRevision, pickCliArtifact } from '../src/update.js'
+import { readLocalVersion, getChannelRevision, pickCliArtifact, cmdUpdate } from '../src/update.js'
 
 test('readLocalVersion matches package', () => {
   const v = readLocalVersion()
-  assert.match(v, /prealpha|alpha|beta/)
+  assert.match(v, /prealpha|alpha|beta|prebeta/)
 })
 
 test('getChannelRevision stable', () => {
@@ -27,4 +27,12 @@ test('pickCliArtifact stable empty without DEEP_CLI_ZIP', () => {
   } finally {
     if (prev !== undefined) process.env.DEEP_CLI_ZIP = prev
   }
+})
+
+test('cmdUpdate dry-run beta', async () => {
+  await cmdUpdate({ channel: 'beta', 'dry-run': true })
+})
+
+test('cmdUpdate unknown channel throws', async () => {
+  await assert.rejects(() => cmdUpdate({ channel: 'nope' }), (e) => e.exitCode === 2)
 })

@@ -1,6 +1,6 @@
 {
   "schema": "deep-cli-releases/v1",
-  "note": "CC BY-NC-SA 4.0. Artifact on GitHub Releases v0.3.0-prebeta. Local override: DEEP_CLI_ZIP.",
+  "note": "CC BY-NC-SA 4.0. Artifact on GitHub Releases v0.4.0-beta. Local override: DEEP_CLI_ZIP.",
   "channels": {
     "stable": {
       "revision": "2026.08.24-alpha",
@@ -10,49 +10,49 @@
       }
     },
     "beta": {
-      "revision": "2026.08.24-prebeta",
+      "revision": "2026.08.24-field-beta",
       "cli": {
-        "version": "0.3.0-prebeta",
+        "version": "0.4.0-beta",
         "artifacts": [
           {
             "os": "win32",
             "arch": "x64",
             "format": "zip",
-            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.3.0-prebeta/deep-cli-0.3.0-prebeta.zip",
-            "sha256": "3cf8890c79752d22bd24f647bef8366a55512aa652d7a5a255e17497c0570ed3",
-            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.3.0-prebeta/deep-cli-0.3.0-prebeta.zip.sha256"
+            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.4.0-beta/deep-cli-0.4.0-beta.zip",
+            "sha256": "0ee2e780c2c77405a767432c95f66db36bcc6f3b5c14b1c986e5ab64f3ace27d",
+            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.4.0-beta/deep-cli-0.4.0-beta.zip.sha256"
           },
           {
             "os": "darwin",
             "arch": "arm64",
             "format": "zip",
-            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.3.0-prebeta/deep-cli-0.3.0-prebeta.zip",
-            "sha256": "3cf8890c79752d22bd24f647bef8366a55512aa652d7a5a255e17497c0570ed3",
-            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.3.0-prebeta/deep-cli-0.3.0-prebeta.zip.sha256"
+            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.4.0-beta/deep-cli-0.4.0-beta.zip",
+            "sha256": "0ee2e780c2c77405a767432c95f66db36bcc6f3b5c14b1c986e5ab64f3ace27d",
+            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.4.0-beta/deep-cli-0.4.0-beta.zip.sha256"
           },
           {
             "os": "darwin",
             "arch": "x64",
             "format": "zip",
-            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.3.0-prebeta/deep-cli-0.3.0-prebeta.zip",
-            "sha256": "3cf8890c79752d22bd24f647bef8366a55512aa652d7a5a255e17497c0570ed3",
-            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.3.0-prebeta/deep-cli-0.3.0-prebeta.zip.sha256"
+            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.4.0-beta/deep-cli-0.4.0-beta.zip",
+            "sha256": "0ee2e780c2c77405a767432c95f66db36bcc6f3b5c14b1c986e5ab64f3ace27d",
+            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.4.0-beta/deep-cli-0.4.0-beta.zip.sha256"
           },
           {
             "os": "linux",
             "arch": "x64",
             "format": "zip",
-            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.3.0-prebeta/deep-cli-0.3.0-prebeta.zip",
-            "sha256": "3cf8890c79752d22bd24f647bef8366a55512aa652d7a5a255e17497c0570ed3",
-            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.3.0-prebeta/deep-cli-0.3.0-prebeta.zip.sha256"
+            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.4.0-beta/deep-cli-0.4.0-beta.zip",
+            "sha256": "0ee2e780c2c77405a767432c95f66db36bcc6f3b5c14b1c986e5ab64f3ace27d",
+            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.4.0-beta/deep-cli-0.4.0-beta.zip.sha256"
           }
         ]
       }
     },
     "edge": {
-      "revision": "2026.08.24-prebeta",
+      "revision": "2026.08.24-field-beta",
       "cli": {
-        "version": "0.3.0-prebeta",
+        "version": "0.4.0-beta",
         "artifacts": []
       }
     }

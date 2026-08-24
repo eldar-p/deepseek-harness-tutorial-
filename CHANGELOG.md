@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.4.0-beta] — 2026-08-24
+
+### Added
+
+- Unit tests: gpu-lock, dsh settings/status, status-ui screen, update dry-run
+- Coverage gate raised to **60%** (src ~73%)
+
+### Changed
+
+- Version bump to **0.4.0-beta** (field beta)
+
 ## [0.3.0-prebeta] — 2026-08-24
 
 ### Added
