@@ -4,7 +4,7 @@
  * Checks: run state, jail patch, guest net env, llama+DSH HTTP, guest bash.
  *
  * Usage: node scripts/smoke-e2e.mjs [--stack=default]
- * Exit 0 = PASS, 1 = FAIL, 2 = stack not running (skip-friendly locally).
+ * Exit 0 = PASS (or local SKIP if stack down), 1 = FAIL / CI without stack.
  */
 import fs from 'node:fs'
 import path from 'node:path'
