@@ -17,9 +17,9 @@
 | [020](./020-field-coverage-60.md) | Coverage gate ≥60% | ✅ done | field beta |
 | [021](./021-rc-readiness.md) | RC readiness + more CLI tests | ✅ done | RC |
 | [022](./022-core-05.md) | 0.5 core + Windows field | ✅ done | 0.5 |
+| [023](./023-v1-release.md) | Ship 1.0.0 | ✅ done | 1.0 |
 
-**0.5** (`0.5.0`) — readiness 100/100 · coverage ~79% (gate 75%) · Windows field GREEN  
-**Next:** macOS/Linux matrix, CDN upload, then `1.0.0`  
-Readiness: `deep doctor --readiness --stage=0.5` · [CORE.md](../CORE.md)
+**1.0** (`1.0.0`) — product release · coverage ~83% (gate 80%) · Windows GREEN  
+Readiness: `deep doctor --readiness --stage=1.0` · [RELEASE.md](../RELEASE.md)
 
 Alpha archive: [README.md](./README.md)

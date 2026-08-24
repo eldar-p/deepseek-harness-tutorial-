@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import path from 'node:path'
 import { paths } from '../src/paths.js'
-import { resolveDshBin, writeDshRuntimeSettings, stopDsh, dshStatusFromRun } from '../src/dsh.js'
+import { resolveDshBin, writeDshRuntimeSettings, stopDsh, dshStatusFromRun, startDsh } from '../src/dsh.js'
 
 test('resolveDshBin respects DEEP_DSH_BIN', () => {
   const prev = process.env.DEEP_DSH_BIN
@@ -37,4 +37,23 @@ test('dshStatusFromRun levels', () => {
   assert.equal(dshStatusFromRun({ dshSkip: 'missing' }).detail, 'missing')
   assert.equal(dshStatusFromRun({ pids: { dsh: 999999991 } }).level, 'red')
   assert.equal(dshStatusFromRun({ pids: { dsh: process.pid }, urls: { dsh: 'http://x' } }).level, 'green')
+})
+
+test('startDsh without dsh binary returns not ok', async () => {
+  const prev = process.env.DEEP_DSH_BIN
+  const prevPath = process.env.Path || process.env.PATH
+  // Point PATH away so which('dsh') fails; missing DEEP_DSH_BIN
+  delete process.env.DEEP_DSH_BIN
+  process.env.Path = 'C:\\Windows\\System32'
+  process.env.PATH = process.env.Path
+  try {
+    const r = await startDsh({ stack: `utest-dsh-${process.pid}`, port: 19999, llamaPort: 19998 })
+    assert.equal(r.ok, false)
+    assert.match(r.detail, /dsh not on PATH/i)
+  } finally {
+    if (prev === undefined) delete process.env.DEEP_DSH_BIN
+    else process.env.DEEP_DSH_BIN = prev
+    process.env.Path = prevPath
+    process.env.PATH = prevPath
+  }
 })
