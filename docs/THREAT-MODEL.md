@@ -78,7 +78,7 @@ We **mitigate** injection via tool enforcement; we do **not** claim immunity.
 | L1 Static audits | `npm run audit:prebeta`, `npm run audit:security` |
 | L2 Unit tests | `test/jail.test.js`, `test/config-security.test.js` |
 | L3 **Security eval (P6)** | `npm run test:security` — enforcement scenarios |
-| L4 Docker egress smoke | `npm run smoke:guest` (planned runtime verify) |
+| L4 Docker egress smoke | `npm run smoke:egress` (offline guest blocks HTTP/DNS) |
 | L5 External pentest | Not done |
 
 **Claim «security-hardened»:** L1–L3 PASS + this document + [OWASP-LLM-MAP.md](./OWASP-LLM-MAP.md).

@@ -48,6 +48,7 @@ function defaultColibriDocker(cfg = {}, flags = {}) {
 
 /** @returns {'colibri'|'vllm'|null} */
 export function resolveLlmDockerBackend(cfg = {}, flags = {}) {
+  if (flags.gguf || cfg.gguf) return null
   const explicit = (flags['llm-docker'] || process.env.GIM_LLM_DOCKER || '').toLowerCase().trim()
   if (explicit === 'vllm') return 'vllm'
   if (explicit === 'colibri') return 'colibri'

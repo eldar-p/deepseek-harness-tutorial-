@@ -7,6 +7,7 @@ import crypto from 'node:crypto'
 import { paths } from './paths.js'
 import { detectGpu, detectContainerEngine } from './detect.js'
 import { hostSummary } from './detect.js'
+import { LOW_RAM_CTX_CAP, LOW_RAM_THRESHOLD_GB } from './context-policy.js'
 
 /** Stable cache id from resolved model directory (content-agnostic). */
 export function llmCacheId(modelPath) {
@@ -113,6 +114,12 @@ export function assessSpeedHints(opts = {}) {
   if (host.totalmemGb < 48) {
     hints.push('RAM < 48 GB — raise --ram only within free memory; expect disk expert misses')
     level = 'yellow'
+  }
+  if (host.totalmemGb < LOW_RAM_THRESHOLD_GB && !process.env.GIM_CTX) {
+    hints.push(
+      `RAM < ${LOW_RAM_THRESHOLD_GB} GB — runtime ctx capped at ${LOW_RAM_CTX_CAP} (set GIM_CTX to override)`,
+    )
+    if (level === 'green') level = 'yellow'
   }
   if (!engine.ok) {
     hints.push('Docker not running — Colibri default stack needs Docker')

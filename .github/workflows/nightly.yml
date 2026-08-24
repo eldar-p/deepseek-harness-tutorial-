@@ -23,6 +23,12 @@ jobs:
           GIM_COVERAGE_MIN: '80'
           GIM_COVERAGE_FLOOR: '78'
       - run: npm run audit:prebeta
+      - run: npm run audit:security
+      - run: npm run test:security
+      - name: Honest eval (skip if UI down)
+        run: npm run test:honest
+        env:
+          GIM_UI: http://127.0.0.1:7545
       - name: doctor readiness (field)
         run: node bin/gim.js doctor --readiness --stage=field
       - name: field-lite

@@ -64,6 +64,27 @@ export const DEFERRED_TOOLS = [
     detail: 'gim mcp  OR  node scripts/gim-mcp.mjs — code_search + tool_search + status.',
     when: 'Wire GIM tools into Cursor / Claude Desktop',
   },
+  {
+    id: 'doctor_release',
+    keywords: ['release', 'tag', 'rc', 'pre-beta', 'ship'],
+    summary: 'Pre-tag release gate',
+    detail: 'gim doctor --release — RC readiness + audit:prebeta + audit:security + security eval.',
+    when: 'Before versioning or publishing 2.x',
+  },
+  {
+    id: 'doctor_security',
+    keywords: ['security', 'owasp', 'eval', 'policy', 'jail'],
+    summary: 'Security posture + adversarial eval',
+    detail: 'gim doctor --security · npm run test:security · npm run smoke:egress.',
+    when: 'Verify enforcement bar; after security changes',
+  },
+  {
+    id: 'colibri_speed',
+    keywords: ['colibri', 'warm', 'kv', 'grammar', 'ctx', 'speed', 'prefill'],
+    summary: 'Colibri universal speed knobs',
+    detail: 'GIM_LLM_KEEP, cache_slot, GIM_GRAMMAR_TOOLS, adaptive ctx cap — see docs/SPEED.md · gim doctor --speed.',
+    when: 'Slow agent turns; cold start; OOM on large ctx',
+  },
 ]
 
 /**

@@ -1,14 +1,13 @@
-# Code search (GIM CLI)
+---
+name: code-search
+description: Semantic code index for large repos — gim index build/search before bulk grep or read_file.
+---
 
-Use semantic code index instead of reading whole files on large repos.
+# Code search (GIM index)
 
-## When to use
+Use when the workspace has **50+ source files** or grep returns noise.
 
-- Project has 50+ source files
-- Question is "where is X implemented?" or "how does Y work?"
-- Grep returns huge output
-
-## Commands (host workspace)
+## Commands (host CLI)
 
 ```bash
 gim index build --name STACK
@@ -18,22 +17,27 @@ gim index status --name STACK
 
 ## Agent workflow
 
-1. Run `gim index build` once per session (or rely on auto-incremental after writes).
-2. Use `gim index search "<natural language query>"` before bulk Read/Grep.
-3. Read only the 1–3 files/lines returned (path:startLine-endLine).
+1. `gim index build` once per session (or after large refactors).
+2. `gim index search "<natural language>"` **before** bulk `search_files` / `read_file`.
+3. Open only the top 1–3 hits (path + line range).
+
+## HTTP API (stack running)
+
+`GIM_INDEX_URL` — default `http://127.0.0.1:<indexPort>`
+
+```http
+POST /search
+{ "query": "...", "limit": 8 }
+```
 
 ## Optional AST + LanceDB
-
-For tree-sitter AST chunks and LanceDB vector store:
 
 ```bash
 cd optional/code-index && npm install
 ```
 
-Without optional deps: regex chunking + JSON store + hash/llama embeddings (still works).
+Without optional deps: regex chunks + JSON store + hash embeddings (still works).
 
-## Index API
+## Combine with LSP
 
-When stack is running: `GIM_INDEX_URL` (default `http://127.0.0.1:<port>`).
-
-POST `/search` `{ "query": "...", "limit": 8 }`
+Index = fuzzy/natural language. LSP = precise def/refs — see [lsp](../lsp/SKILL.md).

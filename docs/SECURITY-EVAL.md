@@ -22,8 +22,8 @@ gim doctor --security
 
 | Pack | Purpose |
 |------|---------|
-| `honest-eval.mjs` | Agent **usefulness** (messy prompts, tools work) |
-| `security-eval.mjs` | Agent **safety** (enforcement blocks abuse) |
+| [honest-eval.mjs](../scripts/honest-eval.mjs) | Agent **usefulness** + **adversarial resistance** (live LLM) — see [HONEST-EVAL.md](./HONEST-EVAL.md) |
+| `security-eval.mjs` | Agent **safety** (enforcement blocks abuse, offline) |
 
 A model can pass security eval and fail honest-eval, and vice versa.
 

@@ -1,43 +1,45 @@
 ﻿---
 name: large-project
-description: Scaffold and grow large multi-file codebases under share/projects without getting lost. Use for apps, packages, complex structures, many modules, or long builds.
+description: Grow multi-file apps inside the GIM workspace without losing structure. Modular layout, small reads.
 ---
 
 # Large / complex projects
 
 ## Where
-Everything under one slug:
 
-| Host | VM |
-|------|-----|
-| `<HOST_SHARE>\projects\<slug>\` | `/mnt/hostshare/projects/<slug>/` |
-
-Never dump big trees onto share root. Never overwrite unrelated root `README.md`.
-
-## How not to get lost
-1. **`create_goal`** with the end state (what "done" means). Update/complete as you go.
-2. First write a short **tree plan** (in the goal or one `STRUCTURE.txt` inside the project) — dirs + main entrypoints only.
-3. **One concern per file.** Prefer many small modules over one giant script.
-4. Typical layout (adapt to language):
+Everything under the **stack workspace**:
 
 ```text
-projects/<slug>/
-  STRUCTURE.txt          # optional map (not a marketing README)
-  src/ or lib/           # code
-  tests/                 # if testing
-  scripts/               # runners
-  .venv/                 # python deps only here
+~/.gim/workspace/<stack>/
+  my-app/
+    STRUCTURE.txt    # optional map (not marketing README)
+    src/
+    tests/
+    scripts/
 ```
 
-5. After each module: run the smallest check (import, unit test, or CLI help). Do not rewrite the whole tree.
-6. Prefer **stdlib** first. If deps needed: `python3 -m venv /mnt/hostshare/projects/<slug>/.venv` then pip *into that venv*.
-7. Navigation: `grep` / `glob` under `projects/<slug>` — never page multi-kLoC files end-to-end (`read` limit ≤ 200).
-8. ASCII only in code (`[OK]` / `[FAIL]`). No emoji.
-9. Docs: only if user asked, or a brief `STRUCTURE.txt` / module docstrings — not share-root LICENSE/README spam.
-10. When done: **`complete_goal`**, one short summary with the project path.
+Guest sees the same tree at `/workspace/my-app/`.
+
+Do not scatter files outside the workspace. Do not overwrite unrelated root docs unless asked.
+
+## How not to get lost
+
+1. First write a short **tree plan** (`STRUCTURE.txt` or first `ask_user` turn) — dirs + entrypoints only.
+2. **One concern per file** — many small modules over one giant script.
+3. After each module: smallest check (`guest_bash` test, import, `--help`).
+4. Navigation: `search_files` / `rg` under project dir — never read multi-kLoC files whole.
+5. Prefer stdlib; venv/node_modules **inside** the project folder via `guest_bash`.
+6. ASCII status in code: `[OK]` / `[FAIL]`. No emoji in filenames or source.
+7. Docs only when user asked, or brief module docstrings.
+
+## Agent modes
+
+- **Agent / Debug** — full six tools
+- **Plan / Ask** — clarify with `ask_user` before big rewrites
 
 ## Anti-patterns
-- One 2k-line file for an app
-- `pip install --break-system-packages` on the VM
-- Root-level README/LICENSE for every toy script
-- Re-listing `pwd`/`ls` between every write
+
+- Single 2k-line file for an app
+- `pip install --break-system-packages` in guest without venv
+- LICENSE/README spam for every toy script
+- Re-listing directory between every write

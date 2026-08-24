@@ -35,6 +35,10 @@ test('cmdDoctor and readiness rc', async () => {
   await cmdDoctor({ readiness: true, stage: 'rc' })
 })
 
+test('cmdDoctor release gate', async () => {
+  await cmdDoctor({ release: true })
+})
+
 test('cmdStacks lists', async () => {
   await cmdStacks()
 })

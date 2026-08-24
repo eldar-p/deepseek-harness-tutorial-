@@ -15,4 +15,11 @@ jobs:
           node-version: '22'
       - run: npm run infra:check
       - run: npm test
-      - run: npm run audit -- --gate=pre-alpha
+      - run: npm run test:coverage
+        env:
+          GIM_COVERAGE_MIN: '80'
+          GIM_COVERAGE_FLOOR: '78'
+      - run: npm run audit:prebeta
+      - run: npm run audit:security
+      - run: npm run test:security
+      - run: node bin/gim.js doctor --release

@@ -47,6 +47,14 @@ const TESTS = [
   'test/mcp-config.test.js',
   'test/policy-score.test.js',
   'test/security-eval.test.js',
+  'test/colibri.test.js',
+  'test/llm-docker.test.js',
+  'test/colibri-speed.test.js',
+  'test/platform-paths.test.js',
+  'test/context-policy.test.js',
+  'test/release-check.test.js',
+  'test/agent-prefill.test.js',
+  'test/honest-eval-tasks.test.js',
 ]
 
 const r = spawnSync(

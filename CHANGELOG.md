@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.1.2] — 2026-08-24
+
+### Added
+
+- Honest-eval **adversarial suite** (a01–a12) from published agent failures (AIShellJack, Trail of Bits, Oso, Unit42, AgentHopper)
+- `src/honest-eval-tasks.js` — task catalog + helpers
+- [docs/HONEST-EVAL.md](./docs/HONEST-EVAL.md)
+- `gim doctor --release`, `npm run smoke:egress`, `npm run test:honest`
+- Skills rework: `gim-workspace`, `gim-security`, `network-egress`; index [skills/README.md](./skills/README.md)
+- Tool-search catalog: `doctor_release`, `doctor_security`, `colibri_speed`
+
+### Changed
+
+- Release gate in CI; coverage ≥80%; adaptive ctx cap (<64 GB RAM → 128K)
+- Agent defaults: `GIM_TOOL_MAX_READ` 8 KB; batch tool results on
+- Version **1.1.2** (fixes/tuning release track)
+
 ## [2.0.0] — 2026-08-24
 
 ### Changed
@@ -18,6 +35,18 @@
 - Workspace **file browser** panel in GIM UI
 - **ask_user** clarifying polls (options + free text); Ask/Plan can clarify too; UI form resumes the agent loop
 - **Colibri backend** (`gim start --colibri`): safetensors via `coli serve`; default `E:\models\DeepSeek-V4-Flash-0731`; wired into GIM UI model list
+
+### Release readiness (2.0.0)
+
+- `gim doctor --release` — RC readiness + audit:prebeta + audit:security + security eval
+- `npm run smoke:egress` — runtime egress smoke (offline guest) in CI
+- Coverage gate ≥80% with expanded Colibri/llm-docker tests
+- Adaptive ctx cap: RAM < 64 GB → 128K unless `GIM_CTX` set
+- Agent efficiency: `GIM_TOOL_MAX_READ` default 8 KB; batch tool results on by default
+- CI: `test:security` + `audit:security` on all OS; egress smoke on ubuntu
+- [RELEASE.md](./RELEASE.md) with published residual risks
+- **Skills rework (2.0):** `skills/README.md` — GIM workspace, security, network-egress; removed legacy Tor/DSH/hostshare skills
+- `npm run test:honest` — honest-eval CI wrapper (skips if UI down)
 
 ## [1.1.1] — 2026-08-24
 

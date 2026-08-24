@@ -10,7 +10,7 @@ import { detectContainerEngine, engineEnv } from './detect.js'
 import { isGuestRunning } from './guest.js'
 import { classifyBashRisk, classifyWriteRisk } from './permission-risk.js'
 
-const MAX_READ = Number(process.env.GIM_TOOL_MAX_READ || 48_000)
+const MAX_READ = Number(process.env.GIM_TOOL_MAX_READ || 8_192)
 const MAX_LIST = Number(process.env.GIM_TOOL_MAX_LIST || 400)
 const MAX_BASH_OUT = Number(process.env.GIM_TOOL_MAX_BASH || 32_000)
 

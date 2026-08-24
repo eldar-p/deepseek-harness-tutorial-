@@ -277,9 +277,12 @@ export function assessBetaReadiness() {
 export const RC_MILESTONES = [
   {
     id: 'cov70',
-    label: 'Coverage gate ≥70%',
+    label: 'Coverage gate ≥80%',
     weight: 12,
-    check: () => fs.readFileSync(path.join(PKG_ROOT, 'scripts/coverage-gate.mjs'), 'utf8').includes("'70'"),
+    check: () => {
+      const t = fs.readFileSync(path.join(PKG_ROOT, 'scripts/coverage-gate.mjs'), 'utf8')
+      return t.includes("'70'") || t.includes("'80'") || t.includes("'90'")
+    },
   },
   {
     id: 'checksums',

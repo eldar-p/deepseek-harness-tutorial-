@@ -33,7 +33,7 @@ export function stringifyToolResult(result) {
  * @param {object[]} messages
  */
 export function batchTrailingToolResults(messages) {
-  if (process.env.GIM_BATCH_TOOL_RESULTS !== '1') return messages
+  if (process.env.GIM_BATCH_TOOL_RESULTS === '0') return messages
   const msgs = [...messages]
   const trailing = []
   while (msgs.length && msgs[msgs.length - 1]?.role === 'tool') {

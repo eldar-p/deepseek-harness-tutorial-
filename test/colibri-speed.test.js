@@ -1,10 +1,19 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import {
   llmCacheId,
   universalColibriSpeedEnv,
   llmKeepWarm,
   dockerEnvArgs,
+  ensureLlmCacheDirs,
+  shouldRunAutoTune,
+  markAutoTuneDone,
+  autoTuneMarkerPath,
+  assessSpeedHints,
+  formatSpeedReport,
 } from '../src/colibri-speed.js'
 import {
   resolveLlmDockerBackend,
@@ -61,4 +70,43 @@ test('resolveLlmDockerBackend defaults to colibri on win/linux', () => {
 
 test('llmContainerName', () => {
   assert.equal(llmContainerName('default', 'colibri'), 'gim-llm-colibri-default')
+})
+
+test('ensureLlmCacheDirs creates subdirs', () => {
+  const model = path.join(os.tmpdir(), `gim-cache-${process.pid}`)
+  const prev = process.env.GIM_HOME
+  process.env.GIM_HOME = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-home-'))
+  const base = ensureLlmCacheDirs(model)
+  assert.ok(fs.existsSync(path.join(base, 'xdg')))
+  assert.ok(fs.existsSync(path.join(base, 'markers')))
+  if (prev === undefined) delete process.env.GIM_HOME
+  else process.env.GIM_HOME = prev
+})
+
+test('autoTune marker lifecycle', () => {
+  const model = path.join(os.tmpdir(), `gim-tune-${process.pid}`)
+  const prev = process.env.GIM_HOME
+  process.env.GIM_HOME = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-home2-'))
+  assert.equal(shouldRunAutoTune(model), true)
+  markAutoTuneDone(model)
+  assert.equal(fs.existsSync(autoTuneMarkerPath(model)), true)
+  assert.equal(shouldRunAutoTune(model), false)
+  if (prev === undefined) delete process.env.GIM_HOME
+  else process.env.GIM_HOME = prev
+})
+
+test('assessSpeedHints returns hints', () => {
+  const r = assessSpeedHints()
+  assert.ok(Array.isArray(r.hints))
+  assert.ok(r.hints.length >= 3)
+  assert.ok(['green', 'yellow', 'red'].includes(r.level))
+  assert.match(formatSpeedReport(r), /GIM speed hints/)
+})
+
+test('universalColibriSpeedEnv respects COLI_KV_SLOTS', () => {
+  const prev = process.env.COLI_KV_SLOTS
+  process.env.COLI_KV_SLOTS = '4'
+  assert.equal(universalColibriSpeedEnv({ ramGb: 32 }).COLI_KV_SLOTS, '4')
+  if (prev === undefined) delete process.env.COLI_KV_SLOTS
+  else process.env.COLI_KV_SLOTS = prev
 })

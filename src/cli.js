@@ -69,6 +69,7 @@ import { classifyBashRisk, classifyBashRiskLlm, classifyWriteRisk } from './perm
 import { assessWorkspaceMemoryBudget } from './memory-budget.js'
 import { assessPolicyScore, formatPolicyScoreReport } from './policy-score.js'
 import { runSecurityEval, formatSecurityEvalReport } from './security-eval.js'
+import { runReleaseCheck, formatReleaseCheckReport } from './release-check.js'
 import { cmdCoord } from './coordinator.js'
 import { validateDeepPlugins, formatPluginValidation } from './plugin-validate.js'
 import { resolveDshBin } from './dsh.js'
@@ -136,7 +137,8 @@ export function parseArgs(argv) {
         a === '--vllm' ||
         a === '--full-stop' ||
         a === '--speed' ||
-        a === '--security'
+        a === '--security' ||
+        a === '--release'
       ) {
         flags[a.slice(2)] = true
       } else {
@@ -255,6 +257,12 @@ export async function cmdDoctor(flags = {}) {
   if (flags.security) {
     console.log(formatPolicyScoreReport(assessPolicyScore()))
     console.log(formatSecurityEvalReport(runSecurityEval()))
+  }
+
+  if (flags.release) {
+    const report = runReleaseCheck({ host, engine, gpu })
+    console.log(formatReleaseCheckReport(report, { host, engine, gpu, stage: 'rc' }))
+    if (!report.ok) process.exitCode = 1
   }
 
   appendLog('event=doctor')
@@ -1084,8 +1092,8 @@ export function cmdHelp(topic) {
   const bar = wide ? '─'.repeat(48) : '---'
 
   const topics = {
-    doctor: `gim doctor [--readiness] [--policy] [--speed] [--security] [--stage pre-alpha|alpha|beta|rc|0.5|1.0|1.1|field]
-  Host/engine/GPU probe. --readiness checklist; --policy isolation; --speed Colibri/Docker hints; --security enforcement eval.`,
+    doctor: `gim doctor [--readiness] [--policy] [--speed] [--security] [--release] [--stage pre-alpha|alpha|beta|rc|0.5|1.0|1.1|field]
+  Host/engine/GPU probe. --readiness checklist; --policy isolation; --speed Colibri/Docker hints; --security enforcement eval; --release pre-tag gate.`,
     test: `gim test harness|security
   harness — offline guardrail pack; security — P6 adversarial enforcement eval.`,
     field: `gim field lite [--skip-fetch]

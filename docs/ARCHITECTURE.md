@@ -36,6 +36,10 @@ We do **not** ship per-model tool schemas, agent profiles, or OS-specific LLM la
 
 Runtime `probeLlmCapabilities()` + universal `gim-tool` text fallback — one agent loop.
 
+## Agent skills
+
+Bundled under `skills/` — index [skills/README.md](../skills/README.md). Copied to `~/.gim/dsh-home/skills` on bootstrap. Guide long agent tasks (speed, security, index, egress) without per-model prompts in core.
+
 ## One stack
 
 1 stack = 1 LLM endpoint + 1 guest + UI/index. Multi-stack via `--name`.

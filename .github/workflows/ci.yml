@@ -52,6 +52,12 @@ jobs:
       - name: Harness test pack
         run: npm run test:harness
 
+      - name: Security eval
+        run: npm run test:security
+
+      - name: Audit gate (security)
+        run: npm run audit:security
+
   field-lite:
     name: field-lite (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -81,3 +87,6 @@ jobs:
 
       - name: Guest build + mount smoke
         run: npm run smoke:guest
+
+      - name: Egress runtime smoke
+        run: npm run smoke:egress

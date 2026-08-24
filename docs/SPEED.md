@@ -44,9 +44,10 @@ Set via Docker env (override any with host `COLI_*` / `CUDA_*`):
 
 ## P3 — Harness
 
-- `GIM_TOOL_MAX_READ` / `GIM_TOOL_MAX_BASH` — smaller tool payloads → less prefill.
+- `GIM_TOOL_MAX_READ` / `GIM_TOOL_MAX_BASH` — smaller tool payloads → less prefill (default read **8 KB**).
 - HTTP keep-alive to `/v1` (`src/llm-fetch.js`).
 - Context compact @ 72% (`GIM_COMPACT_PCT`).
+- **Adaptive ctx cap** — RAM < 64 GB → runtime ctx capped at 128K unless `GIM_CTX` set (`context-policy.js`).
 - Capability probe cached per stack (not per chat).
 
 ## P4 — Doctor
@@ -77,7 +78,7 @@ Env: `GIM_DEFAULT_LLM=colibri|gguf|api|none` · `GIM_LLM_KEEP=0|1`
 | **Grammar drafts** | `GIM_GRAMMAR_TOOLS=1` | Universal compact JSON GBNF in Docker |
 | **Agent temp 0** | default agent/debug | Greedy + grammar draft acceptance |
 | **Compact tool JSON** | `GIM_TOOL_RESULT_MAX` | Smaller prefill after tools |
-| **Batch tool results** | `GIM_BATCH_TOOL_RESULTS=1` | Optional merge (off by default) |
+| **Batch tool results** | on by default (`GIM_BATCH_TOOL_RESULTS=0` to disable) | One user block instead of N tool messages → less prefill |
 | **Multi-GPU** | `COLI_GPUS=0,1` | Optional expert tier spread |
 | **Queue** | `COLI_MAX_QUEUE=8` | Fair admission under load |
 
@@ -94,3 +95,9 @@ Disable grammar: `GIM_GRAMMAR_TOOLS=0`. Disable KV slot assignment: omit `chatId
 | **Doctor** | `gim doctor --security` | Policy score + security eval summary |
 
 Separate from functional eval: `node scripts/honest-eval.mjs`. See [SECURITY-EVAL.md](./SECURITY-EVAL.md).
+
+## Release gate
+
+```bash
+gim doctor --release   # RC readiness + audit:prebeta + audit:security + test:security summary
+```

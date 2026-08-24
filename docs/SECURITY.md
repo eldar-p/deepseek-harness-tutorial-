@@ -10,7 +10,7 @@ What we protect, how we verify it, and what we **do not** promise.
 | **Assured** | Tested against OWASP LLM agent threats | + egress runtime smoke + published residual risks |
 | **Certified** | Enterprise-ready | External audit, SOC 2, IR plan — **not current** |
 
-GIM targets **Hardened** at pre-beta; **Assured** is the next milestone.
+GIM targets **Assured** (partial) at 2.0 — Hardened controls + runtime egress smoke + published residual risks in [RELEASE.md](../RELEASE.md).
 
 ## Controls (summary)
 
@@ -26,11 +26,19 @@ GIM targets **Hardened** at pre-beta; **Assured** is the next milestone.
 ```bash
 npm run audit:security      # static checks 1–32
 npm run test:security       # P6 adversarial enforcement pack
+npm run smoke:egress        # runtime: offline guest blocks egress (Docker)
 gim doctor --policy         # isolation posture score
 gim doctor --security       # policy + security eval summary
+gim doctor --release        # pre-tag gate (RC + audits + security eval)
 ```
 
-Functional agent quality is separate: `node scripts/honest-eval.mjs`.
+Functional agent quality is separate:
+
+```bash
+gim start   # warm stack + UI
+GIM_UI=http://127.0.0.1:<port> node scripts/honest-eval.mjs
+npm run test:honest   # CI wrapper — skips if UI down (nightly)
+```
 
 ## What we do not claim
 

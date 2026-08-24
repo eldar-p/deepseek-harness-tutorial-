@@ -1,7 +1,7 @@
 # OWASP LLM Top 10 → GIM controls
 
 Mapping to [OWASP Top 10 for LLM Applications](https://owasp.org/www-project-top-10-for-large-language-model-applications/) (2025).  
-Status: **Hardened** tier — static + enforcement eval; runtime egress partially manual.
+Status: **Assured** tier (partial) — static + enforcement eval + runtime egress smoke in CI.
 
 | ID | Risk | GIM control | Test / audit |
 |----|------|-------------|--------------|
@@ -21,7 +21,7 @@ Status: **Hardened** tier — static + enforcement eval; runtime egress partiall
 | Tier | OWASP items with automated test | Notes |
 |------|--------------------------------|-------|
 | Hardened (now) | 8/10 (LLM01–07, LLM10) | LLM08 N/A without RAG; LLM09 quality-only |
-| Assured (next) | + runtime egress (#29), guest write smoke (#31) | Docker CI job |
+| **Assured** (next) | + runtime egress CI (`smoke:egress`), published residual risks in RELEASE.md | Docker CI job |
 
 ## Run enforcement mapping
 
