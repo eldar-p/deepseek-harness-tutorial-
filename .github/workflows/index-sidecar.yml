@@ -1,0 +1,42 @@
+name: index-sidecar
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            cacheName: gim-index-linux-x64
+            binaryName: gim-index
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            cacheName: gim-index-win-x64.exe
+            binaryName: gim-index.exe
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            cacheName: gim-index-darwin-arm64
+            binaryName: gim-index
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - name: cargo build
+        working-directory: sidecar/gim-index
+        run: cargo build --release --target ${{ matrix.target }}
+      - name: stage artifact
+        shell: bash
+        run: |
+          mkdir -p dist-sidecar
+          cp sidecar/gim-index/target/${{ matrix.target }}/release/${{ matrix.binaryName }} dist-sidecar/${{ matrix.cacheName }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.cacheName }}
+          path: dist-sidecar/${{ matrix.cacheName }}

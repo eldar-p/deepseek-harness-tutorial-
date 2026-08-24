@@ -48,8 +48,9 @@ import {
   llmContainerName,
 } from './llm-docker.js'
 import { formatSpeedReport, assessSpeedHints } from './colibri-speed.js'
-import { cmdIndexBuild, cmdIndexSearch, cmdIndexStatus, cmdIndexSidecar } from './code-index-cli.js'
-import { spawnCodeIndexService } from './index-sidecar.js'
+import { cmdIndexBuild, cmdIndexSearch, cmdIndexStatus, cmdIndexSidecar, cmdIndexBench } from './code-index-cli.js'
+import { prepareCodeIndexSpawn } from './index-sidecar.js'
+import { maybeWarnOpportunityOnStart } from './start-hints.js'
 import { ensureSecretsTemplate } from './secrets.js'
 import {
   isApiMode,
@@ -141,6 +142,8 @@ export function parseArgs(argv) {
         a === '--vllm' ||
         a === '--full-stop' ||
         a === '--speed' ||
+        a === '--ki' ||
+        a === '--opportunity' ||
         a === '--security' ||
         a === '--release'
       ) {
@@ -263,6 +266,13 @@ export async function cmdDoctor(flags = {}) {
 
   if (flags.speed) {
     console.log(formatSpeedReport(assessSpeedHints()))
+    const { assessOpportunityCost, formatOpportunityCostReport } = await import('./opportunity-cost.js')
+    console.log(formatOpportunityCostReport(await assessOpportunityCost(flags.name || 'default')))
+  }
+
+  if (flags.ki || flags.opportunity) {
+    const { assessOpportunityCost, formatOpportunityCostReport } = await import('./opportunity-cost.js')
+    console.log(formatOpportunityCostReport(await assessOpportunityCost(flags.name || 'default')))
   }
 
   if (flags.security) {
@@ -525,13 +535,14 @@ async function startStackApi({ stack, cfg, flags, engine }) {
     console.log(`[GREEN] Egress proxy :${proxyPort} (${allow.length} hosts)`)
   }
 
-  state.pids.index = spawnCodeIndexService({
+  const idxSpawn = await prepareCodeIndexSpawn({
     stack,
     indexPort,
     llamaUrl: urls.llama,
     logFile: runLogPath(stack, 'code-index'),
-  }).pid
-  console.log(`[GREEN] Code index ${urls.index}`)
+  })
+  state.pids.index = idxSpawn.pid
+  console.log(`[GREEN] Code index ${urls.index} (backend=${idxSpawn.backend})`)
 
   if (engine.ok) {
     const g = await startGuest({ stack, presetNet: cfg.guestNetwork, proxyPort })
@@ -585,6 +596,7 @@ async function startStackApi({ stack, cfg, flags, engine }) {
   console.log(`API:   ${profile.id} / ${profile.model}`)
   registerStack(cfg, stack, { preset: cfg.preset, device: 'api', guestNetwork: cfg.guestNetwork, urls })
   appendLog(`event=start_api stack=${stack} provider=${profile.id} model=${profile.model}`)
+  await maybeWarnOpportunityOnStart(stack)
 }
 
 /** LLM in Docker — Colibri safetensors or vLLM (Win/Linux; macOS → --gguf/--api). */
@@ -716,13 +728,14 @@ async function startStackLlmDocker({ stack, cfg, flags, engine, backend }) {
     console.log(`[GREEN] Egress proxy :${proxyPort} (${allow.length} hosts)`)
   }
 
-  state.pids.index = spawnCodeIndexService({
+  const idxSpawn = await prepareCodeIndexSpawn({
     stack,
     indexPort,
     llamaUrl: state.urls?.llama || urls.llama,
     logFile: runLogPath(stack, 'code-index'),
-  }).pid
-  console.log(`[GREEN] Code index ${urls.index}`)
+  })
+  state.pids.index = idxSpawn.pid
+  console.log(`[GREEN] Code index ${urls.index} (backend=${idxSpawn.backend})`)
 
   if (engine.ok) {
     const g = await startGuest({ stack, presetNet: cfg.guestNetwork, proxyPort })
@@ -776,6 +789,7 @@ async function startStackLlmDocker({ stack, cfg, flags, engine, backend }) {
   console.log(`Model: ${modelPath}`)
   registerStack(cfg, stack, { preset: cfg.preset, device: backend, guestNetwork: cfg.guestNetwork, urls })
   appendLog(`event=start_llm_docker stack=${stack} backend=${backend} model=${modelPath}`)
+  await maybeWarnOpportunityOnStart(stack)
 }
 
 export async function cmdStart(flags) {
@@ -941,14 +955,14 @@ export async function cmdStart(flags) {
       console.log(`[GREEN] Egress proxy :${proxyPort} (${allow.length} hosts, secrets on host)`)
     }
 
-    // Code index HTTP service
-    state.pids.index = spawnCodeIndexService({
+    const idxSpawn = await prepareCodeIndexSpawn({
       stack,
       indexPort,
       llamaUrl: urls.llama,
       logFile: runLogPath(stack, 'code-index'),
-    }).pid
-    console.log(`[GREEN] Code index ${urls.index}`)
+    })
+    state.pids.index = idxSpawn.pid
+    console.log(`[GREEN] Code index ${urls.index} (backend=${idxSpawn.backend})`)
 
     // Guest (optional if no engine)
     let guestSkip = null
@@ -1020,6 +1034,7 @@ export async function cmdStart(flags) {
       urls,
     })
     appendLog(`event=start stack=${stack} device=${llamaDevice} dshPort=${dshPort} llamaPort=${llamaPort}`)
+    await maybeWarnOpportunityOnStart(stack)
   }, { stack })
 }
 
@@ -1114,8 +1129,8 @@ export function cmdHelp(topic) {
   const bar = wide ? '─'.repeat(48) : '---'
 
   const topics = {
-    doctor: `gim doctor [--readiness] [--policy] [--speed] [--security] [--release] [--stage pre-alpha|alpha|beta|rc|0.5|1.0|1.1|field]
-  Host/engine/GPU probe. --readiness checklist; --policy isolation; --speed Colibri/Docker hints; --security enforcement eval; --release pre-tag gate.`,
+    doctor: `gim doctor [--readiness] [--policy] [--speed] [--ki] [--security] [--release] [--stage pre-alpha|alpha|beta|rc|0.5|1.0|1.1|field]
+  Host/engine/GPU probe. --speed Colibri hints + KI; --ki performance opportunity only; --release pre-tag gate.`,
     test: `gim test harness|security
   harness — offline guardrail pack; security — P6 adversarial enforcement eval.`,
     field: `gim field lite [--skip-fetch]
@@ -1146,9 +1161,9 @@ export function cmdHelp(topic) {
   List built-in presets.`,
     api: `gim api
   List cloud API providers for --api.`,
-    index: `gim index build|search|status|sidecar [--name STACK]
-  Semantic code index over the stack workspace.`,
-    lsp: `gim lsp servers|query|hover|definition|references|symbols
+    index: `gim index build|search|status|sidecar|bench [--name STACK]
+  Semantic code index over the stack workspace. bench = search latency.`,
+    lsp: `gim lsp servers|query|hover|definition|references|symbols|workspace_symbols
   Host language-server helpers (typescript-language-server / pyright / …).`,
     daemon: `gim daemon start|stop|status|tick [--name STACK] [--interval MS] [--proactive]
   Background health poller for llama/DSH (Kairos-lite). --proactive writes .gim/PROACTIVE.md.`,
@@ -1333,7 +1348,8 @@ export async function main(argv) {
         if (sub === 'search') return await cmdIndexSearch(flags, rest)
         if (sub === 'status') return await cmdIndexStatus(flags)
         if (sub === 'sidecar') return await cmdIndexSidecar()
-        console.error('Usage: gim index build|search|status|sidecar')
+        if (sub === 'bench') return await cmdIndexBench(flags, rest)
+        console.error('Usage: gim index build|search|status|sidecar|bench')
         process.exitCode = 2
         return
       }

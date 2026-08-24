@@ -258,9 +258,40 @@ export async function scanStackHealth(stack = 'default', opts = {}) {
     'index',
     idx.chunkCount > 0,
     'Code index',
-    idx.chunkCount > 0 ? `${idx.chunkCount} chunks` : 'not built',
+    idx.chunkCount > 0 ? `${idx.chunkCount} chunks (${idx.backend}${idx.sharded ? ', sharded' : ''})` : 'not built',
     { severity: 'info', code: 'GIM-INDEX-001', fix: 'gim index build' },
   )
+
+  try {
+    const { assessIndexSidecar } = await import('./index-sidecar.js')
+    const sidecar = await assessIndexSidecar()
+    add(
+      'index-sidecar',
+      sidecar.jsOk,
+      'Index sidecar',
+      `${sidecar.activeBackend}${sidecar.native ? ` (${sidecar.native.source})` : ''}`,
+      { severity: 'info' },
+    )
+    if (sidecar.manifestEntry && !sidecar.manifestPinned) {
+      add('index-sidecar-pin', true, 'Sidecar manifest', 'native url not pinned — JS/local fallback', {
+        severity: 'info',
+        fix: 'npm run pack:index-sidecar after release upload',
+      })
+    }
+  } catch {
+    /* optional */
+  }
+
+  try {
+    const { assessLanceBackend } = await import('./code-index/store.js')
+    const lance = await assessLanceBackend()
+    add('index-lance', lance.available, 'LanceDB optional', lance.available ? 'installed' : lance.reason || 'missing', {
+      severity: 'info',
+      fix: 'cd optional/code-index && npm install',
+    })
+  } catch {
+    /* optional */
+  }
 
   const recent = readDiagnostics(stack, { limit: 10 })
   const gpu = detectGpu()

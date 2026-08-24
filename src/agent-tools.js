@@ -11,6 +11,8 @@ import { isGuestRunning } from './guest.js'
 import { classifyBashRisk, classifyWriteRisk } from './permission-risk.js'
 import { hasMcpServers } from './mcp-client.js'
 import { scheduleIndexTouch } from './code-index/touch.js'
+import { searchDeferredTools, selectDeferredTool, formatToolSearchHits } from './tool-search.js'
+import { isMcpSubscriptionTool } from './mcp-subscriptions.js'
 
 const MAX_READ = Number(process.env.GIM_TOOL_MAX_READ || 8_192)
 const MAX_LIST = Number(process.env.GIM_TOOL_MAX_LIST || 400)
@@ -125,6 +127,133 @@ export const AGENT_TOOLS = [
   },
 ]
 
+export const DEFERRED_AGENT_TOOLS = [
+  {
+    type: 'function',
+    function: {
+      name: 'tool_search',
+      description: 'Search GIM deferred tool catalog by keywords before guessing CLI/MCP capabilities.',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: { type: 'string' },
+          limit: { type: 'number' },
+        },
+        required: ['query'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'tool_select',
+      description: 'Load full deferred tool detail by id (after tool_search).',
+      parameters: {
+        type: 'object',
+        properties: { id: { type: 'string' } },
+        required: ['id'],
+      },
+    },
+  },
+]
+
+export const LSP_AGENT_TOOL = {
+  type: 'function',
+  function: {
+    name: 'lsp_query',
+    description:
+      'Language-server query: hover|definition|references|symbols|workspace_symbols (host tsserver/pyright). Prefer over grep for precise nav.',
+    parameters: {
+      type: 'object',
+      properties: {
+        op: {
+          type: 'string',
+          description: 'hover|definition|references|symbols|workspace_symbols',
+        },
+        path: { type: 'string', description: 'Relative file path (optional for workspace_symbols)' },
+        query: { type: 'string', description: 'Symbol query for workspace_symbols' },
+        line: { type: 'number' },
+        character: { type: 'number' },
+      },
+      required: ['op'],
+    },
+  },
+}
+
+export const CODE_SEARCH_AGENT_TOOL = {
+  type: 'function',
+  function: {
+    name: 'code_search',
+    description: 'Semantic search over workspace code index (uses sidecar HTTP when stack running).',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: { type: 'string' },
+        limit: { type: 'number' },
+      },
+      required: ['query'],
+    },
+  },
+}
+
+export const INDEX_AGENT_TOOLS = [
+  {
+    type: 'function',
+    function: {
+      name: 'code_index_status',
+      description: 'Code index backend, chunk count, builtAt (local or sidecar HTTP).',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'code_index_build',
+      description: 'Rebuild/incremental code index (may take minutes on large repos).',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+]
+
+export const LSP_SERVERS_AGENT_TOOL = {
+  type: 'function',
+  function: {
+    name: 'lsp_servers',
+    description: 'List host language servers available on PATH (tsserver, pyright, etc.).',
+    parameters: { type: 'object', properties: {} },
+  },
+}
+
+export const MCP_SUBSCRIPTION_TOOLS = [
+  {
+    type: 'function',
+    function: {
+      name: 'mcp_subscribe',
+      description: 'Subscribe to an MCP resource URI for change polling (use mcp_poll_subscriptions).',
+      parameters: {
+        type: 'object',
+        properties: {
+          server: { type: 'string' },
+          uri: { type: 'string' },
+        },
+        required: ['server', 'uri'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'mcp_poll_subscriptions',
+      description: 'Poll subscribed MCP resources for changes since last check.',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+]
+
+export function deferredToolsEnabled() {
+  return process.env.GIM_DEFERRED_TOOLS !== '0'
+}
+
 export const MCP_AGENT_TOOLS = [
   {
     type: 'function',
@@ -172,9 +301,22 @@ export function modesWithTools(mode) {
 /** Full toolset vs clarify-only for Ask/Plan. */
 export function toolsForMode(mode, stack = 'default') {
   if (mode === 'agent' || mode === 'debug') {
-    const base = [...AGENT_TOOLS]
+    /** @type {object[]} */
+    let base
+    if (deferredToolsEnabled()) {
+      base = [
+        ...DEFERRED_AGENT_TOOLS,
+        ...AGENT_TOOLS.filter((t) => t.function?.name !== 'search_files'),
+        LSP_AGENT_TOOL,
+        LSP_SERVERS_AGENT_TOOL,
+        CODE_SEARCH_AGENT_TOOL,
+        ...INDEX_AGENT_TOOLS,
+      ]
+    } else {
+      base = [...AGENT_TOOLS]
+    }
     if (hasMcpServers() || process.env.GIM_MCP_TOOLS === '1') {
-      base.push(...MCP_AGENT_TOOLS)
+      base.push(...MCP_AGENT_TOOLS, ...MCP_SUBSCRIPTION_TOOLS)
     }
     return base
   }
@@ -336,14 +478,103 @@ export function runAgentTool(stack, name, args = {}) {
       return searchWorkspace(stack, args.query, args.path || '.')
     case 'ask_user':
       return { ok: true, pending: true, questions: args.questions || [], title: args.title || 'Clarification' }
+    case 'tool_search': {
+      const hits = searchDeferredTools(args.query || '', { limit: args.limit ?? 6 })
+      return { ok: true, hits: formatToolSearchHits(hits) }
+    }
+    case 'tool_select': {
+      const t = selectDeferredTool(args.id || '')
+      return t ? { ok: true, tool: t } : { ok: false, error: `unknown tool id ${args.id}` }
+    }
     default:
       return { ok: false, error: `unknown tool: ${name}` }
   }
 }
 
+/**
+ * Async agent tools (LSP, MCP subscriptions).
+ */
+export async function runAgentToolAsync(stack, name, args = {}) {
+  if (isMcpAgentTool(name)) {
+    return runMcpAgentTool(name, args)
+  }
+  if (name === 'code_search') {
+    const { searchIndex, defaultIndexDir } = await import('./code-index/indexer.js')
+    const { readRunState } = await import('./runstate.js')
+    const ws = workspaceRoot(stack)
+    const run = readRunState(stack)
+    const r = await searchIndex({
+      workspaceRoot: ws,
+      indexDir: defaultIndexDir(ws),
+      query: String(args.query || ''),
+      limit: Number(args.limit) || 8,
+      llamaBase: run?.urls?.llama,
+      stack,
+    })
+    return r
+  }
+  if (name === 'code_index_status') {
+    const { indexStatus, defaultIndexDir, indexStatusViaHttp } = await import('./code-index/indexer.js')
+    const http = await indexStatusViaHttp(stack)
+    if (http) return { ok: true, ...http, source: 'sidecar' }
+    const ws = workspaceRoot(stack)
+    return { ok: true, ...indexStatus(defaultIndexDir(ws)), source: 'local' }
+  }
+  if (name === 'code_index_build') {
+    const { buildIndexViaHttp, buildIndex, defaultIndexDir } = await import('./code-index/indexer.js')
+    const { readRunState } = await import('./runstate.js')
+    const http = await buildIndexViaHttp(stack)
+    if (http.ok) return { ...http, source: 'sidecar' }
+    const ws = workspaceRoot(stack)
+    const run = readRunState(stack)
+    return {
+      ...(await buildIndex({
+        workspaceRoot: ws,
+        indexDir: defaultIndexDir(ws),
+        llamaBase: run?.urls?.llama,
+      })),
+      source: 'local',
+    }
+  }
+  if (name === 'lsp_servers') {
+    const { listAvailableServers } = await import('./lsp-bridge.js')
+    return { ok: true, servers: listAvailableServers() }
+  }
+  if (name === 'lsp_query') {
+    const { lspQuery } = await import('./lsp-bridge.js')
+    const op = args.op || 'hover'
+    const isWs = op === 'workspace_symbols' || op === 'workspaceSymbol'
+    const rel = String(args.path || '')
+    const full = rel ? resolveWorkspacePath(stack, rel) : null
+    if (rel && !full) return { ok: false, error: 'path escapes workspace' }
+    if (!isWs && !full) return { ok: false, error: 'path required for this op' }
+    return lspQuery({
+      op,
+      file: full || undefined,
+      query: args.query || '',
+      line: Number(args.line || 0),
+      character: Number(args.character || args.col || 0),
+      workspace: workspaceRoot(stack),
+    })
+  }
+  return runAgentTool(stack, name, args)
+}
+
 /** @param {string} name @param {object} args */
 export function isMcpAgentTool(name) {
   return name === 'mcp_list_tools' || name === 'mcp_call'
+}
+
+export function isAsyncAgentTool(name) {
+  return (
+    isMcpAgentTool(name) ||
+    isMcpSubscriptionTool(name) ||
+    name === 'lsp_query' ||
+    name === 'lsp_servers' ||
+    name === 'code_search' ||
+    name === 'code_index_status' ||
+    name === 'code_index_build'
+  )
 }
 
 export const TOOLS_TEXT_FALLBACK = `
@@ -353,17 +584,15 @@ Native tool_calls are unavailable on this endpoint. To run a GIM tool, emit exac
 {"name":"list_dir","args":{"path":"."}}
 \`\`\`
 
-Tools: list_dir, read_file, write_file, search_files, guest_bash, ask_user, mcp_list_tools, mcp_call (same names/args as always).
-For ask_user use args: {"title":"…","questions":[{"id":"q1","prompt":"…","options":["A","B"]}]}.
+Tools: tool_search, tool_select, list_dir, read_file, write_file, guest_bash, ask_user, code_search, code_index_status, lsp_query, lsp_servers, mcp_list_tools, mcp_call, mcp_subscribe.
+Prefer code_search / lsp_query over blind grep. For ask_user use args: {"title":"…","questions":[{"id":"q1","prompt":"…","options":["A","B"]}]}.
 `.trim()
 
 export const AGENT_SYSTEM_EXTRA = `
-You have tools: list_dir, read_file, write_file, search_files, guest_bash, ask_user, mcp_list_tools, mcp_call.
-Use tools to inspect the workspace before guessing. guest_bash runs in the Docker guest (/workspace).
-External integrations: mcp_list_tools (kind=tools|resources|prompts|all) then mcp_call (type=tool|resource|prompt).
-When you need the user to choose or clarify, call ask_user (1–4 short questions with options when possible).
-After tools, answer the user's latest request directly. Do not repeat the same menu.
-Follow .gim/ai-instructions.md when present.
+You have tools: tool_search/tool_select, list_dir, read_file, write_file, guest_bash, ask_user, lsp_query (incl. workspace_symbols), lsp_servers, code_search, code_index_status/build, mcp_* when configured.
+Prefer code_search and lsp_query over exploratory grep. Build index once if code_search is empty (code_index_build).
+guest_bash runs in the Docker guest (/workspace). MCP: mcp_list_tools → mcp_call; mcp_subscribe (auto-poll debounced).
+When you need the user to choose, call ask_user. Answer directly after tools. Follow .gim/ai-instructions.md when present.
 `.trim()
 
 export const ASK_PLAN_SYSTEM_EXTRA = `

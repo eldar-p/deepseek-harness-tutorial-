@@ -1,0 +1,16 @@
+[package]
+name = "gim-index"
+version = "0.1.0"
+edition = "2021"
+description = "GIM code index sidecar — HTTP search over sharded JSON index"
+license = "Apache-2.0"
+
+[[bin]]
+name = "gim-index"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rouille = "3"

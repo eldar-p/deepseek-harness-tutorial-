@@ -2,9 +2,9 @@
  * Agent loop: OpenAI tools → execute → continue; emit SSE events for the UI.
  * ask_user pauses the loop until the client posts answers (resumeMessages).
  */
-import { AGENT_SYSTEM_EXTRA, ASK_PLAN_SYSTEM_EXTRA, TOOLS_TEXT_FALLBACK, modesWithTools, toolsForMode, runAgentTool, isMcpAgentTool } from './agent-tools.js'
-import { runMcpAgentTool } from './mcp-client.js'
+import { AGENT_SYSTEM_EXTRA, ASK_PLAN_SYSTEM_EXTRA, TOOLS_TEXT_FALLBACK, modesWithTools, toolsForMode, runAgentTool, runAgentToolAsync, isAsyncAgentTool } from './agent-tools.js'
 import { loadAiInstructionsBlock } from './instructions.js'
+import { pollMcpSubscriptionsForAgent, formatMcpResourceUpdates } from './mcp-subscriptions.js'
 import { emitChunkedDelta, extractTextPoll, extractTextToolCall } from './clarify-detect.js'
 import { llmFetch } from './llm-fetch.js'
 import {
@@ -83,6 +83,14 @@ export async function runAgentLoop(opts) {
     (opts.chatId ? resolveCacheSlot(stack, opts.chatId) : 0)
 
   for (let round = 0; round < MAX_ROUNDS; round++) {
+    if (useTools) {
+      const mcpUpdates = await pollMcpSubscriptionsForAgent(stack)
+      if (mcpUpdates.length) {
+        onEvent({ type: 'mcp_resource_update', updates: mcpUpdates })
+        messages.push({ role: 'user', content: formatMcpResourceUpdates(mcpUpdates) })
+      }
+    }
+
     messages = batchTrailingToolResults(messages)
     const temp = agentTemperature(mode, opts.temperature)
     const body = {
@@ -165,8 +173,8 @@ export async function runAgentLoop(opts) {
         }
 
         onEvent({ type: 'tool_start', id: tc.id, name, args })
-        const result = isMcpAgentTool(name)
-          ? await runMcpAgentTool(name, args)
+        const result = isAsyncAgentTool(name)
+          ? await runAgentToolAsync(stack, name, args)
           : runAgentTool(stack, name, args)
         onEvent({ type: 'tool_result', id: tc.id, name, result })
         messages.push({
@@ -224,8 +232,8 @@ export async function runAgentLoop(opts) {
             return { ok: true, paused: true, messages, clarify: { id: fakeId, title, questions } }
           }
         }
-        const result = isMcpAgentTool(name)
-          ? await runMcpAgentTool(name, args)
+        const result = isAsyncAgentTool(name)
+          ? await runAgentToolAsync(stack, name, args)
           : runAgentTool(stack, name, args)
         onEvent({ type: 'tool_result', id: fakeId, name, result })
         messages.push({ role: 'assistant', content })

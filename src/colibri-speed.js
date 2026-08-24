@@ -166,6 +166,7 @@ export function assessSpeedHints(opts = {}) {
   if (process.env.GIM_COLIBRI_AUTO_TUNE !== '0') {
     hints.push('First start may run coli tune — one-time per machine+model path')
   }
+  hints.push('Measure reclaimable speed: gim doctor --ki · gim index bench')
   return { hints, level }
 }
 

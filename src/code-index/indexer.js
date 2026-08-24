@@ -10,9 +10,18 @@ import {
   loadFileMap,
   saveFileMap,
   saveJsonStore,
+  saveIndexMeta,
+  loadAllChunks,
+  saveFileShard,
+  loadFileShard,
+  removeFileShard,
+  shardsEnabled,
   searchJsonAsync,
+  syncLanceStore,
   tryOpenLance,
+  scheduleChunksSnapshot,
 } from './store.js'
+import { resolveIndexUrl, tryIndexHttpSearch, indexHttpBuild, indexHttpStatus } from './client.js'
 
 /**
  * @param {string} workspaceRoot absolute host workspace
@@ -72,11 +81,13 @@ export async function buildIndex(opts) {
   const force = opts.force === true || process.env.GIM_INDEX_FULL === '1'
   const files = listSourceFiles(workspaceRoot, { maxFiles: opts.maxFiles })
   const paths = indexPaths(indexDir)
+  const meta0 = loadIndexMeta(indexDir)
+  const useShards = (meta0.sharded || shardsEnabled()) && shardsEnabled()
 
-  let existingChunks = []
+  /** @type {import('./store.js').StoredChunk[]|null} */
+  let existingChunks = null
   let fileMap = {}
-  if (!force && fs.existsSync(paths.json)) {
-    existingChunks = loadJsonChunks(indexDir)
+  if (!force) {
     fileMap = loadFileMap(indexDir)
   }
 
@@ -88,7 +99,7 @@ export async function buildIndex(opts) {
   const diskPaths = new Set()
   let skippedFiles = 0
   let indexedFiles = 0
-  let backend = loadIndexMeta(indexDir).backend || 'json'
+  let backend = meta0.backend || 'json'
 
   const lance = await tryOpenLance(indexDir)
   if (lance) backend = 'lancedb'
@@ -110,7 +121,12 @@ export async function buildIndex(opts) {
     const hash = fileContentHash(text)
 
     if (!force && fileMap[rel]?.hash === hash) {
-      chunks.push(...existingChunks.filter((c) => c.path === rel))
+      if (useShards) {
+        chunks.push(...loadFileShard(indexDir, rel))
+      } else {
+        if (!existingChunks) existingChunks = loadJsonChunks(indexDir)
+        chunks.push(...existingChunks.filter((c) => c.path === rel))
+      }
       nextFileMap[rel] = { hash, mtime: stat.mtimeMs }
       skippedFiles++
       if (opts.onProgress && i % 25 === 0) opts.onProgress(`${i + 1}/${files.length} ${rel} (skip)`)
@@ -125,17 +141,8 @@ export async function buildIndex(opts) {
   }
 
   if (lance) {
-    const tableName = 'code_chunks'
-    const rows = chunks.map((c) => ({ ...c, vector: c.vector }))
-    try {
-      const tables = await lance.db.tableNames()
-      if (tables.includes(tableName)) {
-        await lance.db.dropTable(tableName)
-      }
-      await lance.db.createTable(tableName, rows)
-    } catch {
-      backend = 'json'
-    }
+    const synced = await syncLanceStore(indexDir, chunks)
+    if (!synced.ok) backend = 'json'
   }
 
   saveJsonStore(indexDir, chunks, {
@@ -144,6 +151,8 @@ export async function buildIndex(opts) {
     skippedFiles,
     indexedFiles,
     incremental: !force && skippedFiles > 0,
+    fileMap: nextFileMap,
+    sharded: shardsEnabled(),
   })
   saveFileMap(indexDir, nextFileMap)
 
@@ -167,6 +176,13 @@ export async function searchIndex(opts) {
   const workspaceRoot = path.resolve(opts.workspaceRoot)
   const indexDir = opts.indexDir || defaultIndexDir(workspaceRoot)
   const limit = opts.limit ?? 8
+  const stack = opts.stack || 'default'
+
+  if (!opts.localOnly) {
+    const httpHit = await tryIndexHttpSearch(stack, opts.query, limit)
+    if (httpHit) return httpHit
+  }
+
   const meta = loadIndexMeta(indexDir)
   const chunkCount = meta.chunkCount ?? 0
   if (!chunkCount) {
@@ -174,7 +190,7 @@ export async function searchIndex(opts) {
   }
 
   const queryVec = await embed(opts.query, opts.llamaBase)
-  const chunks = loadJsonChunks(indexDir)
+  const chunks = loadAllChunks(indexDir)
   if (!chunks.length) {
     return { ok: false, error: 'index empty — run: gim index build', hits: [] }
   }
@@ -216,6 +232,27 @@ function formatHit(h) {
 }
 
 /**
+ * Build via sidecar HTTP when stack index URL is live.
+ * @param {string} stack
+ */
+export async function buildIndexViaHttp(stack = 'default') {
+  const base = resolveIndexUrl(stack)
+  if (!base) return { ok: false, error: 'index sidecar not running' }
+  return indexHttpBuild(base)
+}
+
+/**
+ * Status via sidecar HTTP when available.
+ * @param {string} stack
+ */
+export async function indexStatusViaHttp(stack = 'default') {
+  const base = resolveIndexUrl(stack)
+  if (!base) return null
+  const r = await indexHttpStatus(base)
+  return r.ok ? r : null
+}
+
+/**
  * Lazy status — reads meta.json only, not chunks.json.
  * @param {string} indexDir
  */
@@ -230,6 +267,7 @@ export function indexStatus(indexDir) {
     skippedFiles: meta.skippedFiles ?? 0,
     indexedFiles: meta.indexedFiles ?? 0,
     incremental: meta.incremental ?? false,
+    sharded: meta.sharded ?? false,
     indexDir,
   }
 }
@@ -246,15 +284,30 @@ export async function indexFile(workspaceRoot, relPath, llamaBase) {
   const abs = path.join(workspaceRoot, relPath)
   const fileMap = loadFileMap(indexDir)
   const meta = loadIndexMeta(indexDir)
+  const useShards = (meta.sharded || shardsEnabled()) && shardsEnabled()
 
   if (!fs.existsSync(abs)) {
-    const filtered = loadJsonChunks(indexDir).filter((c) => c.path !== norm)
+    const prevCount = useShards ? loadFileShard(indexDir, norm).length : 0
+    if (useShards) {
+      removeFileShard(indexDir, norm)
+    } else {
+      const filtered = loadJsonChunks(indexDir).filter((c) => c.path !== norm)
+      saveJsonStore(indexDir, filtered, {
+        backend: meta.backend || 'json',
+        fileCount: Object.keys(fileMap).length,
+        sharded: false,
+      })
+    }
     delete fileMap[norm]
-    saveJsonStore(indexDir, filtered, {
+    saveFileMap(indexDir, fileMap)
+    saveIndexMeta(indexDir, {
       backend: meta.backend || 'json',
       fileCount: Object.keys(fileMap).length,
+      chunkCount: Math.max(0, (meta.chunkCount ?? 0) - prevCount),
+      sharded: useShards,
+      chunksStale: useShards,
     })
-    saveFileMap(indexDir, fileMap)
+    if (useShards) scheduleChunksSnapshot(indexDir)
     return { ok: true, removed: true, path: norm }
   }
 
@@ -264,9 +317,30 @@ export async function indexFile(workspaceRoot, relPath, llamaBase) {
     return { ok: true, skipped: true, reason: 'unchanged', path: norm }
   }
 
-  const filtered = loadJsonChunks(indexDir).filter((c) => c.path !== norm)
   const stat = fs.statSync(abs)
   const fileChunks = await chunksForFile(norm, text, stat, { llamaBase, useTreeSitter: true })
+
+  if (useShards) {
+    const prevCount = loadFileShard(indexDir, norm).length
+    saveFileShard(indexDir, norm, fileChunks)
+    fileMap[norm] = { hash, mtime: stat.mtimeMs }
+    saveFileMap(indexDir, fileMap)
+    saveIndexMeta(indexDir, {
+      backend: meta.backend || 'json',
+      fileCount: Object.keys(fileMap).length,
+      chunkCount: Math.max(0, (meta.chunkCount ?? 0) - prevCount + fileChunks.length),
+      indexedFiles: 1,
+      sharded: true,
+      chunksStale: true,
+    })
+    if (meta.backend === 'lancedb') {
+      await syncLanceStore(indexDir, loadAllChunks(indexDir))
+    }
+    scheduleChunksSnapshot(indexDir)
+    return { ok: true, path: norm, chunks: fileChunks.length, sharded: true }
+  }
+
+  const filtered = loadJsonChunks(indexDir).filter((c) => c.path !== norm)
   const merged = [...filtered, ...fileChunks]
   fileMap[norm] = { hash, mtime: stat.mtimeMs }
 
@@ -274,7 +348,12 @@ export async function indexFile(workspaceRoot, relPath, llamaBase) {
     backend: meta.backend || 'json',
     fileCount: Object.keys(fileMap).length,
     indexedFiles: 1,
+    fileMap,
+    sharded: false,
   })
   saveFileMap(indexDir, fileMap)
+  if (meta.backend === 'lancedb') {
+    await syncLanceStore(indexDir, merged)
+  }
   return { ok: true, path: norm, chunks: fileChunks.length }
 }

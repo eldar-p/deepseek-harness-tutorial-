@@ -1,5 +1,80 @@
 # Changelog
 
+## [1.1.8] — 2026-08-25
+
+### Fixed
+
+- **Incremental build after shard touch** — skips reload stale `chunks.json`; reuses per-file shards
+- Debounced **chunks.json snapshot** after shard `indexFile` (`GIM_INDEX_SNAPSHOT_MS`, default 3s)
+
+### Added
+
+- **Start-time KI warnings** — `gim start` prints reclaimable speed factors when K is high
+- **Daemon** probes index `/status` + MCP subscription poll on tick
+- Diagnostics codes: `GIM-INDEX-002`, `GIM-LSP-001`, `GIM-KI-001`
+- Agent prompts prefer `code_search` / `lsp_query` over blind grep
+
+## [1.1.7] — 2026-08-25
+
+### Added
+
+- **LSP `workspace_symbols`** — agent + `gim lsp workspace_symbols <query>` (no file required)
+- **MCP poll debounce** — agent auto-poll at most every `GIM_MCP_POLL_MS` (default 5000)
+- **`gim index bench`** — search latency (local vs HTTP when stack up)
+- **Performance opportunity (KI)** — `gim doctor --ki` / included in `--speed`; `src/opportunity-cost.js`
+
+### Changed
+
+- `lsp_query` agent tool: `op=workspace_symbols` + optional `query`; path optional for that op
+
+## [1.1.6] — 2026-08-25
+
+### Added
+
+- **Index HTTP client** — `code_search` / CLI search prefer live sidecar (`GIM_INDEX_URL`) over local chunk load
+- **Agent tools** — `code_index_build`, `code_index_status`, `lsp_servers` in deferred toolset
+- **`prepareCodeIndexSpawn`** — auto-fetch native sidecar on `gim start` (`GIM_INDEX_FETCH=0` to skip)
+- **Rust `/touch`** — native single-file re-index (regex chunk + shard write)
+- **`npm run release:ship`** — release:full + smoke:egress + smoke:e2e
+- **`gim diagnose`** — index sidecar + LanceDB availability checks
+
+### Changed
+
+- `gim start` logs index sidecar backend (`js` | `native`)
+- Sidecar README: native touch supported
+
+## [1.1.5] — 2026-08-25
+
+### Added
+
+- **LanceDB auto-default** — uses Lance when `optional/code-index` deps installed (`GIM_INDEX_LANCE=0` disables)
+- **MCP auto-poll** in agent loop — subscribed resources inject context each round (`GIM_MCP_POLL=0` disables)
+- **`code_search` agent tool** — semantic index search from agent/deferred toolset
+- **Sidecar local build** — `cargo build` in `sidecar/gim-index` auto-detected; `npm run pack:index-sidecar`
+- CI workflow **`.github/workflows/index-sidecar.yml`** — build native binaries on tag
+- **`npm run release:full`** — release:check + honest eval
+
+### Changed
+
+- `indexFile` syncs Lance table after shard touch when backend is `lancedb`
+- `gim index status` shows LanceDB availability
+- `manifests/index-sidecar.json` — `releaseTag` / `releaseBase` / `localBuild` hints
+
+## [1.1.4] — 2026-08-25
+
+### Added
+
+- **Sharded code index** — per-file `shards/*.json`, fast `indexFile` touch (`GIM_INDEX_SHARDS=0` to disable)
+- **Deferred agent tools** — `tool_search` / `tool_select` + `lsp_query` when `GIM_DEFERRED_TOOLS` ≠ `0` (default on)
+- **MCP resource subscriptions** — agent `mcp_subscribe` / `mcp_poll_subscriptions` (`~/.gim/mcp-subscriptions.json`)
+- **Rust gim-index MVP** — `sidecar/gim-index/` (native `/search` over shards; build via `cargo build --release`)
+- `npm run release:check` — RC gate + security eval
+
+### Changed
+
+- Agent loop uses `runAgentToolAsync` for LSP/MCP subscription tools
+- [docs/CODE-INDEX.md](./docs/CODE-INDEX.md), [sidecar/README.md](./sidecar/README.md) updated for shards + native build
+
 ## [1.1.3] — 2026-08-25
 
 ### Added

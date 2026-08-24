@@ -5,7 +5,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { chunkSource, langForPath, listSourceFiles } from '../src/code-index/chunker.js'
 import { hashEmbed, cosine, arrayToVec } from '../src/code-index/embedder.js'
-import { indexPaths, loadJsonStore, loadIndexMeta, loadJsonChunks, loadFileMap, saveJsonStore, searchJson, searchJsonAsync } from '../src/code-index/store.js'
+import { indexPaths, loadJsonStore, loadIndexMeta, loadJsonChunks, loadFileMap, saveJsonStore, searchJson, searchJsonAsync, loadAllChunks, lanceEnabled } from '../src/code-index/store.js'
 import { buildIndex, searchIndex, indexStatus, defaultIndexDir, indexFile, fileContentHash } from '../src/code-index/indexer.js'
 import { scheduleIndexTouch, flushIndexTouchForTests } from '../src/code-index/touch.js'
 import { writeWorkspaceFile } from '../src/agent-tools.js'
@@ -76,6 +76,80 @@ test('ensureSecretsTemplate writes sample once', () => {
     else process.env.GIM_HOME = prev
     fs.rmSync(home, { recursive: true, force: true })
   }
+})
+
+test('lanceEnabled respects GIM_INDEX_LANCE=0', () => {
+  const prev = process.env.GIM_INDEX_LANCE
+  process.env.GIM_INDEX_LANCE = '0'
+  assert.equal(lanceEnabled(), false)
+  if (prev === undefined) delete process.env.GIM_INDEX_LANCE
+  else process.env.GIM_INDEX_LANCE = prev
+})
+
+test('sharded store per-file shards + loadAllChunks', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-idx-shard-'))
+  const vec = Array.from(hashEmbed('shard test auth'))
+  const fileMap = { 'a.js': { hash: 'abc', mtime: 1 } }
+  saveJsonStore(
+    dir,
+    [
+      {
+        id: 'a.js:1:hi',
+        path: 'a.js',
+        symbol: 'hi',
+        kind: 'function',
+        startLine: 1,
+        endLine: 2,
+        text: 'function hi() {}',
+        lang: 'js',
+        vector: vec,
+        mtime: 1,
+      },
+    ],
+    { backend: 'json', fileCount: 1, fileMap, sharded: true },
+  )
+  const meta = loadIndexMeta(dir)
+  assert.equal(meta.sharded, true)
+  assert.ok(fs.existsSync(path.join(indexPaths(dir).shards, 'a.js.json')))
+  const loaded = loadAllChunks(dir)
+  assert.equal(loaded.length, 1)
+  assert.equal(loaded[0].symbol, 'hi')
+  fs.rmSync(dir, { recursive: true, force: true })
+})
+
+test('indexFile uses shard fast path', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-idx-shard-touch-'))
+  fs.writeFileSync(path.join(root, 'a.js'), 'export function a() {}\n')
+  const indexDir = defaultIndexDir(root)
+  await buildIndex({ workspaceRoot: root, indexDir, useTreeSitter: false, maxFiles: 10 })
+  const meta = loadIndexMeta(indexDir)
+  assert.equal(meta.sharded, true)
+  fs.writeFileSync(path.join(root, 'a.js'), 'export function aChanged() {}\n')
+  const r = await indexFile(root, 'a.js', null)
+  assert.equal(r.ok, true)
+  assert.equal(r.sharded, true)
+  const chunks = loadAllChunks(indexDir)
+  assert.ok(chunks.some((c) => c.symbol === 'aChanged'))
+  fs.rmSync(root, { recursive: true, force: true })
+})
+
+test('indexFile sharded marks chunksStale and snapshot clears it', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-idx-snap-'))
+  fs.writeFileSync(path.join(root, 'a.js'), 'export function a() {}\n')
+  const indexDir = defaultIndexDir(root)
+  await buildIndex({ workspaceRoot: root, indexDir, useTreeSitter: false, maxFiles: 10 })
+  fs.writeFileSync(path.join(root, 'a.js'), 'export function aSnap() {}\n')
+  const r = await indexFile(root, 'a.js', null)
+  assert.equal(r.sharded, true)
+  const meta = loadIndexMeta(indexDir)
+  assert.equal(meta.chunksStale, true)
+  const { flushChunksSnapshot } = await import('../src/code-index/store.js')
+  const snap = flushChunksSnapshot(indexDir)
+  assert.equal(snap.ok, true)
+  assert.equal(loadIndexMeta(indexDir).chunksStale, false)
+  const raw = JSON.parse(fs.readFileSync(indexPaths(indexDir).json, 'utf8'))
+  assert.ok(raw.chunks.some((c) => c.symbol === 'aSnap'))
+  fs.rmSync(root, { recursive: true, force: true })
 })
 
 test('json store save load search', () => {

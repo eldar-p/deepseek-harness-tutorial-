@@ -101,14 +101,32 @@ export async function daemonTick(stack = 'default', opts = {}) {
 
   const llama = run?.urls?.llama
   const dsh = run?.urls?.dsh
+  const index = run?.urls?.index
   await probe('llama', llama ? `${String(llama).replace(/\/$/, '')}/health` : null)
   await probe('dsh', dsh || null)
+  if (index) await probe('index', `${String(index).replace(/\/$/, '')}/status`)
+
+  /** @type {{ mcpUpdates?: number, mcpSubs?: number }} */
+  let mcp = {}
+  try {
+    const { pollMcpSubscriptionsForAgent, countMcpSubscriptions } = await import('./mcp-subscriptions.js')
+    if (countMcpSubscriptions(stack) > 0) {
+      const updates = await pollMcpSubscriptionsForAgent(stack)
+      mcp = { mcpUpdates: updates.length, mcpSubs: countMcpSubscriptions(stack) }
+      if (updates.length) {
+        appendLog(`event=daemon_mcp_updates stack=${stack} n=${updates.length}`)
+      }
+    }
+  } catch {
+    /* optional */
+  }
 
   const summary = {
     at: new Date().toISOString(),
     stack,
     checks,
     ok: checks.every((c) => c.ok),
+    ...mcp,
   }
   appendLog(`event=daemon_tick stack=${stack} ok=${summary.ok}`)
   if (opts.proactive !== false) {

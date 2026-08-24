@@ -13,6 +13,13 @@ test('pickServerForFile maps js and unknown', () => {
   assert.match(unk.reason, /no LSP mapping/)
 })
 
+test('lspQuery workspace_symbols without file when no server', async () => {
+  const r = await lspQuery({ op: 'workspace_symbols', query: 'foo', workspace: os.tmpdir() })
+  // Either ok with results, or fail missing server — must not throw
+  assert.ok('ok' in r)
+  if (!r.ok) assert.match(r.error || '', /PATH|not installed|timeout|server/i)
+})
+
 test('listAvailableServers returns entries', () => {
   const list = listAvailableServers()
   assert.ok(list.some((s) => s.id === 'typescript'))

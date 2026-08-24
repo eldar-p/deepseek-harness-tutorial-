@@ -12,8 +12,33 @@ import {
   modesWithTools,
   toolsForMode,
   searchWorkspace,
+  deferredToolsEnabled,
 } from '../src/agent-tools.js'
 import { applyClarifyAnswers } from '../src/agent-loop.js'
+
+test('deferred tools mode exposes tool_search and lsp_query', () => {
+  const prev = process.env.GIM_DEFERRED_TOOLS
+  process.env.GIM_DEFERRED_TOOLS = '1'
+  try {
+    assert.equal(deferredToolsEnabled(), true)
+    const names = toolsForMode('agent').map((t) => t.function.name)
+    assert.ok(names.includes('tool_search'))
+    assert.ok(names.includes('tool_select'))
+    assert.ok(names.includes('lsp_query'))
+    assert.ok(names.includes('code_index_status'))
+    assert.ok(names.includes('lsp_servers'))
+    assert.ok(!names.includes('search_files'))
+  } finally {
+    if (prev === undefined) delete process.env.GIM_DEFERRED_TOOLS
+    else process.env.GIM_DEFERRED_TOOLS = prev
+  }
+})
+
+test('tool_search via runAgentTool', () => {
+  const r = runAgentTool('default', 'tool_search', { query: 'diagnose' })
+  assert.equal(r.ok, true)
+  assert.match(r.hits, /diagnose/i)
+})
 
 test('modesWithTools', () => {
   assert.equal(modesWithTools('agent'), true)

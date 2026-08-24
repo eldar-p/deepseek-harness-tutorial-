@@ -20,6 +20,19 @@ export function jsIndexSidecarScript() {
   return path.join(PKG_ROOT, 'scripts', 'gim-index-sidecar.mjs')
 }
 
+/** Cargo build output when developing from repo checkout. */
+export function resolveLocalIndexSidecarBuild() {
+  const exe = indexSidecarExeName()
+  const candidates = [
+    path.join(PKG_ROOT, 'sidecar', 'gim-index', 'target', 'release', exe),
+    path.join(PKG_ROOT, 'sidecar', 'gim-index', 'target', 'debug', exe),
+  ]
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p
+  }
+  return null
+}
+
 /**
  * @param {{ binaries?: object[] }} manifest
  */
@@ -36,6 +49,11 @@ export function resolveNativeIndexSidecarBin() {
 
   if (mode && mode !== '1' && mode !== 'auto' && fs.existsSync(mode)) {
     return { bin: path.resolve(mode), source: 'env', backend: 'native' }
+  }
+
+  const local = resolveLocalIndexSidecarBuild()
+  if (local && mode !== 'js' && mode !== '0') {
+    return { bin: local, source: 'local-build', backend: 'native' }
   }
 
   const exe = indexSidecarExeName()
@@ -133,6 +151,17 @@ export function buildIndexSidecarSpawnSpec(opts) {
   }
 }
 
+export async function prepareCodeIndexSpawn(opts) {
+  const fetchNative =
+    process.env.GIM_INDEX_SIDECAR !== 'js' &&
+    process.env.GIM_INDEX_SIDECAR !== '0' &&
+    process.env.GIM_INDEX_FETCH !== '0'
+  if (fetchNative) {
+    await ensureNativeIndexSidecarBin({ fetch: true })
+  }
+  return spawnCodeIndexService(opts)
+}
+
 /**
  * @param {{ stack: string, indexPort: number, llamaUrl?: string, logFile: string }} opts
  */
@@ -162,12 +191,14 @@ export async function assessIndexSidecar() {
   }
 
   const native = resolveNativeIndexSidecarBin()
+  const localBuild = resolveLocalIndexSidecarBuild()
   const jsScript = jsIndexSidecarScript()
   const jsOk = fs.existsSync(jsScript)
 
   return {
     activeBackend: native ? 'native' : 'js',
     native,
+    localBuild,
     jsScript,
     jsOk,
     manifestEntry,
@@ -179,6 +210,9 @@ export async function assessIndexSidecar() {
 export function formatIndexSidecarReport(report) {
   const lines = ['Index sidecar']
   lines.push(`  backend   ${report.activeBackend}${report.native ? ` (${report.native.source}: ${report.native.bin})` : ''}`)
+  if (report.localBuild) {
+    lines.push(`  local     cargo build ready: ${report.localBuild}`)
+  }
   lines.push(`  js        ${report.jsOk ? 'OK' : 'MISSING'} ${report.jsScript}`)
   if (report.manifestEntry) {
     lines.push(

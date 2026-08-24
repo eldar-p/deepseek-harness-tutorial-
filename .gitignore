@@ -3,3 +3,4 @@ node_modules/
 install.log
 dist/
 .cursor/
+sidecar/gim-index/target/

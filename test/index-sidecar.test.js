@@ -5,12 +5,19 @@ import path from 'node:path'
 import {
   pickIndexSidecarEntry,
   resolveNativeIndexSidecarBin,
+  resolveLocalIndexSidecarBuild,
   buildIndexSidecarSpawnSpec,
   jsIndexSidecarScript,
   assessIndexSidecar,
   formatIndexSidecarReport,
+  prepareCodeIndexSpawn,
+  spawnCodeIndexService,
 } from '../src/index-sidecar.js'
 import { loadManifest } from '../src/download.js'
+
+test('resolveLocalIndexSidecarBuild returns null without cargo output', () => {
+  assert.equal(resolveLocalIndexSidecarBuild(), null)
+})
 
 test('pickIndexSidecarEntry matches platform', () => {
   const man = loadManifest('index-sidecar.json')

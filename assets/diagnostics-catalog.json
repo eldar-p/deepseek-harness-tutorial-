@@ -65,6 +65,30 @@
       "cause": "Semantic index never built for this workspace.",
       "fix": "gim index build --name STACK"
     },
+    "GIM-INDEX-002": {
+      "title": "Index search slow / JS-only sidecar",
+      "component": "index",
+      "severity": "info",
+      "match": ["JS fallback", "native url not pinned", "slow search"],
+      "cause": "Large indexes without LanceDB or native gim-index leave O(n) JS cosine on the hot path.",
+      "fix": "cd optional/code-index && npm install; cargo build --release in sidecar/gim-index; gim index bench"
+    },
+    "GIM-LSP-001": {
+      "title": "Language server missing",
+      "component": "lsp",
+      "severity": "info",
+      "match": ["language server not installed", "no LSP", "no language server"],
+      "cause": "Host LSP binaries not on PATH — agent falls back to grep loops.",
+      "fix": "npm i -g typescript-language-server typescript · or pyright; gim lsp servers"
+    },
+    "GIM-KI-001": {
+      "title": "High performance opportunity cost",
+      "component": "speed",
+      "severity": "warn",
+      "match": ["Speed opportunity", "reclaimable session", "K≈"],
+      "cause": "Warm LLM / index / LSP / sidecar factors are leaving session wall-clock on the table.",
+      "fix": "gim doctor --ki; fix LOST factors (Colibri ELF or --gguf, gim index build, LSP)"
+    },
     "GIM-MCP-001": {
       "title": "MCP server connection failed",
       "component": "mcp",

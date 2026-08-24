@@ -24,6 +24,7 @@ gim index status [--name default]
 | `meta.json` | Backend, `chunkCount`, `builtAt`, incremental stats — **loaded by `status`** |
 | `files.json` | `{ "path/to/file.js": { "hash", "mtime" } }` — incremental index |
 | `chunks.json` | All chunks + vectors — **loaded only on search** |
+| `shards/*.json` | Per-file chunk shards (default when `GIM_INDEX_SHARDS` ≠ `0`) — fast `indexFile` touch |
 | `lance/` | Optional LanceDB tables |
 
 ## Incremental build
@@ -40,6 +41,38 @@ Single-file updates after agent writes: `indexFile()` / debounced `GIM_INDEX_TOU
 |-----|--------|
 | `GIM_INDEX_TOUCH=0` | Disable auto re-index on agent `write_file` |
 | `GIM_INDEX_TOUCH_MS` | Debounce ms (default `1500`) |
+| `GIM_INDEX_SHARDS=0` | Disable per-file shards (monolithic `chunks.json` only) |
+| `GIM_INDEX_LANCE=0` | Disable LanceDB even when optional deps installed (default: **auto-on**) |
+| `GIM_MCP_POLL=0` | Disable MCP resource auto-poll in agent loop |
+| `GIM_INDEX_SNAPSHOT=0` | Disable debounced chunks.json rewrite after shard touch |
+| `GIM_INDEX_SNAPSHOT_MS` | Debounce ms for snapshot (default `3000`) |
+
+## HTTP sidecar routing (1.1.6+)
+
+When stack is running, `searchIndex` and agent `code_search` prefer **HTTP** (`run.urls.index` / `GIM_INDEX_URL`) over loading `chunks.json` locally — faster for large indexes.
+
+```bash
+gim start                    # sets GIM_INDEX_URL for DSH + agent
+GIM_INDEX_FETCH=0 gim start  # skip manifest download attempt for native binary
+```
+
+## LanceDB (optional, auto-default)
+
+When `optional/code-index/node_modules` is installed, build/search prefer **LanceDB** vector store under `lance/`. JSON shards remain the source of truth; Lance syncs on build and `indexFile` touch.
+
+```bash
+cd optional/code-index && npm install
+gim index build
+gim index status   # shows LanceDB: available
+```
+
+Disable: `GIM_INDEX_LANCE=0`.
+
+## Sharded index (1.1.4+)
+
+When shards are enabled (default), each file gets `shards/<path>.json`. Incremental `indexFile()` after agent writes updates **one shard + meta** without reloading the full index.
+
+Search loads via `loadAllChunks()` — shards when `meta.sharded`, else `chunks.json`.
 
 ## Search pipeline
 

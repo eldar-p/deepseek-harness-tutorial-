@@ -30,6 +30,17 @@ export function pickServerForFile(filePath) {
   return { id: null, bin: null, reason: `no LSP mapping for ${ext || 'unknown'}` }
 }
 
+/** First language server that is installed on PATH. */
+export function pickAnyAvailableServer() {
+  for (const s of SERVERS) {
+    for (const bin of s.bins) {
+      const found = which(bin)
+      if (found) return { ...s, bin: found }
+    }
+  }
+  return { id: null, bin: null, reason: 'no language server on PATH' }
+}
+
 /** List which language servers are currently available. */
 export function listAvailableServers() {
   return SERVERS.map((s) => {
@@ -44,35 +55,55 @@ export function listAvailableServers() {
 
 /**
  * Best-effort one-shot LSP request via stdio JSON-RPC.
- * @param {{ op: string, file: string, line?: number, character?: number, workspace?: string, timeoutMs?: number }} opts
+ * @param {{ op: string, file?: string, query?: string, line?: number, character?: number, workspace?: string, timeoutMs?: number }} opts
  */
 export async function lspQuery(opts) {
-  const file = path.resolve(opts.file)
-  if (!fs.existsSync(file)) {
-    return { ok: false, error: `file not found: ${file}` }
-  }
-  const server = pickServerForFile(file)
-  if (!server.bin) {
-    return { ok: false, error: server.reason || 'language server not installed', server: server.id }
+  const op = String(opts.op || 'hover')
+  const isWorkspaceSymbol = op === 'workspace_symbols' || op === 'workspaceSymbol' || op === 'workspace/symbol'
+
+  let server
+  let file = null
+  let text = ''
+  let uri = null
+
+  if (isWorkspaceSymbol) {
+    if (opts.file) {
+      file = path.resolve(opts.file)
+      server = pickServerForFile(file)
+    } else {
+      server = pickAnyAvailableServer()
+    }
+    if (!server.bin) {
+      return { ok: false, error: server.reason || 'language server not installed', server: server.id }
+    }
+  } else {
+    file = path.resolve(opts.file || '')
+    if (!file || !fs.existsSync(file)) {
+      return { ok: false, error: `file not found: ${file || '(empty)'}` }
+    }
+    server = pickServerForFile(file)
+    if (!server.bin) {
+      return { ok: false, error: server.reason || 'language server not installed', server: server.id }
+    }
+    text = fs.readFileSync(file, 'utf8')
+    uri = pathToFileUrl(file)
   }
 
-  const workspace = path.resolve(opts.workspace || path.dirname(file))
+  const workspace = path.resolve(opts.workspace || (file ? path.dirname(file) : process.cwd()))
   const line = Math.max(0, Number(opts.line || 0))
   const character = Math.max(0, Number(opts.character || 0))
-  const op = String(opts.op || 'hover')
   const timeoutMs = opts.timeoutMs || 8_000
+  const query = String(opts.query || '')
 
-  const method =
-    op === 'definition'
+  const method = isWorkspaceSymbol
+    ? 'workspace/symbol'
+    : op === 'definition'
       ? 'textDocument/definition'
       : op === 'references'
         ? 'textDocument/references'
         : op === 'symbols'
           ? 'textDocument/documentSymbol'
           : 'textDocument/hover'
-
-  const uri = pathToFileUrl(file)
-  const text = fs.readFileSync(file, 'utf8')
 
   return await new Promise((resolve) => {
     const child = spawn(server.bin, server.args || [], {
@@ -123,23 +154,27 @@ export async function lspQuery(opts) {
         }
         if (msg.id === 1) {
           send({ jsonrpc: '2.0', method: 'initialized', params: {} })
-          send({
-            jsonrpc: '2.0',
-            method: 'textDocument/didOpen',
-            params: {
-              textDocument: { uri, languageId: guessLang(file), version: 1, text },
-            },
-          })
-          const params =
-            method === 'textDocument/documentSymbol'
-              ? { textDocument: { uri } }
-              : {
-                  textDocument: { uri },
-                  position: { line, character },
-                  ...(method === 'textDocument/references'
-                    ? { context: { includeDeclaration: true } }
-                    : {}),
-                }
+          if (!isWorkspaceSymbol && uri) {
+            send({
+              jsonrpc: '2.0',
+              method: 'textDocument/didOpen',
+              params: {
+                textDocument: { uri, languageId: guessLang(file), version: 1, text },
+              },
+            })
+          }
+          let params
+          if (method === 'workspace/symbol') {
+            params = { query }
+          } else if (method === 'textDocument/documentSymbol') {
+            params = { textDocument: { uri } }
+          } else {
+            params = {
+              textDocument: { uri },
+              position: { line, character },
+              ...(method === 'textDocument/references' ? { context: { includeDeclaration: true } } : {}),
+            }
+          }
           send({ jsonrpc: '2.0', id: 2, method, params })
         }
         if (msg.id === 2) {
@@ -157,7 +192,15 @@ export async function lspQuery(opts) {
       params: {
         processId: process.pid,
         rootUri: pathToFileUrl(workspace),
-        capabilities: {},
+        capabilities: {
+          workspace: { symbol: {} },
+          textDocument: {
+            hover: {},
+            definition: {},
+            references: {},
+            documentSymbol: {},
+          },
+        },
         workspaceFolders: [{ uri: pathToFileUrl(workspace), name: path.basename(workspace) }],
       },
     })

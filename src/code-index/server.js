@@ -35,6 +35,7 @@ export function startCodeIndexServer(opts) {
           query: j.query || '',
           llamaBase,
           limit: j.limit,
+          localOnly: true,
         })
         return send(200, r)
       }
@@ -54,7 +55,9 @@ export function startCodeIndexServer(opts) {
   return new Promise((resolve, reject) => {
     server.on('error', reject)
     server.listen(opts.port, '127.0.0.1', () => {
-      resolve({ server, port: opts.port, url: `http://127.0.0.1:${opts.port}` })
+      const addr = server.address()
+      const port = typeof addr === 'object' && addr ? addr.port : opts.port
+      resolve({ server, port, url: `http://127.0.0.1:${port}` })
     })
   })
 }

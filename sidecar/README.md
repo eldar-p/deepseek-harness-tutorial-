@@ -1,9 +1,19 @@
-# GIM index sidecar (future)
+# GIM index sidecar
 
 Optional native binary **`gim-index`** for large workspaces (100k+ chunks). GIM core stays JS; sidecar replaces only the hot search/build path.
 
-## HTTP contract (localhost)
+## Build native (MVP)
 
+```bash
+cd sidecar/gim-index
+cargo build --release
+# binary: target/release/gim-index (or gim-index.exe on Windows)
+GIM_INDEX_SIDECAR=/path/to/gim-index gim index sidecar
+```
+
+MVP scope: **GET /status**, **POST /search**, **POST /touch** (regex chunk + shard). Build via `gim index build` or **POST /build** on JS sidecar.
+
+## HTTP contract (localhost)
 Same as `src/code-index/server.js`:
 
 | Method | Path | Body | Response |
@@ -19,7 +29,7 @@ Env: `GIM_INDEX_URL=http://127.0.0.1:PORT` (stack coordinator sets this when sid
 
 Unchanged — read/write under `<workspace>/.gim/code-index/`:
 
-- `meta.json`, `files.json`, `chunks.json`, optional `lance/`
+- `meta.json`, `files.json`, `chunks.json`, `shards/*.json`, optional `lance/`
 
 ## Rollout
 

@@ -1,6 +1,8 @@
 {
   "version": "0.1.0",
-  "note": "Optional native gim-index sidecar. url=null → JS fallback (scripts/gim-index-sidecar.mjs). Pin URL+sha256 when binaries ship.",
+  "releaseTag": "v1.1.5",
+  "releaseBase": "https://github.com/eldar-p/gim-cli/releases/download/v1.1.5",
+  "note": "url+sha256 pinned after release upload (npm run pack:index-sidecar). url=null → JS fallback until then.",
   "binaries": [
     {
       "os": "win32",
@@ -38,5 +40,9 @@
   "jsFallback": {
     "script": "scripts/gim-index-sidecar.mjs",
     "backend": "js"
+  },
+  "localBuild": {
+    "crate": "sidecar/gim-index",
+    "command": "cargo build --release"
   }
 }
