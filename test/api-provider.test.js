@@ -1,5 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import { resolveApiProfile, isApiMode, buildDshApiYaml, listApiProviderIds } from '../src/api-provider.js'
 
 test('listApiProviderIds includes deepseek and openai', () => {
@@ -46,4 +49,32 @@ test('buildDshApiYaml contains provider block', () => {
   })
   assert.match(yaml, /provider: deepseek/)
   assert.match(yaml, /baseURL: https:\/\/api\.deepseek\.com\/v1/)
+})
+
+test('resolveApiProfile rejects unknown and missing provider', () => {
+  assert.throws(() => resolveApiProfile({}, null), /No API provider/)
+  assert.throws(() => resolveApiProfile({ api: 'nope' }, null), /Unknown API provider/)
+})
+
+test('saveApiToConfig and writeApiKeyToDshEnv', async () => {
+  const prev = process.env.DEEP_HOME
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-api-'))
+  process.env.DEEP_HOME = home
+  try {
+    const { saveApiToConfig, writeApiKeyToDshEnv } = await import('../src/api-provider.js')
+    const profile = resolveApiProfile(
+      { api: 'openai', 'api-model': 'gpt-4o-mini', 'api-key': 'sk-x' },
+      null,
+    )
+    const cfg = saveApiToConfig({}, profile)
+    assert.equal(cfg.api.provider, 'openai')
+    writeApiKeyToDshEnv(profile)
+    writeApiKeyToDshEnv(profile) // rewrite same key
+    const envText = fs.readFileSync(path.join(home, 'dsh-home', '.env'), 'utf8')
+    assert.match(envText, /OPENAI_API_KEY=sk-x/)
+  } finally {
+    if (prev === undefined) delete process.env.DEEP_HOME
+    else process.env.DEEP_HOME = prev
+    fs.rmSync(home, { recursive: true, force: true })
+  }
 })
