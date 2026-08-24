@@ -1,7 +1,7 @@
 {
   "name": "@deep-cli/deep",
-  "version": "1.0.0",
-  "description": "Deep CLI — llama.cpp + container guest + DSH (1.0.0)",
+  "version": "1.0.1",
+  "description": "Deep CLI — llama.cpp + container guest + DSH (1.0.1)",
   "type": "module",
   "bin": {
     "deep": "./bin/deep.js"

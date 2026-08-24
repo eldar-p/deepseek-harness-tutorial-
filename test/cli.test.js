@@ -91,8 +91,40 @@ test('main doctor ok', async () => {
   await main(['doctor'])
 })
 
-test('main stacks ok', async () => {
-  await main(['stacks'])
+test('cmdHelp topic start', () => {
+  process.env.DEEP_NO_BANNER = '1'
+  try {
+    cmdHelp('start')
+  } finally {
+    delete process.env.DEEP_NO_BANNER
+  }
+})
+
+test('main version ok', async () => {
+  process.env.DEEP_NO_BANNER = '1'
+  try {
+    await main(['version'])
+  } finally {
+    delete process.env.DEEP_NO_BANNER
+  }
+})
+
+test('main check ok', async () => {
+  process.env.DEEP_NO_BANNER = '1'
+  try {
+    await main(['check'])
+  } finally {
+    delete process.env.DEEP_NO_BANNER
+  }
+})
+
+test('main deps ok', async () => {
+  process.env.DEEP_NO_BANNER = '1'
+  try {
+    await main(['deps'])
+  } finally {
+    delete process.env.DEEP_NO_BANNER
+  }
 })
 
 test('cmdBootstrap missing gguf throws', async () => {

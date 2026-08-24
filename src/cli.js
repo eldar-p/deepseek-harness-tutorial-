@@ -23,6 +23,8 @@ import { rotateLogIfLarge, cleanStalePartFiles } from './io-policy.js'
 import { assessGgufQuant, formatQuantWarning } from './quant-warn.js'
 import { cmdUpdate } from './update.js'
 import { assessReadiness, formatReadinessReport } from './readiness.js'
+import { printBanner, maybePrintFirstRunWelcome } from './banner.js'
+import { cmdVersion, cmdDeps, cmdCheck } from './version-check.js'
 
 /**
  * @param {string[]} argv
@@ -503,13 +505,54 @@ export async function cmdStacks() {
   console.log('Status: deep status --name STACK | deep status --all')
 }
 
-export function cmdHelp() {
+export function cmdHelp(topic) {
+  printBanner()
   const wide = process.stdout.isTTY && (process.stdout.columns || 80) >= 60
   const ver = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'package.json'), 'utf8')).version
   const bar = wide ? '─'.repeat(48) : '---'
+
+  const topics = {
+    doctor: `deep doctor [--readiness] [--stage pre-alpha|alpha|beta|rc|0.5|1.0]
+  Host/engine/GPU probe. With --readiness prints stage checklist.`,
+    bootstrap: `deep bootstrap [--gguf PATH] [--preset NAME] [--channel stable|beta|edge] [--name STACK]
+  Create ~/.deep layout, config, workspace seeds.`,
+    start: `deep start [--name STACK] [--gguf PATH] [--cpu] [--preset NAME]
+  Start llama + guest + DSH. Stops same stack first if already running.`,
+    stop: `deep stop [--name STACK] [--emergency] [--wipe-session]
+  Stop stack processes. --emergency force-kills.`,
+    status: `deep status [--name STACK] [--all]
+  One-screen health for a stack (or list with --all).`,
+    stacks: `deep stacks
+  List registered stacks and run state.`,
+    update: `deep update [--channel stable|beta|edge] [--dry-run]
+  Sync channel / install CLI zip (CDN or DEEP_CLI_ZIP).`,
+    version: `deep version [--channel stable|beta|edge]
+  Print local version and CDN freshness.`,
+    check: `deep check [--channel …]
+  Version freshness + dependency probe.`,
+    deps: `deep deps
+  Check Node, Docker/Podman, DSH, llama, home writability.`,
+    presets: `deep presets
+  List built-in presets.`,
+    help: `deep help [command]
+  This screen, or details for one command.`,
+  }
+
+  if (topic && topics[topic]) {
+    console.log(`Deep CLI ${ver} — help: ${topic}`)
+    console.log(bar)
+    console.log(topics[topic])
+    console.log(`\nHome: ${paths().home}`)
+    return
+  }
+
   console.log(`Deep CLI ${ver}`)
   console.log(bar)
   console.log(`Usage:
+  deep help [command]
+  deep version [--channel stable|beta|edge]
+  deep check [--channel …]
+  deep deps
   deep doctor [--readiness] [--stage pre-alpha|alpha|beta|rc|0.5|1.0]
   deep bootstrap [--gguf PATH] [--preset NAME] [--channel stable|beta|edge]
   deep start [--name STACK] [--gguf PATH] [--cpu] [--preset NAME]
@@ -519,9 +562,17 @@ export function cmdHelp() {
   deep update [--channel stable|beta|edge] [--dry-run]
   deep presets
 
+Tips:
+  First run:  deep doctor && deep bootstrap --gguf MODEL.gguf && deep start
+  No banner:  set DEEP_NO_BANNER=1
+  Local zip:  set DEEP_CLI_ZIP=path\\to\\deep-cli-*.zip
+
 Presets: ${PRESET_NAMES.join(', ')}
 Home: ${paths().home}
 `)
+  if (topic) {
+    console.log(`[HINT] Unknown help topic "${topic}". Try: ${Object.keys(topics).join(', ')}`)
+  }
 }
 
 export async function cmdPresets() {
@@ -532,15 +583,24 @@ export async function cmdPresets() {
 }
 
 export async function main(argv) {
-  const { cmd, flags } = parseArgs(argv)
+  const { cmd, args, flags } = parseArgs(argv)
+  if (flags.version === true || flags.V === true) {
+    return cmdVersion(flags)
+  }
+  // First-run welcome once (skip bare --version)
+  if (!['version', '-V', '--version'].includes(cmd)) {
+    maybePrintFirstRunWelcome()
+  }
   try {
     switch (cmd) {
       case 'doctor':
         return await cmdDoctor(flags)
       case 'bootstrap':
         return await cmdBootstrap(flags)
-      case 'start':
+      case 'start': {
+        printBanner({ tagline: true })
         return await cmdStart(flags)
+      }
       case 'stop':
         return await cmdStop(flags)
       case 'status':
@@ -551,10 +611,19 @@ export async function main(argv) {
         return await cmdUpdate(flags)
       case 'presets':
         return await cmdPresets()
+      case 'version':
+      case '-V':
+      case '--version':
+        return cmdVersion(flags)
+      case 'deps':
+      case 'dependencies':
+        return cmdDeps()
+      case 'check':
+        return cmdCheck(flags)
       case 'help':
       case '--help':
       case '-h':
-        return cmdHelp()
+        return cmdHelp(args[0])
       default:
         console.error(`Unknown command: ${cmd}`)
         cmdHelp()
