@@ -72,6 +72,7 @@ export function parseArgs(argv) {
         a === '--dry-run' ||
         a === '--readiness' ||
         a === '--policy' ||
+        a === '--skip-fetch' ||
         a === '--all'
       ) {
         flags[a.slice(2)] = true
@@ -134,7 +135,9 @@ export async function cmdDoctor(flags = {}) {
 
   if (flags.readiness) {
     const stage =
-      flags.stage === '1.1' || flags.stage === 'v1.1'
+      flags.stage === 'field' || flags.stage === 'os'
+        ? 'field'
+        : flags.stage === '1.1' || flags.stage === 'v1.1'
         ? '1.1'
         : flags.stage === '1.0' || flags.stage === 'v1'
         ? '1.0'
@@ -724,10 +727,12 @@ export function cmdHelp(topic) {
   const bar = wide ? '─'.repeat(48) : '---'
 
   const topics = {
-    doctor: `deep doctor [--readiness] [--policy] [--stage pre-alpha|alpha|beta|rc|0.5|1.0|1.1]
+    doctor: `deep doctor [--readiness] [--policy] [--stage pre-alpha|alpha|beta|rc|0.5|1.0|1.1|field]
   Host/engine/GPU probe. --readiness checklist; --policy isolation grade.`,
     test: `deep test harness
   Offline agent harness test pack (jail, risk, MCP, API mock).`,
+    field: `deep field lite [--skip-fetch]
+  OS field-lite probe: policy, harness, llama CPU fetch, materialize.`,
     bootstrap: `deep bootstrap [--gguf PATH] [--preset NAME] [--channel stable|beta|edge] [--name STACK]
   Create ~/.deep layout, config, workspace seeds.`,
     start: `deep start [--name STACK] [--gguf PATH] [--cpu] [--preset NAME]
@@ -784,6 +789,7 @@ export function cmdHelp(topic) {
   deep deps
   deep doctor [--readiness] [--policy] [--stage …]
   deep test harness
+  deep field lite
   deep bootstrap [--gguf PATH | --api PROVIDER] [--api-model MODEL] [--api-key KEY] [--preset NAME]
   deep start [--name STACK] [--gguf PATH | --api PROVIDER] [--api-model MODEL] [--api-key KEY] [--cpu] [--preset NAME]
   deep api
@@ -846,6 +852,32 @@ export async function main(argv) {
         const { spawn } = await import('node:child_process')
         const script = path.join(PKG_ROOT, 'scripts', 'harness-test-pack.mjs')
         const child = spawn(process.execPath, [script, ...args.slice(1)], {
+          stdio: 'inherit',
+          env: process.env,
+          cwd: PKG_ROOT,
+        })
+        await new Promise((resolve, reject) => {
+          child.on('error', reject)
+          child.on('exit', (code) => {
+            process.exitCode = code ?? 0
+            resolve()
+          })
+        })
+        return
+      }
+      case 'field': {
+        const sub = (args[0] || 'lite').toLowerCase()
+        if (sub !== 'lite') {
+          console.error('Usage: deep field lite [--skip-fetch]')
+          process.exitCode = 2
+          return
+        }
+        const { spawn } = await import('node:child_process')
+        const script = path.join(PKG_ROOT, 'scripts', 'field-lite.mjs')
+        const extra = []
+        if (flags['skip-fetch'] === true || flags['skip-fetch'] === '') extra.push('--skip-fetch')
+        if (flags.json === true || flags.json === '') extra.push('--json')
+        const child = spawn(process.execPath, [script, ...extra], {
           stdio: 'inherit',
           env: process.env,
           cwd: PKG_ROOT,

@@ -571,7 +571,82 @@ export function assessV11Readiness() {
   return assessMilestones(V11_MILESTONES)
 }
 
+/** Cross-OS field parity milestones (sum = 100). */
+export const FIELD_MILESTONES = [
+  {
+    id: 'os-compat',
+    label: 'OS-COMPAT.md',
+    weight: 12,
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'docs/OS-COMPAT.md')),
+  },
+  {
+    id: 'field-lite',
+    label: 'field-lite.mjs',
+    weight: 15,
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'scripts/field-lite.mjs')),
+  },
+  {
+    id: 'field-linux',
+    label: 'field-linux.sh',
+    weight: 12,
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'scripts/field-linux.sh')),
+  },
+  {
+    id: 'field-macos',
+    label: 'field-macos.sh',
+    weight: 12,
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'scripts/field-macos.sh')),
+  },
+  {
+    id: 'field-wsl',
+    label: 'field-linux-wsl.sh',
+    weight: 10,
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'scripts/field-linux-wsl.sh')),
+  },
+  {
+    id: 'llama-win',
+    label: 'Win llama pin',
+    weight: 10,
+    check: () => {
+      const man = loadManifest('llama-binaries.json')
+      return (man.binaries || []).some((b) => b.os === 'win32' && b.sha256)
+    },
+  },
+  {
+    id: 'llama-linux',
+    label: 'Linux llama pin',
+    weight: 10,
+    check: () => {
+      const man = loadManifest('llama-binaries.json')
+      return (man.binaries || []).some((b) => b.os === 'linux' && b.variant === 'cpu' && b.sha256)
+    },
+  },
+  {
+    id: 'llama-darwin',
+    label: 'Darwin llama pin',
+    weight: 10,
+    check: () => {
+      const man = loadManifest('llama-binaries.json')
+      return (man.binaries || []).some((b) => b.os === 'darwin' && b.sha256)
+    },
+  },
+  {
+    id: 'linux-vulkan',
+    label: 'Linux Vulkan pin',
+    weight: 9,
+    check: () => {
+      const man = loadManifest('llama-binaries.json')
+      return (man.binaries || []).some((b) => b.os === 'linux' && b.variant === 'vulkan' && b.sha256)
+    },
+  },
+]
+
+export function assessFieldReadiness() {
+  return assessMilestones(FIELD_MILESTONES)
+}
+
 export function assessReadiness(stage = 'pre-alpha') {
+  if (stage === 'field' || stage === 'os') return assessFieldReadiness()
   if (stage === '1.1' || stage === 'v1.1') return assessV11Readiness()
   if (stage === '1.0' || stage === 'v1') return assessV1Readiness()
   if (stage === '0.5' || stage === 'core') return assessCoreReadiness()
@@ -583,19 +658,21 @@ export function assessReadiness(stage = 'pre-alpha') {
 
 export function formatReadinessReport(r, { host, engine, gpu, stage = 'pre-alpha' } = {}) {
   const label =
-    stage === '1.1' || stage === 'v1.1'
-      ? '1.1'
-      : stage === '1.0' || stage === 'v1'
-        ? '1.0'
-        : stage === '0.5' || stage === 'core'
-          ? '0.5'
-          : stage === 'rc'
-            ? 'RC'
-            : stage === 'beta'
-              ? 'Beta'
-              : stage === 'alpha'
-                ? 'Alpha'
-                : 'Pre-alpha'
+    stage === 'field' || stage === 'os'
+      ? 'Field'
+      : stage === '1.1' || stage === 'v1.1'
+        ? '1.1'
+        : stage === '1.0' || stage === 'v1'
+          ? '1.0'
+          : stage === '0.5' || stage === 'core'
+            ? '0.5'
+            : stage === 'rc'
+              ? 'RC'
+              : stage === 'beta'
+                ? 'Beta'
+                : stage === 'alpha'
+                  ? 'Alpha'
+                  : 'Pre-alpha'
   const lines = []
   lines.push('')
   lines.push(`${label} readiness: ${r.pct}% (${r.score}/${r.max}) — stage: ${r.stage}`)

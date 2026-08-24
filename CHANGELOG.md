@@ -13,6 +13,8 @@
 - Policy score: `deep doctor --policy` (isolation grade A–F)
 - CI runs `smoke:api` + harness pack on all OS
 - GitHub Release **v1.1.0** zip + sha256; `manifests/cli-releases.json` channels → 1.1.0
+- Cross-OS field-lite: `deep field lite` + `field-linux.sh` / `field-macos.sh` / WSL helper; CI job on ubuntu+macos
+- Readiness `--stage=field` for OS parity assets
 
 ### Changed
 
