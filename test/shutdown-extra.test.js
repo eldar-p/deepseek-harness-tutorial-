@@ -4,6 +4,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { stopAllStacks, isStopping, installShutdownHandlers } from '../src/shutdown.js'
+import { writeRunState, clearRunState } from '../src/runstate.js'
 
 test('isStopping false by default', () => {
   assert.equal(isStopping(), false)
@@ -23,6 +24,17 @@ test('stopAllStacks returns 0 when no run state', async () => {
   }
 })
 
+test('stopAllStacks stops stack with guestRunning flag', async () => {
+  const stack = `utest-sig-${process.pid}`
+  writeRunState(stack, { pids: {}, guestRunning: true, guestName: `deep-guest-${stack}` })
+  try {
+    const n = await stopAllStacks({ emergency: true })
+    assert.ok(n >= 1)
+  } finally {
+    clearRunState(stack)
+  }
+})
+
 test('installShutdownHandlers respects DEEP_NO_SIGNAL_HANDLERS', () => {
   process.env.DEEP_NO_SIGNAL_HANDLERS = '1'
   try {
@@ -30,4 +42,9 @@ test('installShutdownHandlers respects DEEP_NO_SIGNAL_HANDLERS', () => {
   } finally {
     delete process.env.DEEP_NO_SIGNAL_HANDLERS
   }
+})
+
+test('installShutdownHandlers registers when enabled', () => {
+  delete process.env.DEEP_NO_SIGNAL_HANDLERS
+  installShutdownHandlers()
 })

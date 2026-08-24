@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import os from 'node:os'
 import path from 'node:path'
-import { parseArgs, cmdHelp, cmdPresets, cmdDoctor, cmdStacks, cmdStop, cmdStatus, main } from '../src/cli.js'
+import { parseArgs, cmdHelp, cmdPresets, cmdDoctor, cmdStacks, cmdStop, cmdStatus, cmdBootstrap, main } from '../src/cli.js'
 
 test('parseArgs command and flags', () => {
   const r = parseArgs(['start', '--cpu', '--name', 'dev', '--preset=balanced'])
@@ -59,8 +59,47 @@ test('main help ok', async () => {
   await main(['help'])
 })
 
+test('cmdStatus default stack screen', async () => {
+  await cmdStatus({})
+})
+
+test('cmdBootstrap seeds workspace', async () => {
+  // Avoid long llama fetch in unit tests
+  const prev = process.env.DEEP_LLAMA_BIN
+  process.env.DEEP_LLAMA_BIN = path.join(os.tmpdir(), `no-llama-${process.pid}.exe`)
+  try {
+    await cmdBootstrap({ preset: 'dev', name: `utest-boot-${process.pid}` })
+  } finally {
+    if (prev === undefined) delete process.env.DEEP_LLAMA_BIN
+    else process.env.DEEP_LLAMA_BIN = prev
+  }
+})
+
+test('cmdStop cleans fake run state', async () => {
+  const { writeRunState, clearRunState } = await import('../src/runstate.js')
+  const stack = `utest-stop-${process.pid}`
+  writeRunState(stack, {
+    pids: { llama: 0, dsh: 0 },
+    urls: {},
+    guestRunning: false,
+  })
+  await cmdStop({ name: stack, 'wipe-session': true })
+  clearRunState(stack)
+})
+
+test('main doctor ok', async () => {
+  await main(['doctor'])
+})
+
+test('main stacks ok', async () => {
+  await main(['stacks'])
+})
+
 test('cmdBootstrap missing gguf throws', async () => {
-  const { cmdBootstrap } = await import('../src/cli.js')
   const missing = path.join(os.tmpdir(), `no-gguf-${process.pid}.gguf`)
   await assert.rejects(() => cmdBootstrap({ gguf: missing }), (e) => e.exitCode === 2)
+})
+
+test('cmdDoctor readiness 0.5', async () => {
+  await cmdDoctor({ readiness: true, stage: '0.5' })
 })

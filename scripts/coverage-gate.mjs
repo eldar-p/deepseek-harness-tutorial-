@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
-const MIN = Number(process.env.DEEP_COVERAGE_MIN || '75')
+const MIN = Number(process.env.DEEP_COVERAGE_MIN || '80')
 const TESTS = [
   'test/config.test.js',
   'test/ports.test.js',
@@ -31,6 +31,7 @@ const TESTS = [
   'test/checksums.test.js',
   'test/gpu-lock.test.js',
   'test/dsh.test.js',
+  'test/update-install.test.js',
 ]
 
 const r = spawnSync(

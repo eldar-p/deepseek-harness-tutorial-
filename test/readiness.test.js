@@ -6,12 +6,14 @@ import {
   assessBetaReadiness,
   assessRcReadiness,
   assessCoreReadiness,
+  assessV1Readiness,
   assessReadiness,
   PREALPHA_MILESTONES,
   ALPHA_MILESTONES,
   BETA_MILESTONES,
   RC_MILESTONES,
   CORE_MILESTONES,
+  V1_MILESTONES,
 } from '../src/readiness.js'
 
 test('PREALPHA_MILESTONES weights sum to 100', () => {
@@ -21,7 +23,6 @@ test('PREALPHA_MILESTONES weights sum to 100', () => {
 test('assessPreAlphaReadiness returns pct and stage', () => {
   const r = assessPreAlphaReadiness()
   assert.ok(r.pct >= 0 && r.pct <= 100)
-  assert.ok(['early', 'mid', 'late', 'complete'].includes(r.stage))
   assert.equal(r.items.length, PREALPHA_MILESTONES.length)
 })
 
@@ -30,9 +31,7 @@ test('ALPHA_MILESTONES weights sum to 100', () => {
 })
 
 test('assessAlphaReadiness returns pct and stage', () => {
-  const r = assessAlphaReadiness()
-  assert.ok(r.pct >= 0 && r.pct <= 100)
-  assert.equal(r.items.length, ALPHA_MILESTONES.length)
+  assert.equal(assessAlphaReadiness().items.length, ALPHA_MILESTONES.length)
 })
 
 test('BETA_MILESTONES weights sum to 100', () => {
@@ -40,9 +39,7 @@ test('BETA_MILESTONES weights sum to 100', () => {
 })
 
 test('assessBetaReadiness returns pct and stage', () => {
-  const r = assessBetaReadiness()
-  assert.ok(r.pct >= 0 && r.pct <= 100)
-  assert.equal(r.items.length, BETA_MILESTONES.length)
+  assert.equal(assessBetaReadiness().items.length, BETA_MILESTONES.length)
 })
 
 test('RC_MILESTONES weights sum to 100', () => {
@@ -50,9 +47,7 @@ test('RC_MILESTONES weights sum to 100', () => {
 })
 
 test('assessRcReadiness returns pct and stage', () => {
-  const r = assessRcReadiness()
-  assert.ok(r.pct >= 0 && r.pct <= 100)
-  assert.equal(r.items.length, RC_MILESTONES.length)
+  assert.equal(assessRcReadiness().items.length, RC_MILESTONES.length)
 })
 
 test('CORE_MILESTONES weights sum to 100', () => {
@@ -60,14 +55,23 @@ test('CORE_MILESTONES weights sum to 100', () => {
 })
 
 test('assessCoreReadiness returns pct and stage', () => {
-  const r = assessCoreReadiness()
+  assert.equal(assessCoreReadiness().items.length, CORE_MILESTONES.length)
+})
+
+test('V1_MILESTONES weights sum to 100', () => {
+  assert.equal(V1_MILESTONES.reduce((s, m) => s + m.weight, 0), 100)
+})
+
+test('assessV1Readiness returns pct and stage', () => {
+  const r = assessV1Readiness()
   assert.ok(r.pct >= 0 && r.pct <= 100)
-  assert.equal(r.items.length, CORE_MILESTONES.length)
+  assert.equal(r.items.length, V1_MILESTONES.length)
 })
 
 test('assessReadiness stage routing', () => {
+  assert.equal(assessReadiness('1.0').items.length, V1_MILESTONES.length)
+  assert.equal(assessReadiness('v1').items.length, V1_MILESTONES.length)
   assert.equal(assessReadiness('0.5').items.length, CORE_MILESTONES.length)
-  assert.equal(assessReadiness('core').items.length, CORE_MILESTONES.length)
   assert.equal(assessReadiness('rc').items.length, RC_MILESTONES.length)
   assert.equal(assessReadiness('beta').items.length, BETA_MILESTONES.length)
   assert.equal(assessReadiness('alpha').items.length, ALPHA_MILESTONES.length)

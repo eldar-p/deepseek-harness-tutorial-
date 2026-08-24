@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.0] — 2026-08-24
+
+### Added
+
+- `doctor --readiness --stage=1.0` (V1_MILESTONES)
+- `RELEASE.md` product page
+- Update-from-zip install test; CLI status/bootstrap/stop coverage; startDsh miss path
+
+### Changed
+
+- Coverage gate **80%** (src ~83%)
+- Version **1.0.0**
+
 ## [0.5.0] — 2026-08-24
 
 ### Added

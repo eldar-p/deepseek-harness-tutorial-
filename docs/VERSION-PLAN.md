@@ -54,12 +54,13 @@
 - [x] Version bump `0.4.0-beta`
 - [x] RC readiness `0.9.0-rc.0` (021), coverage gate 70%
 - [x] Core freeze `0.5.0` (022), Windows field GREEN, coverage gate 75%
+- [x] **1.0.0** (023) — RELEASE.md, coverage gate 80%, V1 readiness
 
-**Текущий этап:** `0.5.0` — readiness **100/100**. Next: CDN Release + multi-OS field → `1.0.0`.
+**Текущий этап:** `1.0.0` — product release. Optional: CDN GitHub Release upload (`gh auth`), macOS/Linux field, GPG signing.
 
 ```bash
 npm test
-npm run test:coverage    # ≥75%
+npm run test:coverage    # ≥80%
 npm run audit:prebeta
-node bin/deep.js doctor --readiness --stage=0.5
+node bin/deep.js doctor --readiness --stage=1.0
 ```

@@ -429,7 +429,86 @@ export function assessCoreReadiness() {
   return assessMilestones(CORE_MILESTONES)
 }
 
+/** 1.0 product milestones (sum = 100). */
+export const V1_MILESTONES = [
+  {
+    id: 'core',
+    label: 'CORE.md present',
+    weight: 10,
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'CORE.md')),
+  },
+  {
+    id: 'cov80',
+    label: 'Coverage gate ≥80%',
+    weight: 12,
+    check: () => {
+      const t = fs.readFileSync(path.join(PKG_ROOT, 'scripts/coverage-gate.mjs'), 'utf8')
+      return t.includes("'80'") || t.includes("'90'") || t.includes("'100'")
+    },
+  },
+  {
+    id: 'release-doc',
+    label: 'RELEASE.md',
+    weight: 10,
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'RELEASE.md')),
+  },
+  {
+    id: 'checksums',
+    label: 'Checksum sidecars',
+    weight: 10,
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'src/checksums.js')),
+  },
+  {
+    id: 'cdn',
+    label: 'CDN sha256 pinned',
+    weight: 12,
+    check: () => {
+      const rel = loadManifest('cli-releases.json')
+      const arts = rel.channels?.beta?.cli?.artifacts || []
+      return arts.some((x) => x.url && x.sha256 && /^[a-f0-9]{64}$/i.test(x.sha256))
+    },
+  },
+  {
+    id: 'update-install',
+    label: 'Update install tested',
+    weight: 10,
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'test/update-install.test.js')),
+  },
+  {
+    id: 'win-field',
+    label: 'Windows field noted',
+    weight: 10,
+    check: () => fs.readFileSync(path.join(PKG_ROOT, 'RC.md'), 'utf8').includes('[x] Windows'),
+  },
+  {
+    id: 'license',
+    label: 'CC BY-NC-SA 4.0',
+    weight: 8,
+    check: () => {
+      const pkg = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'package.json'), 'utf8'))
+      return pkg.license === 'CC-BY-NC-SA-4.0'
+    },
+  },
+  {
+    id: 'nightly',
+    label: 'Nightly CI',
+    weight: 8,
+    check: () => fs.existsSync(path.join(PKG_ROOT, '.github/workflows/nightly.yml')),
+  },
+  {
+    id: 'engine',
+    label: 'Container engine',
+    weight: 10,
+    check: () => detectContainerEngine().ok,
+  },
+]
+
+export function assessV1Readiness() {
+  return assessMilestones(V1_MILESTONES)
+}
+
 export function assessReadiness(stage = 'pre-alpha') {
+  if (stage === '1.0' || stage === 'v1') return assessV1Readiness()
   if (stage === '0.5' || stage === 'core') return assessCoreReadiness()
   if (stage === 'rc') return assessRcReadiness()
   if (stage === 'beta') return assessBetaReadiness()
@@ -439,15 +518,17 @@ export function assessReadiness(stage = 'pre-alpha') {
 
 export function formatReadinessReport(r, { host, engine, gpu, stage = 'pre-alpha' } = {}) {
   const label =
-    stage === '0.5' || stage === 'core'
-      ? '0.5'
-      : stage === 'rc'
-        ? 'RC'
-        : stage === 'beta'
-          ? 'Beta'
-          : stage === 'alpha'
-            ? 'Alpha'
-            : 'Pre-alpha'
+    stage === '1.0' || stage === 'v1'
+      ? '1.0'
+      : stage === '0.5' || stage === 'core'
+        ? '0.5'
+        : stage === 'rc'
+          ? 'RC'
+          : stage === 'beta'
+            ? 'Beta'
+            : stage === 'alpha'
+              ? 'Alpha'
+              : 'Pre-alpha'
   const lines = []
   lines.push('')
   lines.push(`${label} readiness: ${r.pct}% (${r.score}/${r.max}) — stage: ${r.stage}`)
