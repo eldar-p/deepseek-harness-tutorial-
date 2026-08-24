@@ -45,6 +45,10 @@
     headChars: 2000
     tailChars: 600
 
+- id: fs-sandbox
+  config:
+    backend: 'file:///__PLUGIN_DIR__/workspace-jail-fs/index.mjs'
+
 - insert:
   - id: one-shot-guard
     name: 'file:///__PLUGIN_DIR__/one-shot-guard/index.mjs'

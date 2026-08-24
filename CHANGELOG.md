@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.0-alpha] — unreleased
+
+### Added
+
+- `todo/` — alpha backlog (001–008)
+- `adr/` — architecture decision records (0001–0006)
+- `src/workspace-jail.js` + FS jail wired in cordis patch
+- `assets/memory.template.json` seeded at bootstrap
+- `scripts/smoke-guest.mjs` + CI job `smoke-guest` (ubuntu)
+- Coverage gate raised to **30%** (src ~65%)
+- `npm run audit:alpha`, `npm run smoke:guest`
+
 ## [0.1.0-prealpha] — 2026-08-24
 
 ### Added

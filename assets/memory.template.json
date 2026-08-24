@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "updated": null,
+  "facts": [],
+  "preferences": {},
+  "notes": "User-consented facts only. Never store secrets. Deep CLI seeds this at bootstrap."
+}

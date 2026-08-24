@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-/** Coverage gate — pre-alpha requires ≥10% line coverage in src/ only. */
+/** Coverage gate — alpha requires ≥30% line coverage in src/ only. Set DEEP_COVERAGE_MIN=10 for legacy pre-alpha. */
 import { spawnSync } from 'node:child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
-const MIN = Number(process.env.DEEP_COVERAGE_MIN || '10')
+const MIN = Number(process.env.DEEP_COVERAGE_MIN || '30')
 const TESTS = [
   'test/config.test.js',
   'test/ports.test.js',
@@ -20,6 +20,8 @@ const TESTS = [
   'test/shutdown.test.js',
   'test/update.test.js',
   'test/readiness.test.js',
+  'test/jail.test.js',
+  'test/materialize.test.js',
 ]
 
 const r = spawnSync(
@@ -54,7 +56,7 @@ const pct =
     : NaN
 
 if (Number.isFinite(pct)) {
-  console.log(`\nsrc/ coverage: ${pct}% (${srcPcts.length} files, min ${MIN}% for pre-alpha)`)
+  console.log(`\nsrc/ coverage: ${pct}% (${srcPcts.length} files, min ${MIN}% for alpha)`)
   if (pct < MIN) {
     console.error(`FAIL: src coverage ${pct}% < ${MIN}%`)
     process.exit(1)

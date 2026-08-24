@@ -1,11 +1,11 @@
 # Audit run 2026-08-24
 
-Gate: **pre-alpha**
+Gate: **alpha**
 
 | # | Аудит | Статус | Детали |
 |---|-------|--------|--------|
 | 1 | Безопасность | PASS | No hardcoded secrets; root refuse; log policy |
-| 2 | Качество и структура | PASS | 18 src modules |
+| 2 | Качество и структура | PASS | 20 src modules |
 | 3 | Документация | PASS | Core docs present |
 | 4 | Лицензии | PASS | package: MIT |
 | 5 | Типы и сигнатуры | N/A | JS only pre-alpha; TS deferred to pre-beta |
@@ -34,6 +34,6 @@ Gate: **pre-alpha**
 ## Gate summary
 
 - FAIL: 0
-- WARN: 0
+- WARN: 1
 
-**Gate pre-alpha: OK** (no FAIL)
+**Gate alpha: OK** (no FAIL)

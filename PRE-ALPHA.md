@@ -64,6 +64,8 @@ npm run infra:check
 
 ## До Alpha
 
+См. [todo/README.md](./todo/README.md) и [adr/README.md](./adr/README.md).
+
 1. Покрытие ≥30%, audit gate alpha
-2. compact/prune/memory
+2. compact/prune/memory — wired; E2E sign-off
 3. Полный jail + smoke на CI runner с Docker

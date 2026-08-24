@@ -26,7 +26,7 @@ jobs:
       - name: Unit tests
         run: npm test
 
-      - name: Coverage gate (pre-alpha 10%)
+      - name: Coverage gate (alpha 30%)
         run: npm run test:coverage
         shell: bash
 
@@ -41,3 +41,16 @@ jobs:
 
       - name: deep help
         run: node bin/deep.js help
+
+  smoke-guest:
+    name: smoke guest (ubuntu + docker)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Guest build + mount smoke
+        run: npm run smoke:guest

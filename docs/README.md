@@ -2,7 +2,9 @@
 
 | Документ | Для кого |
 |----------|----------|
-| [../PRE-ALPHA.md](../PRE-ALPHA.md) | Быстрый старт, текущий статус |
+| [../PRE-ALPHA.md](../PRE-ALPHA.md) | Быстрый старт, pre-alpha статус |
+| [../todo/README.md](../todo/README.md) | Alpha backlog (P0–P2) |
+| [../adr/README.md](../adr/README.md) | Architecture Decision Records |
 | [INSTALL.md](./INSTALL.md) | Установка всех ОС |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | llama + guest + DSH |
 | [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) | Типичные ошибки |

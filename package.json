@@ -1,7 +1,7 @@
 {
   "name": "@deep-cli/deep",
-  "version": "0.1.0-prealpha",
-  "description": "Deep CLI — llama.cpp + container guest + DSH (pre-alpha)",
+  "version": "0.2.0-alpha",
+  "description": "Deep CLI — llama.cpp + container guest + DSH (alpha in progress)",
   "type": "module",
   "bin": {
     "deep": "./bin/deep.js"
@@ -25,7 +25,9 @@
     "doctor": "node bin/deep.js doctor",
     "test": "node --test test/*.test.js",
     "test:coverage": "node scripts/coverage-gate.mjs",
+    "smoke:guest": "node scripts/smoke-guest.mjs",
     "audit": "node scripts/audit-run.mjs --gate=pre-alpha",
+    "audit:alpha": "node scripts/audit-run.mjs --gate=alpha",
     "infra:check": "node scripts/infra-check.mjs"
   },
   "license": "MIT"
