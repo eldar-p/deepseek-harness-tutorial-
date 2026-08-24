@@ -72,8 +72,8 @@ git clone --depth 1 https://github.com/vseeliu/claude-code-source.git
 | MCP tools | ✅ `node scripts/deep-mcp.mjs` (stdio) |
 | Egress proxy + secrets | ✅ `egress-proxy` sidecar |
 | Auto approve bash | 🟡 `permission-risk.js` + one-shot-guard |
-| Coordinator subagents | 📋 ADR + script stub |
-| LSP integration | 📋 planned plugin |
+| Coordinator subagents | ✅ `scripts/coordinator.mjs` (index-parallel workers) |
+| LSP integration | ✅ `dsh-plugins/lsp-bridge` + `src/lsp-bridge.js` |
 | Kairos daemon | 📋 `deep daemon` backlog |
 | Undercover commits | ❌ rejected |
 
