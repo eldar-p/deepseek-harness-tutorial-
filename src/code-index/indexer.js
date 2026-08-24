@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { createHash } from 'node:crypto'
 import { listSourceFiles, chunkWithTreeSitter } from './chunker.js'
-import { embed, vecToArray } from './embedder.js'
+import { embed, embedWithBackend, embedMode, vecToArray } from './embedder.js'
 import {
   indexPaths,
   loadIndexMeta,
@@ -153,6 +153,7 @@ export async function buildIndex(opts) {
     incremental: !force && skippedFiles > 0,
     fileMap: nextFileMap,
     sharded: shardsEnabled(),
+    embedMode: embedMode(),
   })
   saveFileMap(indexDir, nextFileMap)
 
@@ -189,7 +190,8 @@ export async function searchIndex(opts) {
     return { ok: false, error: 'index empty — run: gim index build', hits: [] }
   }
 
-  const queryVec = await embed(opts.query, opts.llamaBase)
+  const queryEmb = await embedWithBackend(opts.query, opts.llamaBase)
+  const queryVec = queryEmb.vector
   const chunks = loadAllChunks(indexDir)
   if (!chunks.length) {
     return { ok: false, error: 'index empty — run: gim index build', hits: [] }
@@ -203,6 +205,7 @@ export async function searchIndex(opts) {
       return {
         ok: true,
         backend: 'lancedb',
+        embed: queryEmb.backend,
         hits: hits.map((h) => formatHit(h)),
       }
     } catch {
@@ -214,6 +217,7 @@ export async function searchIndex(opts) {
   return {
     ok: true,
     backend: meta.backend || 'json',
+    embed: queryEmb.backend,
     hits: hits.map(({ chunk, score }) => formatHit({ ...chunk, _distance: 1 - score })),
   }
 }
@@ -268,6 +272,7 @@ export function indexStatus(indexDir) {
     indexedFiles: meta.indexedFiles ?? 0,
     incremental: meta.incremental ?? false,
     sharded: meta.sharded ?? false,
+    embedMode: meta.embedMode || embedMode(),
     indexDir,
   }
 }

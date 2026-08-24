@@ -10,6 +10,8 @@ import { listAvailableServers } from './lsp-bridge.js'
 import { resolveNativeIndexSidecarBin, resolveLocalIndexSidecarBuild } from './index-sidecar.js'
 import { countMcpSubscriptions, mcpPollEnabled, mcpPollIntervalMs } from './mcp-subscriptions.js'
 import { readRunState } from './runstate.js'
+import { summarizeAgentMetrics, formatMetricsSummary } from './metrics.js'
+import { embedMode } from './code-index/embedder.js'
 
 /**
  * @param {string} [stack]
@@ -104,6 +106,19 @@ export async function assessOpportunityCost(stack = 'default') {
     fix: 'GIM_INDEX_SHARDS unset (default on) · rebuild index',
   })
 
+  factors.push({
+    id: 'embed',
+    weight: 0.08,
+    lost: embedMode() === 'hash' || (embedMode() === 'auto' && !run?.urls?.llama),
+    detail:
+      embedMode() === 'hash'
+        ? 'GIM_INDEX_EMBED=hash'
+        : run?.urls?.llama
+          ? `embed mode=${embedMode()} (llama URL present)`
+          : 'no LLM URL for /v1/embeddings — hash fallback',
+    fix: 'gim start then rebuild index · GIM_INDEX_EMBED=auto',
+  })
+
   const lostWeight = factors.filter((f) => f.lost).reduce((s, f) => s + f.weight, 0)
   const totalWeight = factors.reduce((s, f) => s + f.weight, 0)
   const K = totalWeight > 0 ? Number((lostWeight / totalWeight).toFixed(2)) : 0
@@ -128,6 +143,7 @@ export function formatOpportunityCostReport(report) {
   }
   lines.push('─'.repeat(52))
   lines.push(`Estimate: ~${Math.round(report.K * 100)}% of session speed still reclaimable on this machine`)
-  lines.push('Measure: gim index bench · gim doctor --speed')
+  lines.push(formatMetricsSummary(summarizeAgentMetrics()))
+  lines.push('Measure: gim index bench · gim doctor --speed · gim metrics')
   return lines.join('\n')
 }

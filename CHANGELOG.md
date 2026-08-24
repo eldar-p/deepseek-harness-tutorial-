@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.9] — 2026-08-25
+
+### Added
+
+- **Agent metrics** — `~/.gim/metrics/agent.jsonl` (duration, tools, rounds); `gim metrics` / `gim metrics tail`
+- **Embeddings auto** — `GIM_INDEX_EMBED=auto|hash|llama`; probe `/v1/embeddings` when LLM up; search reports `embed` backend
+- KI checklist includes embed + metrics summary
+
 ## [1.1.8] — 2026-08-25
 
 ### Fixed

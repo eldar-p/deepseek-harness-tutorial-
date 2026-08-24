@@ -1357,6 +1357,17 @@ export async function main(argv) {
         return await cmdLsp(flags, args)
       case 'daemon':
         return await cmdDaemon(flags, args)
+      case 'metrics': {
+        const { summarizeAgentMetrics, formatMetricsSummary, readMetrics } = await import('./metrics.js')
+        if (args[0] === 'tail' || flags.tail) {
+          const rows = readMetrics('agent', { limit: Number(flags.limit) || 10 })
+          for (const r of rows) console.log(JSON.stringify(r))
+          return
+        }
+        console.log(formatMetricsSummary(summarizeAgentMetrics({ limit: Number(flags.limit) || 40 })))
+        console.log('Detail: gim metrics tail [--limit 10] · disable: GIM_METRICS=0')
+        return
+      }
       case 'mcp': {
         const r = await cmdMcp(flags, args)
         if (r === 'spawn') {

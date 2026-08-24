@@ -45,7 +45,7 @@ Single-file updates after agent writes: `indexFile()` / debounced `GIM_INDEX_TOU
 | `GIM_INDEX_LANCE=0` | Disable LanceDB even when optional deps installed (default: **auto-on**) |
 | `GIM_MCP_POLL=0` | Disable MCP resource auto-poll in agent loop |
 | `GIM_INDEX_SNAPSHOT=0` | Disable debounced chunks.json rewrite after shard touch |
-| `GIM_INDEX_SNAPSHOT_MS` | Debounce ms for snapshot (default `3000`) |
+| `GIM_INDEX_EMBED` | `auto` (default): use LLM `/v1/embeddings` when available; `hash` force bag; `llama` require probe |
 
 ## HTTP sidecar routing (1.1.6+)
 

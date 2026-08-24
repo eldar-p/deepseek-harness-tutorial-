@@ -260,6 +260,7 @@ export function saveJsonStore(indexDir, chunks, meta = {}) {
     indexedFiles: meta.indexedFiles ?? 0,
     incremental: meta.incremental ?? false,
     sharded,
+    embedMode: meta.embedMode,
   })
 }
 

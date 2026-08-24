@@ -14,6 +14,7 @@ import {
   stringifyToolResult,
 } from './agent-prefill.js'
 import { resolveCacheSlot } from './llm-session.js'
+import { recordMetric } from './metrics.js'
 
 const MAX_ROUNDS = 8
 
@@ -82,7 +83,26 @@ export async function runAgentLoop(opts) {
     opts.cacheSlot ??
     (opts.chatId ? resolveCacheSlot(stack, opts.chatId) : 0)
 
+  const t0 = Date.now()
+  let toolCallsTotal = 0
+  let roundsDone = 0
+
+  const finish = (result) => {
+    recordMetric('agent', {
+      stack,
+      mode,
+      chatId: opts.chatId || null,
+      ok: !!result.ok,
+      paused: !!result.paused,
+      rounds: roundsDone,
+      toolCalls: toolCallsTotal,
+      durationMs: Date.now() - t0,
+    })
+    return result
+  }
+
   for (let round = 0; round < MAX_ROUNDS; round++) {
+    roundsDone = round + 1
     if (useTools) {
       const mcpUpdates = await pollMcpSubscriptionsForAgent(stack)
       if (mcpUpdates.length) {
@@ -121,19 +141,19 @@ export async function runAgentLoop(opts) {
       const text = await res.text()
       if (!res.ok) {
         onEvent({ type: 'error', error: text.slice(0, 500) || res.statusText })
-        return { ok: false, messages }
+        return finish({ ok: false, messages })
       }
       data = JSON.parse(text)
     } catch (err) {
       onEvent({ type: 'error', error: err.message })
-      return { ok: false, messages }
+      return finish({ ok: false, messages })
     }
 
     const choice = data.choices?.[0]
     const msg = choice?.message
     if (!msg) {
       onEvent({ type: 'error', error: 'empty LLM response' })
-      return { ok: false, messages }
+      return finish({ ok: false, messages })
     }
 
     messages.push(msg)
@@ -173,6 +193,7 @@ export async function runAgentLoop(opts) {
         }
 
         onEvent({ type: 'tool_start', id: tc.id, name, args })
+        toolCallsTotal++
         const result = isAsyncAgentTool(name)
           ? await runAgentToolAsync(stack, name, args)
           : runAgentTool(stack, name, args)
@@ -203,7 +224,7 @@ export async function runAgentLoop(opts) {
           questions: clarify.questions,
           messages,
         })
-        return { ok: true, paused: true, messages, clarify }
+        return finish({ ok: true, paused: true, messages, clarify })
       }
 
       continue
@@ -229,9 +250,10 @@ export async function runAgentLoop(opts) {
               questions,
               messages: [...messages, { role: 'assistant', content }],
             })
-            return { ok: true, paused: true, messages, clarify: { id: fakeId, title, questions } }
+            return finish({ ok: true, paused: true, messages, clarify: { id: fakeId, title, questions } })
           }
         }
+        toolCallsTotal++
         const result = isAsyncAgentTool(name)
           ? await runAgentToolAsync(stack, name, args)
           : runAgentTool(stack, name, args)
@@ -256,15 +278,15 @@ export async function runAgentLoop(opts) {
         title: poll.title,
         questions: poll.questions,
       })
-      return { ok: true, paused: true, localClarify: true, messages, content }
+      return finish({ ok: true, paused: true, localClarify: true, messages, content })
     }
 
     onEvent({ type: 'done', content })
-    return { ok: true, messages, content }
+    return finish({ ok: true, messages, content })
   }
 
   onEvent({ type: 'error', error: 'tool loop limit reached' })
-  return { ok: false, messages }
+  return finish({ ok: false, messages })
 }
 
 /**

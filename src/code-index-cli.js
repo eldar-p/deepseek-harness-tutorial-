@@ -74,6 +74,8 @@ export async function cmdIndexStatus(flags) {
   }
   console.log(`Built: ${s.builtAt || 'never'}`)
   console.log(`LanceDB: ${lance.available ? 'available (auto when deps installed)' : lance.reason}${lanceEnabled() ? '' : ' [disabled GIM_INDEX_LANCE=0]'}`)
+  const { embedMode } = await import('./code-index/embedder.js')
+  console.log(`Embed: ${s.embedMode || embedMode()} (GIM_INDEX_EMBED=auto|hash|llama)`)
 }
 
 export async function cmdIndexSidecar() {

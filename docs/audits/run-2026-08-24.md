@@ -5,10 +5,10 @@ Gate: **security**
 | # | Аудит | Статус | Детали |
 |---|-------|--------|--------|
 | 1 | Безопасность | PASS | No hardcoded secrets; root refuse; log policy |
-| 2 | Качество и структура | PASS | 69 src modules |
+| 2 | Качество и структура | PASS | 70 src modules |
 | 3 | Документация | PASS | Core docs present |
 | 4 | Лицензии | PASS | package: Apache-2.0 |
-| 5 | Типы и сигнатуры | PASS | JSDoc in 51/69 src files; TS deferred (docs/TYPES.md) |
+| 5 | Типы и сигнатуры | PASS | JSDoc in 52/70 src files; TS deferred (docs/TYPES.md) |
 | 6 | Версии среды | PASS | node ^22.19.0 // >=24.0.0 |
 | 7 | Производительность | PASS | Health timeouts + AbortSignal; gim profiling deferred to field beta |
 | 8 | Зависимости | PASS | Zero runtime npm deps (CLI only) |
