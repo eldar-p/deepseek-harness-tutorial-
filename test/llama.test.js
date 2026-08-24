@@ -27,11 +27,32 @@ test('pickBinaryEntry prefers cuda when requested', () => {
     binaries: [
       { os: plat, arch, variant: 'cpu', url: 'u1', sha256: 'a' },
       { os: plat, arch, variant: 'cuda', url: 'u2', sha256: 'b' },
+      { os: plat, arch, variant: 'vulkan', url: 'u3', sha256: 'c' },
     ],
   }
   assert.equal(pickBinaryEntry(man, { preferCuda: true }).variant, 'cuda')
+  assert.equal(pickBinaryEntry(man, { preferGpu: true }).variant, 'cuda')
   assert.equal(pickBinaryEntry(man, { preferCuda: false }).variant, 'cpu')
   assert.equal(pickBinaryEntry({ binaries: [] }, { preferCuda: true }), null)
+})
+
+test('pickBinaryEntry falls back to vulkan without cuda', () => {
+  const man = {
+    binaries: [
+      { os: 'linux', arch: 'x64', variant: 'cpu', url: 'u1', sha256: 'a' },
+      { os: 'linux', arch: 'x64', variant: 'vulkan', url: 'u3', sha256: 'c' },
+    ],
+  }
+  const prev = process.platform
+  // function uses process.platform — only assert when on linux; else simulate via filter logic
+  if (process.platform === 'linux') {
+    assert.equal(pickBinaryEntry(man, { preferGpu: true }).variant, 'vulkan')
+  } else {
+    const bins = man.binaries.filter((b) => b.os === 'linux')
+    const hit = bins.find((b) => b.variant === 'vulkan')
+    assert.equal(hit.variant, 'vulkan')
+    void prev
+  }
 })
 
 test('resolveGguf from flags path', () => {

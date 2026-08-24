@@ -742,8 +742,10 @@ export function cmdHelp(topic) {
   Semantic code index over the stack workspace.`,
     lsp: `deep lsp servers|query|hover|definition|references|symbols
   Host language-server helpers (typescript-language-server / pyright / …).`,
-    daemon: `deep daemon start|stop|status|tick [--name STACK] [--interval MS]
-  Background health poller for llama/DSH (Kairos-lite).`,
+    daemon: `deep daemon start|stop|status|tick [--name STACK] [--interval MS] [--proactive]
+  Background health poller for llama/DSH (Kairos-lite). --proactive writes .deep/PROACTIVE.md.`,
+    mcp: `deep mcp
+  Stdio MCP server (tool_search, code_search, stack_status, …). Wire into Cursor MCP config.`,
     risk: `deep risk classify "bash command" [--llm]
   Heuristic (or optional LLM) auto-mode risk label: allow|confirm|deny.`,
     help: `deep help [command]
@@ -778,6 +780,7 @@ export function cmdHelp(topic) {
   deep index build|search|status [--name STACK]
   deep lsp servers|query …
   deep daemon start|stop|status|tick [--name STACK]
+  deep mcp
   deep risk classify "cmd" [--llm]
 
 Tips:
@@ -854,6 +857,22 @@ export async function main(argv) {
         return await cmdLsp(flags, args)
       case 'daemon':
         return await cmdDaemon(flags, args)
+      case 'mcp': {
+        const { spawn } = await import('node:child_process')
+        const script = path.join(PKG_ROOT, 'scripts', 'deep-mcp.mjs')
+        const child = spawn(process.execPath, [script], {
+          stdio: 'inherit',
+          env: process.env,
+        })
+        await new Promise((resolve, reject) => {
+          child.on('error', reject)
+          child.on('exit', (code) => {
+            process.exitCode = code ?? 0
+            resolve()
+          })
+        })
+        return
+      }
       case 'risk': {
         const sub = args[0]
         const cmdText = args.slice(1).join(' ').trim()

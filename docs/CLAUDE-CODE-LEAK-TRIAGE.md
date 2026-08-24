@@ -32,7 +32,7 @@
 
 ### 1. ToolSearch + deferred MCP tools
 Claude Code keeps **hundreds of tool schemas out of context** until `ToolSearch` matches keywords (`+slack`, `select:bash`).  
-**Deep action:** MCP server exposes `code_search`, `index_build`; Cordis persona says «search before grep». Optional: defer guest-bash tool description.
+**Deep action:** MCP server exposes `tool_search` / `tool_select` + `code_search`; Cordis persona prefers search before inventing tools.
 
 ### 2. Coordinator + AgentTool
 `coordinatorMode.ts`: lead uses `AgentTool` to spawn workers with `ASYNC_AGENT_ALLOWED_TOOLS` minus internal tools; scratchpad under injected dir.  
@@ -74,7 +74,8 @@ git clone --depth 1 https://github.com/vseeliu/claude-code-source.git
 | Auto approve bash | ✅ heuristic + optional LLM (`DEEP_AUTO_MODE=llm`) |
 | Coordinator subagents | ✅ `scripts/coordinator.mjs` (index-parallel workers) |
 | LSP integration | ✅ `dsh-plugins/lsp-bridge` + `src/lsp-bridge.js` |
-| Kairos daemon | ✅ `deep daemon` health poller (no proactive chat yet) |
+| Kairos daemon | ✅ `deep daemon` + proactive `.deep/PROACTIVE.md` |
+| ToolSearch deferred tools | ✅ `tool_search` / `tool_select` MCP + skill |
 | Undercover commits | ❌ rejected |
 
 See [0008-code-index-egress-proxy.md](../adr/0008-code-index-egress-proxy.md).

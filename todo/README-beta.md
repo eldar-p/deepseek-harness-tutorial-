@@ -19,8 +19,9 @@
 | [022](./022-core-05.md) | 0.5 core + Windows field | ✅ done | 0.5 |
 | [023](./023-v1-release.md) | Ship 1.0.0 | ✅ done | 1.0 |
 | [024](./024-automode-daemon.md) | Auto-mode LLM + daemon | ✅ done | post-1.0 |
+| [025](./025-toolsearch-mcp-vulkan.md) | ToolSearch + MCP + Vulkan | ✅ done | post-1.0 |
 
-**1.0** (`1.0.1`) — hybrid + LSP + auto-mode/daemon · coverage ~82% (gate 80 / floor 78)  
+**1.0** (`1.0.1`) — hybrid + LSP + auto-mode/daemon/MCP · coverage ~82% (gate 80 / floor 78)  
 Readiness: `deep doctor --readiness --stage=1.0` · [RELEASE.md](../RELEASE.md)
 
 Alpha archive: [README.md](./README.md)
