@@ -1,0 +1,7 @@
+{
+  "name": "paranoia",
+  "guestNetwork": "none",
+  "zeroTraces": "hard",
+  "telemetry": false,
+  "description": "Min footprint; hard session wipe on stop"
+}

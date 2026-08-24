@@ -1,11 +1,11 @@
-﻿# DeepSeek Harness — туториал + наш стек
+﻿# DeepSeek Harness — туториал + Deep CLI
 
-В репозитории лежит **готовое самописное**: плагины, skills, host/guest скрипты, конфиги.
+**Продукт:** [Deep CLI Pre-alpha](./PRE-ALPHA.md) — [документация](./docs/README.md) · [инфраструктура](./docs/INFRASTRUCTURE.md) · [план версий](./docs/VERSION-PLAN.md) · [аудиты](./docs/AUDITS.md)
 
-| ОС | Гайд | Установка |
-|----|------|-----------|
-| **Windows** | этот файл | `install.ps1` + `host/` |
-| **macOS** | **[MACOS.md](./MACOS.md)** | `install.sh` + `host-mac/` |
+| ОС | Deep CLI | Legacy |
+|----|----------|--------|
+| **Windows** | `scripts/install-deep.ps1` | `install.ps1` + `host/` |
+| **macOS** | `scripts/install-deep.sh` | `install.sh` + `host-mac/` |
 
 ```bash
 git clone https://github.com/eldar-p/deepseek-harness-tutorial-.git

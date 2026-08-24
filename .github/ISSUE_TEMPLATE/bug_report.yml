@@ -1,0 +1,27 @@
+name: Bug report
+description: Something broke in Deep CLI
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+  - type: input
+    id: os
+    attributes:
+      label: OS
+  - type: input
+    id: node
+    attributes:
+      label: Node version
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `deep doctor`
+      render: shell

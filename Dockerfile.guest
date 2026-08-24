@@ -1,0 +1,10 @@
+# deep-guest — minimal sandbox for Deep CLI (pre-alpha)
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash curl ca-certificates python3 git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Neutral hostname set at runtime; no product watermark
+WORKDIR /workspace
+CMD ["sleep", "infinity"]

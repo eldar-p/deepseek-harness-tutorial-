@@ -1,0 +1,44 @@
+{
+  "tag": "b9771",
+  "note": "Official ggml-org/llama.cpp release binaries; verified sha256",
+  "binaries": [
+    {
+      "os": "win32",
+      "arch": "x64",
+      "variant": "cpu",
+      "tag": "b9771",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b9771/llama-b9771-bin-win-cpu-x64.zip",
+      "sha256": "1b3f373b3618a7cebe79b0fb33d8c26176d19374b560f9490565d6fdb6a11536",
+      "cacheName": "llama-b9771-bin-win-cpu-x64.zip"
+    },
+    {
+      "os": "win32",
+      "arch": "x64",
+      "variant": "cuda",
+      "tag": "b9771",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b9771/llama-b9771-bin-win-cuda-12.4-x64.zip",
+      "sha256": "a8106946ddd37a79d8f0e4a79a17fab60b60579cbe0e19bb58f5c83d7c8918af",
+      "cudartUrl": "https://github.com/ggml-org/llama.cpp/releases/download/b9771/cudart-llama-bin-win-cuda-12.4-x64.zip",
+      "cudartSha256": null,
+      "cacheName": "llama-b9771-bin-win-cuda-12.4-x64.zip",
+      "cudartCacheName": "cudart-llama-bin-win-cuda-12.4-x64.zip",
+      "note": "cudart sha optional — system CUDA 12.x often enough; sidecar when pinned"
+    },
+    {
+      "os": "darwin",
+      "arch": "arm64",
+      "variant": "metal",
+      "tag": "b9771",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b9771/llama-b9771-bin-macos-arm64.tar.gz",
+      "sha256": null
+    },
+    {
+      "os": "linux",
+      "arch": "x64",
+      "variant": "cpu",
+      "tag": "b9771",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b9771/llama-b9771-bin-ubuntu-x64.tar.gz",
+      "sha256": null
+    }
+  ]
+}
