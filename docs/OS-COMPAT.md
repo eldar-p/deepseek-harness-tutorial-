@@ -1,7 +1,7 @@
 # OS compatibility matrix
 
-Last verified: **2026-08-24**  
-CI: unit matrix (win/mac/linux) + **field-lite** (ubuntu + macos llama CPU fetch) + guest smoke (ubuntu).
+Last verified: **2026-08-24** (1.1.1)  
+CI: unit matrix (win/mac/linux) + **field-lite** (ubuntu + macos) + guest smoke (ubuntu).
 
 Deep is a **hybrid** host orchestrator: local GGUF (`llama-server`) **or** cloud API (`--api`). Guest container (Docker/Podman), code index, and egress proxy are shared.
 
@@ -22,11 +22,11 @@ Deep is a **hybrid** host orchestrator: local GGUF (`llama-server`) **or** cloud
 
 | Capability | Windows | Linux (native / WSL) | macOS |
 |------------|---------|----------------------|-------|
-| `deep doctor --policy` | PASS | PASS | field-lite CI |
-| `deep field lite` | PASS | PASS | CI job |
-| Guest smoke | PASS | PASS (Desktop integration / image load) | Docker Desktop |
-| `deep start` local GGUF | PASS | PASS (CPU / Vulkan) | Metal pin; needs Mac + GGUF |
-| `smoke-e2e` | PASS | PASS (WSL field) | run `field-macos.sh --gguf …` |
+| `deep doctor --policy` | PASS | **PASS (WSL 24.04)** | field-lite CI |
+| `deep field lite` | PASS | **PASS 10/10 (WSL)** | CI job PASS |
+| Guest smoke | PASS | PASS (Desktop integration) | Docker Desktop |
+| `deep start` local GGUF | **GREEN** (1.1.1) | field-lite; full GGUF optional | Metal pin; needs Mac + GGUF |
+| `smoke:e2e` | **PASS** | — (30B on CPU heavy) | `field-macos.sh --gguf …` |
 | `deep start --api …` | wired | wired | wired |
 
 ## Field helpers
@@ -35,6 +35,9 @@ Deep is a **hybrid** host orchestrator: local GGUF (`llama-server`) **or** cloud
 # Offline + llama CPU auto-fetch (CI runs this on ubuntu/macos)
 deep field lite
 npm run field:lite
+
+# WSL Ubuntu
+bash scripts/run-wsl-field-lite.sh
 
 # Full stack (needs Docker + GGUF)
 bash scripts/field-linux.sh --gguf /path/model.gguf
@@ -52,6 +55,7 @@ deep doctor --readiness --stage=field
 3. **WSL DSH** — install Linux dsh under `~/.local` (reject `/mnt/c` Windows shim).
 4. **macOS physical full stack** — no dedicated Mac in lab; Metal binary + field-lite CI green; full e2e needs operator with GGUF.
 5. **Linux CUDA** — no official ggml zip; use Vulkan pin or `DEEP_LLAMA_BIN`.
+6. **lsp-bridge** — must use `defineTool` + `output.render` (fixed in 1.1.1); old `ctx.tool` crashed DSH boot.
 
 ## Recommended models (quick)
 
