@@ -4,6 +4,7 @@ import {
   resolveAllowlist,
   guestNetworkArgs,
   guestNetworkEnv,
+  guestCapabilityArgs,
   formatAllowlistLog,
 } from '../src/guest.js'
 
@@ -33,4 +34,13 @@ test('guestNetworkArgs offline uses none network', () => {
 
 test('formatAllowlistLog offline', () => {
   assert.match(formatAllowlistLog('offline', []), /none/)
+})
+
+test('formatAllowlistLog allowlist mentions iptables', () => {
+  assert.match(formatAllowlistLog('allowlist', ['a.com']), /iptables/)
+})
+
+test('guestCapabilityArgs adds NET_ADMIN for allowlist', () => {
+  assert.deepEqual(guestCapabilityArgs('allowlist'), ['--cap-add', 'NET_ADMIN'])
+  assert.deepEqual(guestCapabilityArgs('offline'), [])
 })

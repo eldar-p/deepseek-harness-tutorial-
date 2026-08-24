@@ -26,17 +26,24 @@ export function resolveAllowlist(presetNet) {
   return allow[presetNet] || allow.balanced || []
 }
 
+export function guestCapabilityArgs(presetNet) {
+  if (presetNet === 'none' || presetNet === 'offline') return []
+  // iptables in deep-net-enforce needs NET_ADMIN
+  return ['--cap-add', 'NET_ADMIN']
+}
+
 export function guestNetworkArgs(presetNet, allowlistDomains = []) {
+  void allowlistDomains
   if (presetNet === 'none' || presetNet === 'offline') return ['--network', 'none']
   if (presetNet === 'open') return ['--network', 'bridge']
   return ['--network', 'bridge']
 }
 
-/** Env vars passed into guest for network policy (enforcement via sidecar deferred). */
+/** Env vars passed into guest for network policy (iptables via deep-net-enforce). */
 export function guestNetworkEnv(presetNet, allowlistDomains = []) {
   const domains = allowlistDomains.length ? allowlistDomains : resolveAllowlist(presetNet)
   return {
-    DEEP_NET_MODE: presetNet,
+    DEEP_NET_MODE: presetNet === 'allowlist' || presetNet === 'dev' ? 'allowlist' : presetNet,
     DEEP_NET_ALLOWLIST: domains.join(','),
   }
 }
@@ -45,7 +52,7 @@ export function formatAllowlistLog(presetNet, domains) {
   if (presetNet === 'none' || presetNet === 'offline') return 'network=none (no egress)'
   if (presetNet === 'open') return 'network=open (full egress — WARN)'
   const n = domains.length
-  return `network=allowlist (${n} domain${n === 1 ? '' : 's'}; bridge + env policy)`
+  return `network=allowlist (${n} domain${n === 1 ? '' : 's'}; iptables + NET_ADMIN)`
 }
 
 export async function ensureGuestImage() {
@@ -103,6 +110,7 @@ export async function startGuest({ stack, presetNet = 'allowlist' }) {
     '--hostname',
     'sandbox',
     ...guestNetworkArgs(presetNet, resolved),
+    ...guestCapabilityArgs(presetNet),
     ...envArgs,
     '-v',
     mount,

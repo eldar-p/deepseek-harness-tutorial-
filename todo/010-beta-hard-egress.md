@@ -1,6 +1,12 @@
 # 010 — Hard egress for guest
 
-**Status:** ⏳ pending · **Stage:** beta  
+**Status:** ✅ done · **Stage:** beta  
 **ADR:** [0007](../adr/0007-guest-network-env-policy.md)
 
-Env policy (`DEEP_NET_*`) is alpha. Beta: sidecar or guest entrypoint that enforces allowlist (proxy/DNS).
+## Checklist
+
+- [x] `guest/deep-net-enforce.sh` + Dockerfile ENTRYPOINT
+- [x] Image tag `deep-guest:0.2-beta`
+- [x] `--cap-add NET_ADMIN` for allowlist presets
+- [x] Non-fatal iptables failures
+- [ ] IPv6 + CDN IP refresh on TTL (later)

@@ -63,10 +63,11 @@ node bin/deep.js stop
 ```text
 User → deep CLI (host)
          ├── llama-server   127.0.0.1:PORT/v1
-         ├── deep-guest     Docker, bash @ /workspace
+         ├── deep-guest     Docker + iptables allowlist @ /workspace
          └── DSH web        127.0.0.1:PORT/  → llama + guest tools
 ```
 
+Образ: `deep-guest:0.2-beta` (entrypoint `deep-net-enforce`).  
 Подробнее: [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)
 
 ## Quality / smoke
