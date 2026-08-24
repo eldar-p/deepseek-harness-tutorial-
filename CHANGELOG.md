@@ -18,12 +18,11 @@
 - GPU lock tracks stack name; blocks second GPU stack
 - `ALPHA.md` status page
 
-### Verified
+### Changed
 
-- Pre-alpha readiness 100/100
-- Alpha readiness 100/100
-- `smoke:e2e` PASS (llama chat `e2e-ok`, DSH HTTP, guest bash + net env)
-- Gate alpha: OK (0 FAIL, 1 WARN TTY)
+- README rewritten for Deep CLI alpha (legacy VirtualBox moved to bottom)
+- Coverage gate raised to **50%** (src ~69%)
+- Audit #18 TTY → PASS (0 WARN on alpha gate)
 
 ## [0.1.0-prealpha] — 2026-08-24
 

@@ -32,4 +32,4 @@ npm run smoke:e2e
 
 ## До beta (`0.3` / `0.4`)
 
-См. [todo/README-beta.md](./todo/README-beta.md): hard egress proxy, audit #22, coverage ≥50%, CDN artifacts.
+См. [todo/README-beta.md](./todo/README-beta.md): hard egress proxy, audit #22, CDN artifacts. Coverage ≥50% — done.

@@ -1,5 +1,15 @@
 # 012 — Coverage ≥50%
 
-**Status:** ⏳ pending · **Stage:** pre-beta
+**Status:** ✅ done · **Stage:** pre-beta
 
-Raise `DEEP_COVERAGE_MIN` to 50; add tests for `guest.js`, `llama.js`, `cli.js` paths.
+## Checklist
+
+- [x] Default `DEEP_COVERAGE_MIN=50` in coverage-gate
+- [x] Measured src ~69% (above gate)
+- [x] CI step renamed «beta 50%»
+
+## Verify
+
+```bash
+npm run test:coverage
+```

@@ -40,6 +40,12 @@
 
 **Следующий этап:** Pre-beta / Beta — [todo/README-beta.md](../todo/README-beta.md)
 
+- [x] Coverage gate ≥50% (src ~69%)
+- [x] Audit #18 TTY PASS
+- [ ] Hard egress (010)
+- [ ] Audit #22 context (011)
+- [ ] CDN artifacts (013)
+
 ## Команды
 
 ```bash

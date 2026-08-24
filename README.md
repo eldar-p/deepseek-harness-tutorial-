@@ -1,126 +1,110 @@
-﻿# DeepSeek Harness — туториал + Deep CLI
+﻿# Deep CLI
 
-**Продукт:** [Deep CLI Alpha](./ALPHA.md) · [Pre-alpha](./PRE-ALPHA.md) — [документация](./docs/README.md) · [todo](./todo/README.md) · [beta](./todo/README-beta.md) · [ADR](./adr/README.md)
+Локальный стек: **llama.cpp** + **Docker guest** + **DSH**.  
+**Стадия:** [Alpha `v0.2.0-alpha`](./ALPHA.md) · complete · revision `2026.08.24-alpha`
 
-| ОС | Deep CLI | Legacy |
-|----|----------|--------|
-| **Windows** | `scripts/install-deep.ps1` | `install.ps1` + `host/` |
-| **macOS** | `scripts/install-deep.sh` | `install.sh` + `host-mac/` |
+[Документация](./docs/README.md) · [Установка](./docs/INSTALL.md) · [Troubleshooting](./docs/TROUBLESHOOTING.md) · [ADR](./adr/README.md) · [Alpha todo](./todo/README.md) · [Beta todo](./todo/README-beta.md) · [Changelog](./CHANGELOG.md)
+
+## Требования
+
+- Node.js **^22.19** или **≥24**
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (или Podman) — Engine running
+- GGUF-модель (например Q4_K_M)
+- Опционально: `npm i -g @deepseek-ai/dsh@0.1.1-rc.2`
+
+## Быстрый старт
 
 ```bash
 git clone https://github.com/eldar-p/deepseek-harness-tutorial-.git
 cd deepseek-harness-tutorial-
+git checkout v0.2.0-alpha   # или main
 ```
 
----
+**Windows:**
 
-## Содержимое репозитория
+```powershell
+powershell -File .\scripts\wait-docker.ps1
+node bin/deep.js bootstrap --gguf "PATH\to\model.Q4_K_M.gguf"
+node bin/deep.js start --cpu
+node bin/deep.js status
+```
+
+**macOS / Linux:**
+
+```bash
+node bin/deep.js bootstrap --gguf /path/to/model.Q4_K_M.gguf
+node bin/deep.js start --cpu
+node bin/deep.js status
+```
+
+Открой URL **DSH** из вывода `status` (порт случайный, ~13000–14000).
+
+```powershell
+node bin/deep.js stop
+```
+
+## Команды
+
+| Команда | Описание |
+|---------|----------|
+| `deep doctor [--readiness] [--stage alpha]` | Проверка окружения / readiness |
+| `deep bootstrap --gguf PATH` | Конфиг, assets, prefetch llama |
+| `deep start [--name STACK] [--cpu] [--preset NAME]` | Поднять стек |
+| `deep stop [--name STACK]` | Остановить |
+| `deep status [--name STACK] [--all]` | Статус |
+| `deep stacks` | Список стеков |
+| `deep presets` | Пресеты сети / traces |
+| `deep update` | Сверка канала (git) |
+
+Алиас после `npm link`: `deep` → `bin/deep.js`.
+
+## Архитектура
 
 ```text
-dsh-plugins/          кастомные плагины DSH
-skills/               agent-speed, path-map-vm, …
-config/               cordis.patch.yml, settings.yaml, AGENTS.md
-host/                 Windows: vm-exec.ps1, start-*.ps1, …
-host-mac/             macOS: vm-exec.sh, start-*.sh, …
-guest/                guest-setup.sh, tor-up.sh, … (общие)
-knowledge/            шпаргалки
-env.example           Windows → env.ps1
-env.sh.example        macOS → env.sh
-install.ps1           установка на Windows
-install.sh            установка на macOS
-MACOS.md              туториал для Mac
+User → deep CLI (host)
+         ├── llama-server   127.0.0.1:PORT/v1
+         ├── deep-guest     Docker, bash @ /workspace
+         └── DSH web        127.0.0.1:PORT/  → llama + guest tools
 ```
 
----
+Подробнее: [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)
 
-## 0. База (один раз)
+## Quality / smoke
 
-1. VirtualBox + Debian (SSH server).
-2. Shared Folder: хост `<HOST_SHARE>` ↔ гость `/mnt/hostshare` (или `/media/sf_…` + bind).
-3. NAT forward:
-
-| Name | Host | Guest |
-|------|------|-------|
-| ssh | 127.0.0.1:2222 | 22 |
-| torsocks | 127.0.0.1:9050 | 9050 |
-
-4. Node.js **^22.19 или ≥24**, LM Studio, пакет `@deepseek-ai/dsh`.
-5. SSH-ключ хоста → `~/.ssh/authorized_keys` гостя (`guest/guest-setup.sh` + `SSH_PUBKEY=…`).
-
----
-
-## 1. Установка наших файлов
-
-```powershell
-copy env.example env.ps1
-# отредактируй DSH_HOME, HOST_SHARE, LM_STUDIO_MODEL, VM_SSH_USER
-powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
+```bash
+npm test
+npm run test:coverage    # ≥50% src (beta gate)
+npm run audit:alpha
+npm run smoke:guest      # Docker image + mount
+npm run smoke:e2e        # живой стек: jail, HTTP, chat, guest
 ```
 
-`install.ps1` копирует:
+## Структура репо (Deep)
 
-- плагины → `%DSH_HOME%\profiles\web\dsh-plugins\`
-- skills → `%DSH_HOME%\skills\`
-- `cordis.patch.yml` / `AGENTS.md` / `settings.yaml` → home профиля
-- `guest/*` → `%HOST_SHARE%\guest-toolkit\`
-- `host/*` → `%HOST_SHARE%\ai\`
-
----
-
-## 2. Запуск
-
-```powershell
-# модель
-powershell -File .\host\start-solo-max.ps1
-
-# UI
-powershell -File .\host\start-dsh.ps1
+```text
+bin/deep.js          CLI entry
+src/                 оркестратор
+manifests/           pins (llama, guest, channels)
+assets/              cordis patch, AGENTS, memory template
+dsh-plugins/         guest-bash-local, workspace-jail-fs, …
+presets/             balanced, offline, paranoia, …
+Dockerfile.guest     образ deep-guest:prealpha
+todo/                alpha + beta backlog
+adr/                 architecture decisions
+docs/                install, audits, legal
 ```
 
-Открой http://127.0.0.1:3080 — **новый** чат.
+## Legacy tutorial (VirtualBox)
 
-После ребута:
+Старый трек с Debian VM + LM Studio остаётся в репо, но **не** является продуктом Deep CLI.
 
-```powershell
-powershell -File .\host\after-reboot-start.ps1
-```
+| ОС | Установка | Хост-скрипты |
+|----|-----------|--------------|
+| Windows | `install.ps1` + `env.example` | `host/` |
+| macOS | `install.sh` + `env.sh.example` | `host-mac/` · [MACOS.md](./MACOS.md) |
 
----
-
-## 3. Что делает стек
-
-| Компонент | Роль |
-|-----------|------|
-| **vm-bash-local** | каждый `bash` уходит в VM через `host/vm-exec.ps1` (Win) или `host-mac/vm-exec.sh` (Mac) |
-| **path-fix-fs** | `/home/…`, `/tmp/…`, `*\mnt\hostshare\…` → `HOST_SHARE` |
-| **one-shot-guard** | deny: todo, probe bash, bare pip, root README/LICENSE, emoji |
-| **harness-narrative** | раскрываемый Think из tool-шагов |
-| **skills** | скорость, path-map, большие файлы/проекты, UI, Tor-web |
-| **guest/** | sshd, Tor, lean install, persist disk, TOOLKIT |
-
-Политика: один model id `coder`, только bash в VM, файлы только на share, web через Tor `:9050`, без emoji, STOP после одного ответа.
+Там же: Shared Folder → `/mnt/hostshare`, SSH `:2222`, Tor `:9050`, DSH на `:3080`, модель через LM Studio `:1234`.
 
 ---
 
-## 4. Порты
-
-| Порт | Сервис |
-|------|--------|
-| 1234 | LM Studio |
-| 3080 | DSH web |
-| 2222 | SSH → Debian |
-| 9050 | Tor SOCKS |
-
----
-
-## 5. Чеклист
-
-- [ ] Debian + SSH :2222
-- [ ] Share смонтирован в госте
-- [ ] `env.ps1` заполнен, `install.ps1` ок
-- [ ] `lms` видит модель, `start-solo-max` загрузил `coder`
-- [ ] `start-dsh` → :3080
-- [ ] В чате: Write на share → bash видит файл через `/mnt/hostshare`
-
-Подробности по гостевым тулам: `guest/TOOLKIT.md`.  
-Сетевые заметки: `host/NET.md`, `knowledge/`.
+**Лицензия:** [MIT](./LICENSE) · **Тег:** [`v0.2.0-alpha`](https://github.com/eldar-p/deepseek-harness-tutorial-/releases/tag/v0.2.0-alpha)
