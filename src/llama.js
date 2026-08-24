@@ -160,8 +160,17 @@ export async function startLlama({ stack, bin, gguf, port, device }) {
   ]
   const logFile = runLogPath(stack, 'llama')
   const cwd = path.dirname(bin)
+  const env = {}
+  if (process.platform !== 'win32') {
+    const prev = process.env.LD_LIBRARY_PATH || ''
+    env.LD_LIBRARY_PATH = prev ? `${cwd}${path.delimiter}${prev}` : cwd
+    if (process.platform === 'darwin') {
+      const dy = process.env.DYLD_LIBRARY_PATH || ''
+      env.DYLD_LIBRARY_PATH = dy ? `${cwd}${path.delimiter}${dy}` : cwd
+    }
+  }
   console.log(`[YELLOW] Llama warming — ${path.basename(bin)} :${port}`)
-  const pid = spawnDetached(bin, args, { cwd, logFile })
+  const pid = spawnDetached(bin, args, { cwd, logFile, env })
   appendLog(`event=llama_spawn pid=${pid} port=${port} device=${device}`)
   return { pid, port, warming: true }
 }

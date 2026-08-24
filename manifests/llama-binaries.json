@@ -30,7 +30,8 @@
       "variant": "metal",
       "tag": "b9771",
       "url": "https://github.com/ggml-org/llama.cpp/releases/download/b9771/llama-b9771-bin-macos-arm64.tar.gz",
-      "sha256": null
+      "sha256": "27c65b7b5d1e74774b14a19345b9a41498a215ee032191c5946c7ecc6c0bfa17",
+      "cacheName": "llama-b9771-bin-macos-arm64.tar.gz"
     },
     {
       "os": "linux",
@@ -38,7 +39,8 @@
       "variant": "cpu",
       "tag": "b9771",
       "url": "https://github.com/ggml-org/llama.cpp/releases/download/b9771/llama-b9771-bin-ubuntu-x64.tar.gz",
-      "sha256": null
+      "sha256": "9ea63c3e901ed05f7e5dba391c9858e5f0ad13428af7c8decaabaf5681862b75",
+      "cacheName": "llama-b9771-bin-ubuntu-x64.tar.gz"
     }
   ]
 }
