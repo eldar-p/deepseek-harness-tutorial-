@@ -24,7 +24,7 @@
 | [027](./027-harness-policy.md) | Harness pack + policy score | ✅ done | 1.1 |
 | [028](./028-field-parity.md) | Linux/macOS field-lite | ✅ done | 1.1 |
 
-**1.1** (`1.1.0`) — harness + policy + field-lite CI · [OS-COMPAT.md](../docs/OS-COMPAT.md)  
-Readiness: `deep doctor --readiness --stage=1.1|field` · Policy: `deep doctor --policy`
+**1.1.1** — lsp-bridge boot fix · WSL field-lite GREEN · Windows e2e GREEN  
+Readiness: `deep doctor --readiness --stage=1.1|field` · Policy: `deep doctor --policy` · [OS-COMPAT.md](../docs/OS-COMPAT.md)
 
 Alpha archive: [README.md](./README.md)

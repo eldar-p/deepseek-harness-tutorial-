@@ -9,7 +9,7 @@ import { searchDeferredTools, selectDeferredTool, formatToolSearchHits } from '.
 import { daemonTick } from './daemon.js'
 
 export const MCP_PROTOCOL = '2024-11-05'
-export const MCP_SERVER_INFO = { name: 'deep-cli', version: '1.1.0' }
+export const MCP_SERVER_INFO = { name: 'deep-cli', version: '1.1.1' }
 
 export const MCP_TOOLS = [
   {
