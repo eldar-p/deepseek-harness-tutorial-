@@ -29,6 +29,9 @@ export function getCliReleaseInfo(channel) {
 /**
  * Select CDN artifact for this host from cli-releases.json.
  * Prefers entries with a real url; falls back to DEEP_CLI_ZIP local override.
+ * @param {string} channel
+ * @param {{ platform?: string, arch?: string }} [opts]
+ * @returns {object|null}
  */
 export function pickCliArtifact(channel, { platform = process.platform, arch = process.arch } = {}) {
   if (process.env.DEEP_CLI_ZIP && fs.existsSync(process.env.DEEP_CLI_ZIP)) {

@@ -4,7 +4,11 @@ import os from 'node:os'
 import { spawnSync } from 'node:child_process'
 import { paths, chmodOwnerOnly, appendLog } from './paths.js'
 
-/** Resolve artifact url to a local file path or remote http(s) url. */
+/**
+ * Resolve artifact url to a local file path or remote http(s) url.
+ * @param {string} url
+ * @returns {{ kind: 'file', path: string }|{ kind: 'http', url: string }|null}
+ */
 export function resolveArtifactSource(url) {
   if (!url) return null
   if (url.startsWith('file:')) {

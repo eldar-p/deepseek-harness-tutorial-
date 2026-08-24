@@ -1,7 +1,7 @@
 # 5. Типы и сигнатуры
 
-**Status:** N/A
+**Status:** PASS
 
-JS only pre-alpha; TS deferred to pre-beta
+JSDoc in 7/21 src files; TS deferred (docs/TYPES.md)
 
 _Auto-generated 2026-08-24. Re-run: `npm run audit`_

@@ -44,13 +44,15 @@
 - [x] Audit #18 TTY PASS
 - [x] Hard egress iptables (010)
 - [x] Audit #22 context (011)
-- [x] CDN publish path + install shim (013); upload zip via publish-release.ps1 when gh available
+- [x] CDN publish path + install shim (013); zip on GitHub Release
+- [x] Pre-beta audit gate (015) — `npm run audit:prebeta` 0 FAIL
+- [x] Extra proc/llama/shutdown tests (016)
 
 ## Команды
 
 ```bash
-npm test                 # unit tests
-npm run test:coverage    # порог pre-alpha 10%
-npm run audit            # 22 аудита → docs/audits/latest.md
-node bin/deep.js doctor  # локальная проверка окружения
+npm test
+npm run test:coverage    # ≥50%
+npm run audit:prebeta
+node bin/deep.js doctor --readiness --stage=beta
 ```

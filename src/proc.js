@@ -27,6 +27,7 @@ export function spawnDetached(bin, args, { cwd, env, logFile, shell = false } = 
 }
 
 /** Kill process tree. On Windows uses taskkill /T. */
+/** @param {number|null|undefined} pid @param {{ force?: boolean }} [opts] */
 export function killTree(pid, { force = false } = {}) {
   if (!pid) return
   if (process.platform === 'win32') {
@@ -47,6 +48,7 @@ export function killTree(pid, { force = false } = {}) {
   }
 }
 
+/** @param {number|null|undefined} pid @returns {boolean} */
 export function isPidAlive(pid) {
   if (!pid) return false
   try {
@@ -95,6 +97,11 @@ export function extractArchive(archivePath, destDir) {
   }
 }
 
+/**
+ * @param {string} root
+ * @param {string[]} names
+ * @returns {string|null}
+ */
 export function findFileRecursive(root, names) {
   const want = new Set(names.map((n) => n.toLowerCase()))
   const stack = [root]

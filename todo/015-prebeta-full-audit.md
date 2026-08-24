@@ -1,5 +1,9 @@
 # 015 — Full audit gate pre-beta
 
-**Status:** ⏳ pending · **Stage:** pre-beta
+**Status:** ✅ done · **Stage:** pre-beta
 
-Run `node scripts/audit-run.mjs --gate=pre-beta` and clear remaining N/A / WARN items (types, performance, etc. with documented defer if needed).
+## Checklist
+
+- [x] `npm run audit:prebeta` — 0 FAIL
+- [x] Audit #5 JSDoc + `docs/TYPES.md` (TS deferred)
+- [x] Audit #7 timeouts + AbortSignal PASS

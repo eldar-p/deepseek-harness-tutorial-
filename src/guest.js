@@ -5,11 +5,15 @@ import { detectContainerEngine, engineEnv } from './detect.js'
 import { paths, PKG_ROOT, appendLog } from './paths.js'
 import { loadManifest } from './download.js'
 
+/** @param {string} stack */
 function containerName(stack) {
   return `deep-guest-${stack}`
 }
 
-/** Windows host path → Docker Desktop mount form when needed. */
+/** Windows host path → Docker Desktop mount form when needed.
+ * @param {string} hostPath
+ * @returns {string}
+ */
 export function toContainerHostPath(hostPath) {
   if (process.platform !== 'win32') return hostPath
   // Docker Desktop accepts F:\foo or //f/foo — prefer forward slashes
@@ -17,6 +21,11 @@ export function toContainerHostPath(hostPath) {
   return resolved.replace(/\\/g, '/')
 }
 
+/**
+ * Resolve allowlist domains for a network preset.
+ * @param {string} presetNet
+ * @returns {string[]}
+ */
 export function resolveAllowlist(presetNet) {
   const allow = loadManifest('allowlists.json')
   if (presetNet === 'none' || presetNet === 'offline') return []

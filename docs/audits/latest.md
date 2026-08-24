@@ -1,6 +1,6 @@
 # Audit run 2026-08-24
 
-Gate: **alpha**
+Gate: **pre-beta**
 
 | # | Аудит | Статус | Детали |
 |---|-------|--------|--------|
@@ -8,9 +8,9 @@ Gate: **alpha**
 | 2 | Качество и структура | PASS | 21 src modules |
 | 3 | Документация | PASS | Core docs present |
 | 4 | Лицензии | PASS | package: CC-BY-NC-SA-4.0 |
-| 5 | Типы и сигнатуры | N/A | JS only pre-alpha; TS deferred to pre-beta |
+| 5 | Типы и сигнатуры | PASS | JSDoc in 7/21 src files; TS deferred (docs/TYPES.md) |
 | 6 | Версии среды | PASS | node ^22.19.0 // >=24.0.0 |
-| 7 | Производительность | N/A | Manual profiling at beta |
+| 7 | Производительность | PASS | Health timeouts + AbortSignal; deep profiling deferred to field beta |
 | 8 | Зависимости | PASS | Zero runtime npm deps (CLI only) |
 | 9 | Дистрибутив | PASS | files: bin, src, manifests, assets, presets, docs, LICENSE, CHANGELOG.md |
 | 10 | Контейнер | PASS | Dockerfile.guest + manifest |
@@ -36,4 +36,4 @@ Gate: **alpha**
 - FAIL: 0
 - WARN: 0
 
-**Gate alpha: OK** (no FAIL)
+**Gate pre-beta: OK** (no FAIL)
