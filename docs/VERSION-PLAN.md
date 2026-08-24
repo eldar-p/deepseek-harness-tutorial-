@@ -25,7 +25,14 @@
 - [x] Покрытие ≥10% (src ~58%, gate 10%)
 - [x] `npm run audit` без FAIL (gate pre-alpha: **7** аудитов, всего **26**)
 
-**Следующий этап:** Alpha (`0.2.x-alpha`) — jail hardening, coverage ≥30%, CI smoke with Docker.
+**Следующий этап:** Alpha (`0.2.x-alpha`) — см. [../todo/README.md](../todo/README.md) и [../adr/README.md](../adr/README.md).
+
+- [x] Jail wire + memory template (001–003)
+- [x] Coverage gate 30% (src ~65%)
+- [x] CI smoke-guest + local PASS
+- [x] Audit gate alpha OK (1 WARN TTY)
+- [ ] Alpha readiness score (006)
+- [ ] E2E DSH chat sign-off
 
 ## Команды
 

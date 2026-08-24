@@ -26,6 +26,7 @@ export function materializeAssets(stack = 'default') {
 
   copyDir(path.join(PKG_ROOT, 'skills'), skillsDst)
   copyDir(path.join(PKG_ROOT, 'dsh-plugins'), pluginsDst)
+  syncJailCore(pluginsDst)
 
   const agentsSrc = path.join(PKG_ROOT, 'assets', 'AGENTS.deep.md')
   const agentsDst = path.join(p.dshHome, 'AGENTS.md')
@@ -39,6 +40,14 @@ export function materializeAssets(stack = 'default') {
   fs.mkdirSync(path.dirname(ctx), { recursive: true })
   if (!fs.existsSync(ctx)) {
     fs.copyFileSync(path.join(PKG_ROOT, 'assets', 'CONTEXT.md'), ctx)
+  }
+
+  const memDir = path.join(p.workspace, '.deep')
+  const memPath = path.join(memDir, 'memory.json')
+  fs.mkdirSync(memDir, { recursive: true })
+  if (!fs.existsSync(memPath)) {
+    const tpl = path.join(PKG_ROOT, 'assets', 'memory.template.json')
+    if (fs.existsSync(tpl)) fs.copyFileSync(tpl, memPath)
   }
 }
 
@@ -55,6 +64,19 @@ export function writeDeepProfilePatch(stack = 'default') {
   text = text.replaceAll('__PLUGIN_DIR__', pluginDirPosix)
   text = text.replaceAll('__WORKSPACE__', workspacePosix)
   fs.writeFileSync(path.join(profileDir, 'cordis.patch.yml'), text, 'utf8')
+}
+
+function syncJailCore(pluginsDst) {
+  const src = path.join(PKG_ROOT, 'src', 'workspace-jail.js')
+  const dst = path.join(pluginsDst, 'workspace-jail-fs', 'jail-core.mjs')
+  if (fs.existsSync(src) && fs.existsSync(path.dirname(dst))) {
+    let text = fs.readFileSync(src, 'utf8')
+    text = text.replace(
+      "export function rewriteWorkspacePath",
+      "/** @sync src/workspace-jail.js */\nexport function rewriteWorkspacePath",
+    )
+    fs.writeFileSync(dst, text, 'utf8')
+  }
 }
 
 function copyDir(src, dst) {
