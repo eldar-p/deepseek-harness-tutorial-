@@ -3,7 +3,7 @@
 | Документ | Для кого |
 |----------|----------|
 | [../README_BEGINNER.md](../README_BEGINNER.md) | **Новички** — пошаговый гайд с нуля |
-| [CLAUDE-CODE-LEAK-TRIAGE.md](./CLAUDE-CODE-LEAK-TRIAGE.md) | Что взять из leak Claude Code (patterns) |
+| [CLAUDE-CODE-LEAK-TRIAGE.md](./CLAUDE-CODE-LEAK-TRIAGE.md) | Patterns: MCP / LSP / coordinator / Auto Mode |
 | [../PRE-ALPHA.md](../PRE-ALPHA.md) | Pre-alpha статус |
 | [../ALPHA.md](../ALPHA.md) | Alpha 0.2 **complete** |
 | [TYPES.md](./TYPES.md) | JSDoc / TS policy |
@@ -13,7 +13,6 @@
 | [../adr/README.md](../adr/README.md) | Architecture Decision Records |
 | [INSTALL.md](./INSTALL.md) | Установка всех ОС |
 | [OS-COMPAT.md](./OS-COMPAT.md) | Матрица ОС: CI + field (что работает) |
-| [CLAUDE-CODE-LEAK-TRIAGE.md](./CLAUDE-CODE-LEAK-TRIAGE.md) | Patterns: MCP / LSP / coordinator |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | llama + guest + DSH |
 | [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) | Типичные ошибки |
 | [VERSION-PLAN.md](./VERSION-PLAN.md) | Этапы 0.1 → 1.0 |
