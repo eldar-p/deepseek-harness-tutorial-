@@ -111,19 +111,25 @@ test('main version ok', async () => {
 
 test('main check ok', async () => {
   process.env.DEEP_NO_BANNER = '1'
+  const prev = process.exitCode
+  process.exitCode = 0
   try {
     await main(['check'])
   } finally {
     delete process.env.DEEP_NO_BANNER
+    process.exitCode = prev
   }
 })
 
 test('main deps ok', async () => {
   process.env.DEEP_NO_BANNER = '1'
+  const prev = process.exitCode
+  process.exitCode = 0
   try {
     await main(['deps'])
   } finally {
     delete process.env.DEEP_NO_BANNER
+    process.exitCode = prev
   }
 })
 

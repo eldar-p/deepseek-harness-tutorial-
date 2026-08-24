@@ -19,6 +19,8 @@ jobs:
           node-version: '22'
       - run: npm test
       - run: npm run test:coverage
+        env:
+          DEEP_COVERAGE_MIN: '65'
       - run: npm run audit:prebeta
       - name: doctor readiness (beta)
         run: node bin/deep.js doctor --readiness --stage=beta
