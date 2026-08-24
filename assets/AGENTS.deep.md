@@ -28,6 +28,14 @@ Long chats auto-compact at ~50% context window. After compaction, older tool det
 
 User can run `/compact` in DSH to force summary now.
 
+## Low quant (`.deep/QUANT.md`)
+
+When the host GGUF is below Q4_K_M, `deep start` writes `.deep/QUANT.md`.
+
+- Follow that file's **tool budget** (short loops, no speculative tool spam)
+- Prefer targeted Read / `lsp_query` over broad Grep
+- Upgrade model: `deep start --gguf PATH` with Q4_K_M+ (or `deep start --require-q4`)
+
 ## Safety
 
 - No secrets in output

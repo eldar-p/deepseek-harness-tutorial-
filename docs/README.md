@@ -13,6 +13,7 @@
 | [../adr/README.md](../adr/README.md) | Architecture Decision Records |
 | [INSTALL.md](./INSTALL.md) | Установка всех ОС |
 | [OS-COMPAT.md](./OS-COMPAT.md) | Матрица ОС: CI + field (что работает) |
+| [QUANT.md](./QUANT.md) | Политика квантования GGUF (Q4+, soft gates) |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | llama + guest + DSH |
 | [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) | Типичные ошибки |
 | [VERSION-PLAN.md](./VERSION-PLAN.md) | Этапы 0.1 → 1.0 |

@@ -71,7 +71,7 @@ Prefer **Q4_K_M+** for tool-heavy agents (`deep start` / `status` / `doctor` war
 
 Switch: `deep start --gguf /path/model.Q4_K_M.gguf` (or set `gguf` in config).
 
-See [README.md](../README.md) · [HARNESS-TEST-PACK.md](./HARNESS-TEST-PACK.md) · [INSTALL.md](./INSTALL.md).
+See [README.md](../README.md) · [HARNESS-TEST-PACK.md](./HARNESS-TEST-PACK.md) · [INSTALL.md](./INSTALL.md) · [QUANT.md](./QUANT.md).
 
 ## macOS without hardware
 

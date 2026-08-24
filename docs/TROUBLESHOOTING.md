@@ -82,11 +82,12 @@ If `channels.json` / config parse fails with `Unexpected token ''`, the file has
 
 ## Q3 quant warnings
 
-Prefer **Q4_K_M** or higher for tool-heavy agents. See audit #26.
+Prefer **Q4_K_M** or higher for tool-heavy agents. Full policy: [QUANT.md](./QUANT.md).
 
-- `deep start` prints `[YELLOW]` + `[HINT]` when quant is weak
-- `deep status` / `deep doctor` show a **Quant** row (YELLOW/RED)
-- Fix: download same model at Q4_K_M+ (or a smaller Q4/Q5 coder), then `deep start --gguf PATH`
+- `deep start` prints `[YELLOW]` + `[HINT]`; writes `.deep/QUANT.md` for the agent
+- `deep status` / `deep doctor` show a **Quant** row
+- Soft gate: Q2− blocked; `deep start --require-q4` enforces Q4+; `--force-quant` overrides
+- Fix: `deep start --gguf /path/model.Q4_K_M.gguf`
 
 ## Long sessions / context full
 

@@ -37,7 +37,7 @@ import {
   listApiProviderIds,
 } from './api-provider.js'
 import { rotateLogIfLarge, cleanStalePartFiles } from './io-policy.js'
-import { assessGgufQuant, formatQuantWarning, quantStatusRow } from './quant-warn.js'
+import { assessGgufQuant, formatQuantWarning, quantStatusRow, enforceQuantPolicy, writeQuantHintFile } from './quant-warn.js'
 import { cmdUpdate } from './update.js'
 import { assessReadiness, formatReadinessReport } from './readiness.js'
 import { printBanner, maybePrintFirstRunWelcome } from './banner.js'
@@ -75,7 +75,9 @@ export function parseArgs(argv) {
         a === '--readiness' ||
         a === '--policy' ||
         a === '--skip-fetch' ||
-        a === '--all'
+        a === '--all' ||
+        a === '--force-quant' ||
+        a === '--require-q4'
       ) {
         flags[a.slice(2)] = true
       } else {
@@ -125,6 +127,14 @@ export async function cmdDoctor(flags = {}) {
     const apiMode = !!(cfg?.api?.provider)
     const q = quantStatusRow(apiMode ? null : cfg?.gguf, { apiMode })
     console.log(`  quant    ${q.level.toUpperCase()}  ${q.detail}`)
+    if (!apiMode && cfg?.gguf) {
+      const a = assessGgufQuant(cfg.gguf)
+      if (a.tier === 'severe') {
+        console.log('  quant    policy  Q2− blocked on start (override: --force-quant)')
+      } else if (a.tier === 'degraded' || a.tier === 'acceptable') {
+        console.log('  quant    policy  soft WARN; enforce with --require-q4 or DEEP_REQUIRE_Q4=1')
+      }
+    }
   }
   console.log(formatPluginValidation(validateDeepPlugins()))
   if (isWsl()) {
@@ -509,10 +519,17 @@ export async function cmdStart(flags) {
     writeConfig(cfg)
   }
 
-  const qwarn = formatQuantWarning(assessGgufQuant(gguf))
+  const assessment = assessGgufQuant(gguf)
+  const qwarn = formatQuantWarning(assessment)
   if (qwarn) {
     for (const line of qwarn.split('\n')) console.log(line)
   }
+  const policy = enforceQuantPolicy(assessment, flags)
+  if (policy.forced) console.log('[YELLOW] Quant policy overridden via --force-quant / DEEP_FORCE_QUANT')
+
+  const deepDir = path.join(paths(stack).workspace, '.deep')
+  const hintPath = writeQuantHintFile(deepDir, assessment)
+  if (hintPath) console.log(`[INFO] Low-quant agent hints → ${hintPath}`)
 
   const device = flags.cpu ? 'cpu' : detectGpu().discrete ? 'gpu' : 'cpu'
   if (!flags.cpu && device === 'cpu') {
@@ -763,11 +780,13 @@ export function cmdHelp(topic) {
     bootstrap: `deep bootstrap [--gguf PATH] [--preset NAME] [--channel stable|beta|edge] [--name STACK]
   Create ~/.deep layout, config, workspace seeds.`,
     start: `deep start [--name STACK] [--gguf PATH] [--cpu] [--preset NAME]
-  Start llama + guest + DSH. Stops same stack first if already running.`,
+           [--require-q4] [--force-quant]
+  Start llama + guest + DSH. Stops same stack first if already running.
+  Quant: Q2− blocked; --require-q4 enforces Q4_K_M+; --force-quant overrides.`,
     stop: `deep stop [--name STACK] [--emergency] [--wipe-session]
   Stop stack processes. --emergency force-kills.`,
     status: `deep status [--name STACK] [--all]
-  One-screen health for a stack (or list with --all).`,
+  One-screen health (Engine/Guest/Llama/DSH/Quant/…).`,
     stacks: `deep stacks
   List registered stacks and run state.`,
     update: `deep update [--channel stable|beta|edge] [--dry-run]
@@ -819,6 +838,7 @@ export function cmdHelp(topic) {
   deep field lite
   deep bootstrap [--gguf PATH | --api PROVIDER] [--api-model MODEL] [--api-key KEY] [--preset NAME]
   deep start [--name STACK] [--gguf PATH | --api PROVIDER] [--api-model MODEL] [--api-key KEY] [--cpu] [--preset NAME]
+             [--require-q4] [--force-quant]
   deep api
   deep stop [--name STACK] [--emergency] [--wipe-session]
   deep status [--name STACK] [--all]

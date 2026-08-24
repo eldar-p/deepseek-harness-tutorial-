@@ -21,6 +21,7 @@
       For precise navigation use lsp_query when language servers are installed (see lsp skill).
       Prefer tool_search / MCP tool_search before inventing new tools.
       If .deep/PROACTIVE.md exists and says UNHEALTHY, fix stack (deep status/start) before coding.
+      If .deep/QUANT.md exists, follow its tool-budget rules (low quant mode).
       No emoji. Prefer STRUCTURE.txt and .deep/memory.json. Stop after one short answer.
 
 - id: sandbox-policy

@@ -1,4 +1,6 @@
 /** Quant tier for GGUF — warn when below recommended minimum (Q4_K_M). */
+import fs from 'node:fs'
+import path from 'node:path'
 
 const QUANT_SCORE = {
   Q8: 80,
@@ -93,4 +95,107 @@ export function quantStatusRow(ggufPath, { apiMode = false } = {}) {
     return { level: 'yellow', detail: `${a.quant} — weak for tools; ${RECOMMENDED_MIN}+ or smaller Q4 model` }
   }
   return { level: 'red', detail: `${a.quant} — too low for agents; switch to ${RECOMMENDED_MIN}+` }
+}
+
+function truthyFlag(flags, ...keys) {
+  for (const k of keys) {
+    if (flags?.[k] === true || flags?.[k] === '1' || flags?.[k] === 'true') return true
+  }
+  return false
+}
+
+/**
+ * Soft policy for `deep start`:
+ * - severe (Q2−): blocked unless --force-quant / DEEP_FORCE_QUANT=1
+ * - --require-q4 / DEEP_REQUIRE_Q4=1: anything below Q4_K_M blocked (unless force)
+ * - degraded (Q3): warn only by default
+ *
+ * @returns {{ ok: true, forced?: boolean }}
+ */
+export function enforceQuantPolicy(assessment, flags = {}) {
+  const force =
+    truthyFlag(flags, 'force-quant', 'forceQuant') || process.env.DEEP_FORCE_QUANT === '1'
+  const requireQ4 =
+    truthyFlag(flags, 'require-q4', 'requireQ4') || process.env.DEEP_REQUIRE_Q4 === '1'
+
+  if (!assessment) return { ok: true }
+
+  if (requireQ4) {
+    const below = !assessment.quant || assessment.tier !== 'recommended'
+    if (below && !force) {
+      throw Object.assign(
+        new Error(
+          `Quant ${assessment.quant || 'unknown'} below ${RECOMMENDED_MIN} (--require-q4). ` +
+            `Use ${RECOMMENDED_MIN}+ or pass --force-quant`,
+        ),
+        { exitCode: 2 },
+      )
+    }
+    if (below && force) return { ok: true, forced: true }
+  }
+
+  if (assessment.tier === 'severe' && !force) {
+    throw Object.assign(
+      new Error(
+        `Quant ${assessment.quant} too low for agents. Use ${RECOMMENDED_MIN}+ or pass --force-quant`,
+      ),
+      { exitCode: 2 },
+    )
+  }
+  if (assessment.tier === 'severe' && force) return { ok: true, forced: true }
+  return { ok: true }
+}
+
+/** Markdown for workspace `.deep/QUANT.md` when quant is weak. */
+export function lowQuantAgentHints(assessment) {
+  if (!assessment?.tier || assessment.tier === 'recommended') return null
+  if (assessment.tier === 'acceptable') {
+    return [
+      `# Quant hint (${assessment.quant})`,
+      '',
+      `This GGUF is below preferred ${RECOMMENDED_MIN} for heavy coding.`,
+      '- Prefer short tool loops (1–3 calls), then answer',
+      '- Re-read files after edits; do not trust long recalled context',
+      '- Avoid parallel speculative tool spam',
+      '',
+      `Upgrade: \`deep start --gguf PATH\` with ${RECOMMENDED_MIN}+`,
+      '',
+    ].join('\n')
+  }
+  if (assessment.tier === 'degraded' || assessment.tier === 'severe' || assessment.tier === 'unknown') {
+    return [
+      `# Quant hint (${assessment.quant || 'unknown'}) — low quality mode`,
+      '',
+      `Local quant is weak for tool-heavy agents (prefer ${RECOMMENDED_MIN}+).`,
+      '',
+      '## Tool budget',
+      '- Max ~3 tool calls before a short status reply',
+      '- One clear goal per turn; no exploratory ripgrep storms',
+      '- Prefer `lsp_query` / targeted Read over broad Grep',
+      '- After write/edit: re-Read the file once, then stop',
+      '- If stuck twice: ask the user instead of looping',
+      '',
+      '## Upgrade',
+      `\`${HINT}\``,
+      '',
+    ].join('\n')
+  }
+  return null
+}
+
+/**
+ * Write or remove workspace `.deep/QUANT.md` based on assessment.
+ * @returns {string|null} path written, or null if cleared/skipped
+ */
+export function writeQuantHintFile(deepDir, assessment) {
+  if (!deepDir) return null
+  fs.mkdirSync(deepDir, { recursive: true })
+  const f = path.join(deepDir, 'QUANT.md')
+  const body = lowQuantAgentHints(assessment)
+  if (!body) {
+    if (fs.existsSync(f)) fs.unlinkSync(f)
+    return null
+  }
+  fs.writeFileSync(f, body, 'utf8')
+  return f
 }
