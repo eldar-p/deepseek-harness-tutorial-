@@ -22,9 +22,9 @@ Deep is a **hybrid** host orchestrator: local GGUF (`llama-server`) **or** cloud
 | `deep doctor` | PASS (Docker Desktop) | PASS (engine OK) | not field-tested here |
 | Unit tests + security audit | PASS | PASS (167/170*; audits OK) | via CI only |
 | Guest smoke | PASS when Docker ready | FAIL without buildx / legacy builder | — |
-| `deep start` local GGUF | PASS (llama+DSH+index+proxy) | BLOCKED: linux llama zip has no pinned `sha256` in `manifests/llama-binaries.json` | — |
-| Guest on start | PASS when Docker engine up; FAIL if Desktop still waking | — | — |
-| Agent task (`model-coding-eval`) | PASS 12/16 on Qwen3-Coder-30B Q3 | not run (no start) | — |
+| `deep start` local GGUF | PASS (llama+DSH+index+proxy+guest) | BLOCKED: linux llama zip has no pinned `sha256` in `manifests/llama-binaries.json` | — |
+| Guest on start | PASS (Docker Desktop path: `%LOCALAPPDATA%\Programs\DockerDesktop`) | — | — |
+| Agent task (`model-coding-eval`) | PASS **14/16** (Qwen3-Coder-30B Q3, 2026-08-24) | not run (no start) | — |
 | `deep start --api …` | wired in CLI; needs API key | same | same |
 
 \*WSL failures were zip/`unzip` + jail host-path cases on older tree; jail fixed in `5b8800a` / `685f975`. Re-run WSL tests after pull to confirm 170/170.
