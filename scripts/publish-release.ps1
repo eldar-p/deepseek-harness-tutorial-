@@ -1,7 +1,7 @@
 # Upload dist/deep-cli-*.zip (+ .sha256) to GitHub Release (requires gh auth).
 # Usage: powershell -File .\scripts\publish-release.ps1 [-Tag v0.3.0-prebeta]
 param(
-  [string]$Tag = "v0.3.0-prebeta"
+  [string]$Tag = "v0.4.0-beta"
 )
 $ErrorActionPreference = "Stop"
 $Root = Resolve-Path (Join-Path $PSScriptRoot "..")
