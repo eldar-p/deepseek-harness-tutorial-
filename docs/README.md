@@ -13,6 +13,7 @@
 | [../adr/README.md](../adr/README.md) | Architecture Decision Records |
 | [INSTALL.md](./INSTALL.md) | Установка всех ОС |
 | [OS-COMPAT.md](./OS-COMPAT.md) | Матрица ОС: CI + field (что работает) |
+| [CLAUDE-CODE-LEAK-TRIAGE.md](./CLAUDE-CODE-LEAK-TRIAGE.md) | Patterns: MCP / LSP / coordinator |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | llama + guest + DSH |
 | [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) | Типичные ошибки |
 | [VERSION-PLAN.md](./VERSION-PLAN.md) | Этапы 0.1 → 1.0 |

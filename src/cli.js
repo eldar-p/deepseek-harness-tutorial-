@@ -42,6 +42,8 @@ import { cmdUpdate } from './update.js'
 import { assessReadiness, formatReadinessReport } from './readiness.js'
 import { printBanner, maybePrintFirstRunWelcome } from './banner.js'
 import { cmdVersion, cmdDeps, cmdCheck } from './version-check.js'
+import { cmdLsp } from './lsp-cli.js'
+import { assessWorkspaceMemoryBudget } from './memory-budget.js'
 
 /**
  * @param {string[]} argv
@@ -111,6 +113,18 @@ export async function cmdDoctor(flags = {}) {
   console.log(`  config   ${cfg ? paths().config : 'missing — run deep bootstrap'}`)
   if (cfg?.gguf) console.log(`  gguf     ${cfg.gguf}`)
   if (cfg?.rebootRequired) console.log('  reboot   REQUIRED before start')
+
+  try {
+    const stack = assertStackName(flags.name || 'default')
+    const mem = assessWorkspaceMemoryBudget(paths(stack))
+    if (mem.warns.length) {
+      for (const w of mem.warns) console.log(`  memory   WARN ${w}`)
+    } else {
+      console.log('  memory   OK')
+    }
+  } catch {
+    /* */
+  }
 
   if (flags.readiness) {
     const stage =
@@ -223,6 +237,11 @@ export async function cmdBootstrap(flags) {
   if (cfg.gguf) console.log(`[OK] GGUF:      ${cfg.gguf}`)
   else if (cfg.api?.provider) console.log(`[OK] API mode:  ${cfg.api.provider} / ${cfg.api.model}`)
   else console.log('[YELLOW] No model — pass --gguf PATH (local) or --api PROVIDER (cloud)')
+
+  const memBudget = assessWorkspaceMemoryBudget(p)
+  for (const w of memBudget.warns) console.log(`[YELLOW] Memory: ${w}`)
+  if (memBudget.ok && !memBudget.warns.length) console.log('[OK] Memory budget within caps')
+
   appendLog(`event=bootstrap preset=${cfg.preset} stack=${stack}`)
 }
 
@@ -715,6 +734,12 @@ export function cmdHelp(topic) {
   Check Node, Docker/Podman, DSH, llama, home writability.`,
     presets: `deep presets
   List built-in presets.`,
+    api: `deep api
+  List cloud API providers for --api.`,
+    index: `deep index build|search|status [--name STACK]
+  Semantic code index over the stack workspace.`,
+    lsp: `deep lsp servers|query|hover|definition|references|symbols
+  Host language-server helpers (typescript-language-server / pyright / …).`,
     help: `deep help [command]
   This screen, or details for one command.`,
   }
@@ -745,11 +770,14 @@ export function cmdHelp(topic) {
   deep update [--channel stable|beta|edge] [--dry-run]
   deep presets
   deep index build|search|status [--name STACK]
+  deep lsp servers|query …
 
 Tips:
   First run:  deep doctor && deep bootstrap --gguf MODEL.gguf && deep start
+  Cloud:      deep bootstrap --api deepseek --api-key sk-... && deep start --api deepseek
   No banner:  set DEEP_NO_BANNER=1
   Local zip:  set DEEP_CLI_ZIP=path\\to\\deep-cli-*.zip
+  Coordinator: node scripts/coordinator.mjs --task="fix A; fix B"
 
 Presets: ${PRESET_NAMES.join(', ')}
 Home: ${paths().home}
@@ -814,6 +842,8 @@ export async function main(argv) {
         process.exitCode = 2
         return
       }
+      case 'lsp':
+        return await cmdLsp(flags, args)
       case 'version':
       case '-V':
       case '--version':

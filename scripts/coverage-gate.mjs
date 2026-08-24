@@ -38,6 +38,7 @@ const TESTS = [
   'test/code-index.test.js',
   'test/config-security.test.js',
   'test/lsp-bridge.test.js',
+  'test/memory-budget.test.js',
 ]
 
 const r = spawnSync(
