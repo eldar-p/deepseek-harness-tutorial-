@@ -4,6 +4,7 @@ import { which } from './detect.js'
 import { paths, appendLog, PKG_ROOT } from './paths.js'
 import { spawnDetached, killTree, waitHttpOk, runLogPath, isPidAlive } from './proc.js'
 import { loadManifest } from './download.js'
+import { buildDshApiYaml } from './api-provider.js'
 
 export function resolveDshBin() {
   if (process.env.DEEP_DSH_BIN && fs.existsSync(process.env.DEEP_DSH_BIN)) return process.env.DEEP_DSH_BIN
@@ -18,42 +19,21 @@ export function resolveDshBin() {
   return found
 }
 
-/** Write $DSH_HOME/settings.yaml pointing at local llama-server. */
-export function writeDshRuntimeSettings({ llamaPort, contextWindow = 8192 }) {
+/** Write $DSH_HOME/settings.yaml — local llama OR cloud API profile. */
+export function writeDshRuntimeSettings({
+  llamaPort,
+  contextWindow = Number(process.env.DEEP_LLAMA_CTX || 32768),
+  apiProfile = null,
+}) {
   const dshHome = paths().dshHome
   fs.mkdirSync(dshHome, { recursive: true })
-  const baseURL = `http://127.0.0.1:${llamaPort}/v1`
-  const settings = {
-    'agent-default-model': {
-      provider: 'llama',
-      model: 'coder',
-    },
-    'llm-pi-ai': {
-      providers: {
-        llama: {
-          displayName: 'llama.cpp',
-          apiKeyEnv: 'DEEP_LLAMA_API_KEY',
-          api: 'openai-completions',
-          baseURL,
-          defaultContextWindow: contextWindow,
-          defaultMaxTokens: 4096,
-          compat: {
-            supportsDeveloperRole: false,
-            maxTokensField: 'max_tokens',
-          },
-          models: [
-            {
-              id: 'coder',
-              contextWindow,
-              maxTokens: 4096,
-            },
-          ],
-        },
-      },
-    },
-  }
-  // YAML-ish via JSON is invalid — write minimal YAML manually
-  const yaml = `agent-default-model:
+
+  let yaml
+  if (apiProfile) {
+    yaml = buildDshApiYaml(apiProfile)
+  } else {
+    const baseURL = `http://127.0.0.1:${llamaPort}/v1`
+    yaml = `agent-default-model:
   provider: llama
   model: coder
 
@@ -74,14 +54,26 @@ llm-pi-ai:
           contextWindow: ${contextWindow}
           maxTokens: 4096
 `
+  }
+
   const settingsPath = path.join(dshHome, 'settings.yaml')
   fs.writeFileSync(settingsPath, yaml, 'utf8')
 
   const envPath = path.join(dshHome, '.env')
-  if (!fs.existsSync(envPath)) {
-    fs.writeFileSync(envPath, 'DEEP_LLAMA_API_KEY=sk-deep-local\n', 'utf8')
-  } else if (!fs.readFileSync(envPath, 'utf8').includes('DEEP_LLAMA_API_KEY')) {
-    fs.appendFileSync(envPath, '\nDEEP_LLAMA_API_KEY=sk-deep-local\n', 'utf8')
+  if (apiProfile) {
+    if (apiProfile.apiKey) {
+      let text = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : ''
+      const line = `${apiProfile.apiKeyEnv}=${apiProfile.apiKey}`
+      const re = new RegExp(`^${apiProfile.apiKeyEnv}=.*$`, 'm')
+      text = re.test(text) ? text.replace(re, line) : `${text.trimEnd()}\n${line}\n`
+      fs.writeFileSync(envPath, text, 'utf8')
+    }
+  } else {
+    if (!fs.existsSync(envPath)) {
+      fs.writeFileSync(envPath, 'DEEP_LLAMA_API_KEY=sk-deep-local\n', 'utf8')
+    } else if (!fs.readFileSync(envPath, 'utf8').includes('DEEP_LLAMA_API_KEY')) {
+      fs.appendFileSync(envPath, '\nDEEP_LLAMA_API_KEY=sk-deep-local\n', 'utf8')
+    }
   }
 
   // seed profile patch if missing (lightweight — full guest-exec in t5)
@@ -93,14 +85,14 @@ llm-pi-ai:
     fs.copyFileSync(patchSrc, patchDst)
   }
 
-  void settings
+  void yaml
   return settingsPath
 }
 
 /**
  * Start DSH web on host if binary available.
  */
-export async function startDsh({ stack, port, llamaPort, guestName = null, engineBin = null }) {
+export async function startDsh({ stack, port, llamaPort, guestName = null, engineBin = null, indexPort = null, apiProfile = null }) {
   const bin = resolveDshBin()
   if (!bin) {
     return { ok: false, detail: 'dsh not on PATH — npm i -g @deepseek-ai/dsh@0.1.1-rc.2' }
@@ -108,7 +100,7 @@ export async function startDsh({ stack, port, llamaPort, guestName = null, engin
   const pin = loadManifest('dsh-pin.json')
   const dshHome = paths().dshHome
   const workspace = paths(stack).workspace
-  writeDshRuntimeSettings({ llamaPort })
+  writeDshRuntimeSettings({ llamaPort, apiProfile, contextWindow: apiProfile?.contextWindow })
   const { writeDeepProfilePatch } = await import('./materialize.js')
   writeDeepProfilePatch(stack)
   const logFile = runLogPath(stack, 'dsh')
@@ -119,6 +111,12 @@ export async function startDsh({ stack, port, llamaPort, guestName = null, engin
     HOST_SHARE: workspace,
     DEEP_GUEST_NAME: guestName || `deep-guest-${stack}`,
     DEEP_ENGINE: engineBin || process.env.DEEP_ENGINE || 'docker',
+    ...(indexPort ? { DEEP_INDEX_URL: `http://127.0.0.1:${indexPort}` } : {}),
+    ...(apiProfile?.apiKeyEnv && process.env[apiProfile.apiKeyEnv]
+      ? {}
+      : apiProfile?.apiKey
+        ? { [apiProfile.apiKeyEnv]: apiProfile.apiKey }
+        : {}),
   }
   const args = ['web', '--port', String(port), '--host', '127.0.0.1', '--no-open']
   console.log(`[INFO] Starting DSH web :${port} (pin ${pin.version || '?'})`)

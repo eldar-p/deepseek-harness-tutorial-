@@ -59,9 +59,18 @@ apply_allowlist() {
   log "OUTPUT policy=DROP + allowlist applied"
 }
 
+apply_proxy() {
+  local proxy_host="${DEEP_PROXY_HOST:-host.docker.internal}"
+  local proxy_port="${DEEP_PROXY_PORT:-3128}"
+  log "mode=proxy via ${proxy_host}:${proxy_port}"
+  apply_allowlist
+  # curl/wget in guest should use HTTP_PROXY; iptables still blocks non-allowlisted IPs
+}
+
 case "$MODE" in
   none|offline) apply_offline ;;
   open) apply_open ;;
+  proxy) apply_proxy ;;
   *) apply_allowlist ;;
 esac
 

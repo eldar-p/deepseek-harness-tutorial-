@@ -28,7 +28,8 @@ export function printStatusScreen(s) {
   console.log('─'.repeat(56))
   console.log(row('Engine', s.engine.level, s.engine.detail))
   console.log(row('Guest', s.guest.level, s.guest.detail))
-  console.log(row('Llama', s.llama.level, s.llama.detail))
+  const modelLabel = s.apiMode ? 'API' : 'Llama'
+  console.log(row(modelLabel, s.llama.level, s.llama.detail))
   console.log(row('DSH', s.dsh.level, s.dsh.detail))
   console.log(row('GPU/RAM', s.gpu.level, s.gpu.detail))
   console.log(row('Net', s.net.level, s.net.detail))
@@ -36,7 +37,8 @@ export function printStatusScreen(s) {
   if (s.urls?.dsh) {
     console.log('─'.repeat(56))
     console.log(`DSH:   ${s.urls.dsh}`)
-    console.log(`Llama: ${s.urls.llama}`)
+    if (s.apiMode) console.log(`API:   ${s.llama.detail}`)
+    else console.log(`Llama: ${s.urls.llama}`)
   }
   console.log('')
 }

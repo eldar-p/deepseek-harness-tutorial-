@@ -5,13 +5,18 @@ User
   │
   ▼
 deep CLI (host, Node 22+)
+  ├── Model backend (one of)
+  │     ├── llama-server (local GGUF, 127.0.0.1:PORT/v1)
+  │     └── cloud API (OpenAI-compatible, --api PROVIDER)
   ├── manifests/ + ~/.deep/manifests-cache  (sha256 verify)
-  ├── llama-server (host, 127.0.0.1:PORT/v1)
   ├── deep-guest (container, exec bash only)
+  ├── egress-proxy (allowlist; secrets on host)
+  ├── code-index (semantic search HTTP)
   └── DSH web (host, 127.0.0.1:PORT/)
-        └── OpenAI-compatible → llama
         └── tools → guest / workspace jail
 ```
+
+Deep is **not local-only**: use `--api` for OpenAI-compatible cloud models while keeping the same guest sandbox, index, and DSH UI on your machine.
 
 ## One stack
 

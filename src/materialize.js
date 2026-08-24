@@ -77,6 +77,11 @@ function syncJailCore(pluginsDst) {
     )
     fs.writeFileSync(dst, text, 'utf8')
   }
+  const riskSrc = path.join(PKG_ROOT, 'src', 'permission-risk.js')
+  const riskDst = path.join(pluginsDst, 'one-shot-guard', 'permission-risk.mjs')
+  if (fs.existsSync(riskSrc) && fs.existsSync(path.dirname(riskDst))) {
+    fs.copyFileSync(riskSrc, riskDst)
+  }
 }
 
 function copyDir(src, dst) {

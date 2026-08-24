@@ -1,7 +1,5 @@
 ﻿/**
  * Hard runtime guard (tools/pre-execute -> deny).
- *
- * Blocks:
  * - todo_write (always)
  * - bash: only pwd/ls/cd/--version/which/uname probes
  * - bash: --break-system-packages; bare pip install outside projects/
@@ -12,6 +10,8 @@
  */
 export const name = 'one-shot-guard'
 export const inject = []
+
+import { shouldDenyBash } from './permission-risk.mjs'
 
 const DENY_TOOLS = new Set(['todo_write', 'TodoWrite', 'todoWrite'])
 
@@ -146,6 +146,11 @@ export function apply(ctx) {
 
         if (tool === 'bash' || tool === 'Bash') {
           const command = bashCommand(exec)
+          if (shouldDenyBash(command)) {
+            return Promise.resolve(
+              deny('bash', 'destructive or high-risk command blocked (auto-mode lite)'),
+            )
+          }
           if (isWastefulBash(command)) {
             return Promise.resolve(
               deny('bash', 'wasteful probe (' + String(command).slice(0, 100) + ')'),

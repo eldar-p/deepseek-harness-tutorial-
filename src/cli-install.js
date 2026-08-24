@@ -26,6 +26,29 @@ export function resolveArtifactSource(url) {
   return null
 }
 
+/** Reject zip-slip / symlink escape after extract. */
+export function assertExtractedInside(destDir) {
+  const root = fs.realpathSync(destDir)
+  const stack = [root]
+  while (stack.length) {
+    const dir = stack.pop()
+    for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, ent.name)
+      let real
+      try {
+        real = fs.realpathSync(p)
+      } catch {
+        real = path.resolve(p)
+      }
+      const rel = path.relative(root, real)
+      if (rel.startsWith('..') || path.isAbsolute(rel)) {
+        throw new Error(`zip escape detected: ${p}`)
+      }
+      if (ent.isDirectory() && !ent.isSymbolicLink()) stack.push(p)
+    }
+  }
+}
+
 export function extractZip(zipPath, destDir) {
   fs.mkdirSync(destDir, { recursive: true })
   if (process.platform === 'win32') {
@@ -38,6 +61,7 @@ export function extractZip(zipPath, destDir) {
     const r = spawnSync('unzip', ['-o', zipPath, '-d', destDir], { encoding: 'utf8' })
     if (r.status !== 0) throw new Error(`unzip failed: ${(r.stderr || r.stdout || '').slice(0, 200)}`)
   }
+  assertExtractedInside(destDir)
 }
 
 /** Find package root inside extracted tree (bin/deep.js present). */

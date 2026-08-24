@@ -1,0 +1,66 @@
+{
+  "openai": {
+    "displayName": "OpenAI",
+    "baseURL": "https://api.openai.com/v1",
+    "apiKeyEnv": "OPENAI_API_KEY",
+    "defaultModel": "gpt-4o-mini",
+    "contextWindow": 128000,
+    "maxTokens": 8192,
+    "supportsDeveloperRole": true
+  },
+  "anthropic": {
+    "displayName": "Anthropic (OpenAI-compat proxy)",
+    "baseURL": "https://api.anthropic.com/v1",
+    "apiKeyEnv": "ANTHROPIC_API_KEY",
+    "defaultModel": "claude-sonnet-4-20250514",
+    "contextWindow": 200000,
+    "maxTokens": 8192,
+    "supportsDeveloperRole": false,
+    "note": "Use OpenRouter or LiteLLM if native Anthropic API shape differs"
+  },
+  "deepseek": {
+    "displayName": "DeepSeek",
+    "baseURL": "https://api.deepseek.com/v1",
+    "apiKeyEnv": "DEEPSEEK_API_KEY",
+    "defaultModel": "deepseek-chat",
+    "contextWindow": 65536,
+    "maxTokens": 8192,
+    "supportsDeveloperRole": false
+  },
+  "openrouter": {
+    "displayName": "OpenRouter",
+    "baseURL": "https://openrouter.ai/api/v1",
+    "apiKeyEnv": "OPENROUTER_API_KEY",
+    "defaultModel": "deepseek/deepseek-chat",
+    "contextWindow": 65536,
+    "maxTokens": 8192,
+    "supportsDeveloperRole": false
+  },
+  "groq": {
+    "displayName": "Groq",
+    "baseURL": "https://api.groq.com/openai/v1",
+    "apiKeyEnv": "GROQ_API_KEY",
+    "defaultModel": "llama-3.3-70b-versatile",
+    "contextWindow": 32768,
+    "maxTokens": 8192,
+    "supportsDeveloperRole": false
+  },
+  "together": {
+    "displayName": "Together AI",
+    "baseURL": "https://api.together.xyz/v1",
+    "apiKeyEnv": "TOGETHER_API_KEY",
+    "defaultModel": "Qwen/Qwen2.5-Coder-32B-Instruct-Turbo",
+    "contextWindow": 32768,
+    "maxTokens": 8192,
+    "supportsDeveloperRole": false
+  },
+  "custom": {
+    "displayName": "Custom OpenAI-compatible",
+    "baseURL": null,
+    "apiKeyEnv": "DEEP_API_KEY",
+    "defaultModel": "default",
+    "contextWindow": 32768,
+    "maxTokens": 4096,
+    "supportsDeveloperRole": false
+  }
+}
