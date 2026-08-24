@@ -489,9 +489,12 @@ export async function cmdStacks() {
 }
 
 export function cmdHelp() {
-  console.log(`Deep CLI ${JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'package.json'), 'utf8')).version}
-
-Usage:
+  const wide = process.stdout.isTTY && (process.stdout.columns || 80) >= 60
+  const ver = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'package.json'), 'utf8')).version
+  const bar = wide ? '─'.repeat(48) : '---'
+  console.log(`Deep CLI ${ver}`)
+  console.log(bar)
+  console.log(`Usage:
   deep doctor [--readiness] [--stage pre-alpha|alpha]
   deep bootstrap [--gguf PATH] [--preset NAME] [--channel stable|beta|edge]
   deep start [--name STACK] [--gguf PATH] [--cpu] [--preset NAME]
