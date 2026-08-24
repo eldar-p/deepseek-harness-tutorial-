@@ -27,6 +27,8 @@ const TESTS = [
   'test/proc.test.js',
   'test/llama.test.js',
   'test/shutdown-extra.test.js',
+  'test/cli.test.js',
+  'test/checksums.test.js',
 ]
 
 const r = spawnSync(

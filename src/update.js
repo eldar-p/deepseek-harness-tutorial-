@@ -121,13 +121,32 @@ export async function cmdUpdate(flags) {
     console.log(`[OK] Cached ${zipPath}`)
   }
 
-  if (artifact.sha256 && src.kind === 'file') {
-    const { sha256File } = await import('./download.js')
-    const got = sha256File(zipPath)
-    if (got !== artifact.sha256.toLowerCase()) {
-      throw Object.assign(new Error(`sha256 mismatch: got ${got}, want ${artifact.sha256}`), { exitCode: 1 })
+  if (src.kind === 'file') {
+    const { verifySha256 } = await import('./checksums.js')
+    const v = verifySha256(zipPath, { expected: artifact.sha256 || null })
+    if (artifact.sha256 || fs.existsSync(`${zipPath}.sha256`)) {
+      if (!v.ok) {
+        throw Object.assign(new Error(`sha256 verify failed: ${v.detail} got=${v.got} want=${v.want}`), {
+          exitCode: 1,
+        })
+      }
+      console.log('[OK] sha256 verified')
     }
-    console.log('[OK] sha256 verified')
+  } else if (artifact.sha256Url) {
+    try {
+      const { downloadFile } = await import('./download.js')
+      const sidePath = `${zipPath}.sha256`
+      await downloadFile(artifact.sha256Url, sidePath, { label: 'cli-cdn-sha256' })
+      const { verifySha256 } = await import('./checksums.js')
+      const v = verifySha256(zipPath, { expected: artifact.sha256 || null, sidecar: sidePath })
+      if (!v.ok) {
+        throw Object.assign(new Error(`sha256 sidecar verify failed: ${v.detail}`), { exitCode: 1 })
+      }
+      console.log('[OK] sha256 sidecar verified')
+    } catch (e) {
+      if (e.exitCode) throw e
+      console.log(`[WARN] sha256Url fetch skipped: ${e.message}`)
+    }
   }
 
   const version = artifact.version || cliRel?.version || localVer

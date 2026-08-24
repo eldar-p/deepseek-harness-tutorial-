@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.0-prebeta] — 2026-08-24
+
+### Added
+
+- `src/checksums.js` + pack-release `.sha256` sidecar
+- `deep update` verifies sidecar / optional `sha256Url`
+- Unit tests: `parseArgs`, help/presets, checksums
+- Nightly CI workflow (ubuntu / macos / windows)
+
+### Changed
+
+- Version bump to **0.3.0-prebeta** (pre-beta gate closed)
+
 ## [0.2.0-alpha] — 2026-08-24
 
 ### Added

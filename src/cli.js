@@ -24,7 +24,11 @@ import { assessGgufQuant, formatQuantWarning } from './quant-warn.js'
 import { cmdUpdate } from './update.js'
 import { assessReadiness, formatReadinessReport } from './readiness.js'
 
-function parseArgs(argv) {
+/**
+ * @param {string[]} argv
+ * @returns {{ cmd: string, args: string[], flags: Record<string, string|boolean> }}
+ */
+export function parseArgs(argv) {
   const flags = {}
   const positional = []
   for (let i = 0; i < argv.length; i++) {
@@ -41,8 +45,7 @@ function parseArgs(argv) {
         a === '--watch' ||
         a === '--dry-run' ||
         a === '--readiness' ||
-        a === '--all' ||
-        a === '--dry-run'
+        a === '--all'
       ) {
         flags[a.slice(2)] = true
       } else {

@@ -91,9 +91,12 @@ if (!packed) {
 const buf = fs.readFileSync(zipPath)
 const sha = createHash('sha256').update(buf).digest('hex')
 const sizeKiB = Math.round(buf.length / 1024)
+const side = `${zipPath}.sha256`
+fs.writeFileSync(side, `${sha}  ${zipName}\n`, 'utf8')
 
 console.log(`[OK] ${zipPath} (${sizeKiB} KiB)`)
 console.log(`sha256: ${sha}`)
+console.log(`[OK] sidecar ${side}`)
 console.log('')
 console.log('Suggested manifests/cli-releases.json artifact (fill url after upload):')
 console.log(
@@ -104,6 +107,7 @@ console.log(
       format: 'zip',
       url: `https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v${version}/${zipName}`,
       sha256: sha,
+      sha256Url: `https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v${version}/${zipName}.sha256`,
     },
     null,
     2,

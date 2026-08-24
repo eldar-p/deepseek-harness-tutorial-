@@ -11,8 +11,11 @@
 | [014](./014-beta-tty-polish.md) | TTY / audit #18 WARN → PASS | ✅ done | beta |
 | [015](./015-prebeta-full-audit.md) | Audit gate pre-beta (all 26) | ✅ done | pre-beta |
 | [016](./016-prebeta-coverage-cli.md) | More tests for cli/llama/guest | ✅ done | pre-beta |
+| [017](./017-checksum-sidecars.md) | Zip `.sha256` sidecar + verify | ✅ done | field beta |
+| [018](./018-cli-parseargs-tests.md) | parseArgs / help / presets tests | ✅ done | field beta |
 
-**Beta code track:** complete · asset on [Release v0.2.0-alpha](https://github.com/eldar-p/deepseek-harness-tutorial-/releases/tag/v0.2.0-alpha)  
-Readiness: `deep doctor --readiness --stage=beta` · [BETA.md](../BETA.md)
+**Pre-beta** (`0.3.0-prebeta`) — code gate closed · CDN still points at `v0.2.0-alpha` zip until retag  
+**Field beta next:** nightly matrix, re-pack + upload `v0.3.0-prebeta`, ≥60% coverage  
+Readiness: `deep doctor --readiness --stage=beta` · [BETA.md](../BETA.md) · [PRE-BETA.md](../PRE-BETA.md)
 
 Alpha archive: [README.md](./README.md)
