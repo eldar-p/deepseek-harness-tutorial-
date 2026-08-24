@@ -1,102 +1,125 @@
 {
-    "schema":  "deep-cli-releases/v1",
-    "note":  "CC BY-NC-SA 4.0. Artifact on GitHub Releases v1.0.0. Local override: DEEP_CLI_ZIP.",
-    "channels":  {
-                     "stable":  {
-                                    "revision":  "2026.08.24-1.0",
-                                    "cli":  {
-                                                "version":  "1.0.0",
-                                                "artifacts":  [
-                                                                  {
-                                                                      "os":  "win32",
-                                                                      "arch":  "x64",
-                                                                      "format":  "zip",
-                                                                      "url":  "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.0.0/deep-cli-1.0.0.zip",
-                                                                      "sha256":  "be5b2eb3c86893485a4991cd748c05a1c4d135a3f55941590e59bf3b900f6ddc",
-                                                                      "sha256Url":  "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.0.0/deep-cli-1.0.0.zip.sha256"
-                                                                  },
-                                                                  {
-                                                                      "os":  "darwin",
-                                                                      "arch":  "arm64",
-                                                                      "format":  "zip",
-                                                                      "url":  "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.0.0/deep-cli-1.0.0.zip",
-                                                                      "sha256":  "be5b2eb3c86893485a4991cd748c05a1c4d135a3f55941590e59bf3b900f6ddc",
-                                                                      "sha256Url":  "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.0.0/deep-cli-1.0.0.zip.sha256"
-                                                                  },
-                                                                  {
-                                                                      "os":  "darwin",
-                                                                      "arch":  "x64",
-                                                                      "format":  "zip",
-                                                                      "url":  "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.0.0/deep-cli-1.0.0.zip",
-                                                                      "sha256":  "be5b2eb3c86893485a4991cd748c05a1c4d135a3f55941590e59bf3b900f6ddc",
-                                                                      "sha256Url":  "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.0.0/deep-cli-1.0.0.zip.sha256"
-                                                                  },
-                                                                  {
-                                                                      "os":  "linux",
-                                                                      "arch":  "x64",
-                                                                      "format":  "zip",
-                                                                      "url":  "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.0.0/deep-cli-1.0.0.zip",
-                                                                      "sha256":  "be5b2eb3c86893485a4991cd748c05a1c4d135a3f55941590e59bf3b900f6ddc",
-                                                                      "sha256Url":  "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.0.0/deep-cli-1.0.0.zip.sha256"
-                                                                  }
-                                                              ]
-                                            }
-                                },
-                     "beta":  {
-                                  "revision":  "2026.08.24-1.0",
-                                  "cli":  {
-                                              "version":  "1.0.0",
-                                              "artifacts":  [
-                                                                {
-                                                                    "os":  "win32",
-                                                                    "arch":  "x64",
-                                                                    "format":  "zip",
-                                                                    "url":  "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.0.0/deep-cli-1.0.0.zip",
-                                                                    "sha256":  "be5b2eb3c86893485a4991cd748c05a1c4d135a3f55941590e59bf3b900f6ddc",
-                                                                    "sha256Url":  "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.0.0/deep-cli-1.0.0.zip.sha256"
-                                                                },
-                                                                {
-                                                                    "os":  "darwin",
-                                                                    "arch":  "arm64",
-                                                                    "format":  "zip",
-                                                                    "url":  "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.0.0/deep-cli-1.0.0.zip",
-                                                                    "sha256":  "be5b2eb3c86893485a4991cd748c05a1c4d135a3f55941590e59bf3b900f6ddc",
-                                                                    "sha256Url":  "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.0.0/deep-cli-1.0.0.zip.sha256"
-                                                                },
-                                                                {
-                                                                    "os":  "darwin",
-                                                                    "arch":  "x64",
-                                                                    "format":  "zip",
-                                                                    "url":  "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.0.0/deep-cli-1.0.0.zip",
-                                                                    "sha256":  "be5b2eb3c86893485a4991cd748c05a1c4d135a3f55941590e59bf3b900f6ddc",
-                                                                    "sha256Url":  "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.0.0/deep-cli-1.0.0.zip.sha256"
-                                                                },
-                                                                {
-                                                                    "os":  "linux",
-                                                                    "arch":  "x64",
-                                                                    "format":  "zip",
-                                                                    "url":  "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.0.0/deep-cli-1.0.0.zip",
-                                                                    "sha256":  "be5b2eb3c86893485a4991cd748c05a1c4d135a3f55941590e59bf3b900f6ddc",
-                                                                    "sha256Url":  "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.0.0/deep-cli-1.0.0.zip.sha256"
-                                                                }
-                                                            ]
-                                          }
-                              },
-                     "edge":  {
-                                  "revision":  "2026.08.24-1.0",
-                                  "cli":  {
-                                              "version":  "1.0.0",
-                                              "artifacts":  [
-
-                                                            ]
-                                          }
-                              }
-                 },
-    "artifactTemplate":  {
-                             "os":  "win32|darwin|linux",
-                             "arch":  "x64|arm64",
-                             "url":  null,
-                             "sha256":  null,
-                             "format":  "zip|tar.gz"
-                         }
+  "schema": "deep-cli-releases/v1",
+  "note": "CC BY-NC-SA 4.0. Artifact on GitHub Releases v1.1.0. Local override: DEEP_CLI_ZIP.",
+  "channels": {
+    "stable": {
+      "revision": "2026.08.24-1.1",
+      "cli": {
+        "version": "1.1.0",
+        "artifacts": [
+          {
+            "os": "win32",
+            "arch": "x64",
+            "format": "zip",
+            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.0/deep-cli-1.1.0.zip",
+            "sha256": "cde79df1ca6c7c828fb8c94c597d106c91654736e60fbfa7f7d7bfd4098a3e7b",
+            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.0/deep-cli-1.1.0.zip.sha256"
+          },
+          {
+            "os": "darwin",
+            "arch": "arm64",
+            "format": "zip",
+            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.0/deep-cli-1.1.0.zip",
+            "sha256": "cde79df1ca6c7c828fb8c94c597d106c91654736e60fbfa7f7d7bfd4098a3e7b",
+            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.0/deep-cli-1.1.0.zip.sha256"
+          },
+          {
+            "os": "darwin",
+            "arch": "x64",
+            "format": "zip",
+            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.0/deep-cli-1.1.0.zip",
+            "sha256": "cde79df1ca6c7c828fb8c94c597d106c91654736e60fbfa7f7d7bfd4098a3e7b",
+            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.0/deep-cli-1.1.0.zip.sha256"
+          },
+          {
+            "os": "linux",
+            "arch": "x64",
+            "format": "zip",
+            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.0/deep-cli-1.1.0.zip",
+            "sha256": "cde79df1ca6c7c828fb8c94c597d106c91654736e60fbfa7f7d7bfd4098a3e7b",
+            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.0/deep-cli-1.1.0.zip.sha256"
+          }
+        ]
+      }
+    },
+    "beta": {
+      "revision": "2026.08.24-1.1",
+      "cli": {
+        "version": "1.1.0",
+        "artifacts": [
+          {
+            "os": "win32",
+            "arch": "x64",
+            "format": "zip",
+            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.0/deep-cli-1.1.0.zip",
+            "sha256": "cde79df1ca6c7c828fb8c94c597d106c91654736e60fbfa7f7d7bfd4098a3e7b",
+            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.0/deep-cli-1.1.0.zip.sha256"
+          },
+          {
+            "os": "darwin",
+            "arch": "arm64",
+            "format": "zip",
+            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.0/deep-cli-1.1.0.zip",
+            "sha256": "cde79df1ca6c7c828fb8c94c597d106c91654736e60fbfa7f7d7bfd4098a3e7b",
+            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.0/deep-cli-1.1.0.zip.sha256"
+          },
+          {
+            "os": "darwin",
+            "arch": "x64",
+            "format": "zip",
+            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.0/deep-cli-1.1.0.zip",
+            "sha256": "cde79df1ca6c7c828fb8c94c597d106c91654736e60fbfa7f7d7bfd4098a3e7b",
+            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.0/deep-cli-1.1.0.zip.sha256"
+          },
+          {
+            "os": "linux",
+            "arch": "x64",
+            "format": "zip",
+            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.0/deep-cli-1.1.0.zip",
+            "sha256": "cde79df1ca6c7c828fb8c94c597d106c91654736e60fbfa7f7d7bfd4098a3e7b",
+            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.0/deep-cli-1.1.0.zip.sha256"
+          }
+        ]
+      }
+    },
+    "edge": {
+      "revision": "2026.08.24-1.1",
+      "cli": {
+        "version": "1.1.0",
+        "artifacts": [
+          {
+            "os": "win32",
+            "arch": "x64",
+            "format": "zip",
+            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.0/deep-cli-1.1.0.zip",
+            "sha256": "cde79df1ca6c7c828fb8c94c597d106c91654736e60fbfa7f7d7bfd4098a3e7b",
+            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.0/deep-cli-1.1.0.zip.sha256"
+          },
+          {
+            "os": "linux",
+            "arch": "x64",
+            "format": "zip",
+            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.0/deep-cli-1.1.0.zip",
+            "sha256": "cde79df1ca6c7c828fb8c94c597d106c91654736e60fbfa7f7d7bfd4098a3e7b",
+            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.0/deep-cli-1.1.0.zip.sha256"
+          },
+          {
+            "os": "darwin",
+            "arch": "arm64",
+            "format": "zip",
+            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.0/deep-cli-1.1.0.zip",
+            "sha256": "cde79df1ca6c7c828fb8c94c597d106c91654736e60fbfa7f7d7bfd4098a3e7b",
+            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.0/deep-cli-1.1.0.zip.sha256"
+          }
+        ]
+      }
+    }
+  },
+  "artifactTemplate": {
+    "os": "win32|darwin|linux",
+    "arch": "x64|arm64",
+    "url": null,
+    "sha256": null,
+    "format": "zip|tar.gz"
+  }
 }

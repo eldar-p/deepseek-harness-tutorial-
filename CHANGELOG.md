@@ -12,6 +12,7 @@
 - Agent harness test pack: `deep test harness` / `npm run test:harness` + [docs/HARNESS-TEST-PACK.md](./docs/HARNESS-TEST-PACK.md)
 - Policy score: `deep doctor --policy` (isolation grade A–F)
 - CI runs `smoke:api` + harness pack on all OS
+- GitHub Release **v1.1.0** zip + sha256; `manifests/cli-releases.json` channels → 1.1.0
 
 ### Changed
 
