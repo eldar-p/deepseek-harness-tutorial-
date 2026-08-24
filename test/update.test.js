@@ -12,8 +12,19 @@ test('getChannelRevision stable', () => {
   assert.ok(r)
 })
 
-test('pickCliArtifact returns null when urls empty', () => {
-  assert.equal(pickCliArtifact('stable'), null)
-  // beta has placeholders with null url — still null
-  assert.equal(pickCliArtifact('beta', { platform: 'win32', arch: 'x64' }), null)
+test('pickCliArtifact beta has win32 url', () => {
+  const a = pickCliArtifact('beta', { platform: 'win32', arch: 'x64' })
+  assert.ok(a)
+  assert.ok(a.url.includes('deep-cli-'))
+  assert.match(a.sha256, /^[a-f0-9]{64}$/i)
+})
+
+test('pickCliArtifact stable empty without DEEP_CLI_ZIP', () => {
+  const prev = process.env.DEEP_CLI_ZIP
+  delete process.env.DEEP_CLI_ZIP
+  try {
+    assert.equal(pickCliArtifact('stable', { platform: 'win32', arch: 'x64' }), null)
+  } finally {
+    if (prev !== undefined) process.env.DEEP_CLI_ZIP = prev
+  }
 })

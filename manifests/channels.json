@@ -3,7 +3,7 @@
   "defaultGguf": "default-gguf.json",
   "revisions": {
     "stable": "2026.08.24-alpha",
-    "beta": "2026.08.24-alpha",
+    "beta": "2026.08.24-beta",
     "edge": "2026.08.24-alpha"
   }
 }
