@@ -2,7 +2,8 @@
 
 | Документ | Для кого |
 |----------|----------|
-| [../PRE-ALPHA.md](../PRE-ALPHA.md) | Быстрый старт, pre-alpha статус |
+| [../PRE-ALPHA.md](../PRE-ALPHA.md) | Pre-alpha статус |
+| [../ALPHA.md](../ALPHA.md) | Alpha 0.2 статус + sign-off |
 | [../todo/README.md](../todo/README.md) | Alpha backlog (P0–P2) |
 | [../adr/README.md](../adr/README.md) | Architecture Decision Records |
 | [INSTALL.md](./INSTALL.md) | Установка всех ОС |

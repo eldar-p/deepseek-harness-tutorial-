@@ -26,6 +26,7 @@
     "test": "node --test test/*.test.js",
     "test:coverage": "node scripts/coverage-gate.mjs",
     "smoke:guest": "node scripts/smoke-guest.mjs",
+    "smoke:e2e": "node scripts/smoke-e2e.mjs",
     "audit": "node scripts/audit-run.mjs --gate=pre-alpha",
     "audit:alpha": "node scripts/audit-run.mjs --gate=alpha",
     "infra:check": "node scripts/infra-check.mjs"

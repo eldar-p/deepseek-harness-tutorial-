@@ -18,6 +18,8 @@
 - GPU lock tracks stack name; blocks second GPU stack
 - ADR-0007 guest network env policy
 - AGENTS.deep.md memory/consent rules; TROUBLESHOOTING compact/multistack
+- `scripts/smoke-e2e.mjs` + `npm run smoke:e2e` (jail/HTTP/guest env)
+- `ALPHA.md` status page
 
 ## [0.1.0-prealpha] — 2026-08-24
 
