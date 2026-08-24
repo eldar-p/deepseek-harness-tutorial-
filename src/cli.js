@@ -43,6 +43,8 @@ import { assessReadiness, formatReadinessReport } from './readiness.js'
 import { printBanner, maybePrintFirstRunWelcome } from './banner.js'
 import { cmdVersion, cmdDeps, cmdCheck } from './version-check.js'
 import { cmdLsp } from './lsp-cli.js'
+import { cmdDaemon } from './daemon.js'
+import { classifyBashRisk, classifyBashRiskLlm } from './permission-risk.js'
 import { assessWorkspaceMemoryBudget } from './memory-budget.js'
 
 /**
@@ -740,6 +742,10 @@ export function cmdHelp(topic) {
   Semantic code index over the stack workspace.`,
     lsp: `deep lsp servers|query|hover|definition|references|symbols
   Host language-server helpers (typescript-language-server / pyright / …).`,
+    daemon: `deep daemon start|stop|status|tick [--name STACK] [--interval MS]
+  Background health poller for llama/DSH (Kairos-lite).`,
+    risk: `deep risk classify "bash command" [--llm]
+  Heuristic (or optional LLM) auto-mode risk label: allow|confirm|deny.`,
     help: `deep help [command]
   This screen, or details for one command.`,
   }
@@ -771,6 +777,8 @@ export function cmdHelp(topic) {
   deep presets
   deep index build|search|status [--name STACK]
   deep lsp servers|query …
+  deep daemon start|stop|status|tick [--name STACK]
+  deep risk classify "cmd" [--llm]
 
 Tips:
   First run:  deep doctor && deep bootstrap --gguf MODEL.gguf && deep start
@@ -844,6 +852,23 @@ export async function main(argv) {
       }
       case 'lsp':
         return await cmdLsp(flags, args)
+      case 'daemon':
+        return await cmdDaemon(flags, args)
+      case 'risk': {
+        const sub = args[0]
+        const cmdText = args.slice(1).join(' ').trim()
+        if (sub !== 'classify' || !cmdText) {
+          console.error('Usage: deep risk classify "bash command" [--llm]')
+          process.exitCode = 2
+          return
+        }
+        const useLlm = flags.llm === true || flags.llm === ''
+        const verdict = useLlm
+          ? await classifyBashRiskLlm(cmdText)
+          : classifyBashRisk(cmdText)
+        console.log(`${verdict.level}\tsource=${verdict.source || 'heuristic'}\t${verdict.reason}`)
+        return
+      }
       case 'version':
       case '-V':
       case '--version':

@@ -1,6 +1,12 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { classifyBashRisk, shouldDenyBash } from '../src/permission-risk.js'
+import {
+  classifyBashRisk,
+  shouldDenyBash,
+  parseClassifierLabel,
+  classifyBashRiskLlm,
+  shouldDenyBashAsync,
+} from '../src/permission-risk.js'
 
 test('allows deep index search', () => {
   assert.equal(classifyBashRisk('deep index search "foo"').level, 'allow')
@@ -16,4 +22,48 @@ test('denies curl pipe bash', () => {
 
 test('confirm on npm install', () => {
   assert.equal(classifyBashRisk('npm install lodash').level, 'confirm')
+})
+
+test('parseClassifierLabel reads ALLOW/DENY/CONFIRM', () => {
+  assert.equal(parseClassifierLabel('ALLOW\nsafe'), 'allow')
+  assert.equal(parseClassifierLabel('deny: wipe'), 'deny')
+  assert.equal(parseClassifierLabel('CONFIRM'), 'confirm')
+  assert.equal(parseClassifierLabel('soft_deny'), 'confirm')
+  assert.equal(parseClassifierLabel('???'), null)
+})
+
+test('classifyBashRiskLlm skips call when heuristic allow', async () => {
+  let called = 0
+  const fetchFn = async () => {
+    called++
+    return { ok: true, json: async () => ({}) }
+  }
+  const v = await classifyBashRiskLlm('ls -la', { fetchFn })
+  assert.equal(v.level, 'allow')
+  assert.equal(v.source, 'heuristic')
+  assert.equal(called, 0)
+})
+
+test('classifyBashRiskLlm upgrades confirm via mock LLM', async () => {
+  const fetchFn = async () => ({
+    ok: true,
+    json: async () => ({
+      choices: [{ message: { content: 'DENY\nhidden wipe' } }],
+    }),
+  })
+  const v = await classifyBashRiskLlm('npm install evil', { fetchFn, timeoutMs: 2000 })
+  assert.equal(v.level, 'deny')
+  assert.equal(v.source, 'llm')
+})
+
+test('classifyBashRiskLlm falls back on http error', async () => {
+  const fetchFn = async () => ({ ok: false, status: 503 })
+  const v = await classifyBashRiskLlm('npm install x', { fetchFn })
+  assert.equal(v.level, 'confirm')
+  assert.equal(v.source, 'fallback')
+})
+
+test('shouldDenyBashAsync heuristic mode', async () => {
+  assert.equal(await shouldDenyBashAsync('rm -rf /tmp/x', { mode: 'heuristic' }), true)
+  assert.equal(await shouldDenyBashAsync('ls', { mode: 'heuristic' }), false)
 })

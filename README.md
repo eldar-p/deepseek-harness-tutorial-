@@ -101,6 +101,8 @@ node bin/deep.js bootstrap --api custom --api-base https://llm.example.com/v1 --
 | `deep status` | DSH URL + модель |
 | `deep index build \| search \| status` | Семантический поиск по коду |
 | `deep lsp servers \| query …` | Host LSP (definition/hover/…) |
+| `deep daemon start \| stop \| status \| tick` | Health poller (llama/DSH) |
+| `deep risk classify "cmd" [--llm]` | Auto-mode risk label |
 | `deep api` | Список API-провайдеров |
 
 ---
