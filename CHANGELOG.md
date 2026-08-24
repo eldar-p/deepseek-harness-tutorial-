@@ -1,25 +1,29 @@
 # Changelog
 
-## [0.2.0-alpha] — unreleased
+## [0.2.0-alpha] — 2026-08-24
 
 ### Added
 
-- `todo/` — alpha backlog (001–008)
-- `adr/` — architecture decision records (0001–0006)
+- `todo/` — alpha backlog (001–009)
+- `adr/` — architecture decision records (0001–0007)
 - `src/workspace-jail.js` + FS jail wired in cordis patch
 - `assets/memory.template.json` seeded at bootstrap
 - `scripts/smoke-guest.mjs` + CI job `smoke-guest` (ubuntu)
-- Coverage gate raised to **30%** (src ~65%)
-### Added (continued)
-
-- `deep doctor --readiness --stage=alpha` — 10 alpha milestones
+- `scripts/smoke-e2e.mjs` + `npm run smoke:e2e` (jail/HTTP/guest/chat)
+- Coverage gate raised to **30%** (src ~69%)
+- `npm run audit:alpha`
+- `deep doctor --readiness --stage=alpha`
 - `deep stacks`, `deep status --all`, `registerStack()` in config
 - Guest network env: `DEEP_NET_MODE`, `DEEP_NET_ALLOWLIST`
 - GPU lock tracks stack name; blocks second GPU stack
-- ADR-0007 guest network env policy
-- AGENTS.deep.md memory/consent rules; TROUBLESHOOTING compact/multistack
-- `scripts/smoke-e2e.mjs` + `npm run smoke:e2e` (jail/HTTP/guest env)
 - `ALPHA.md` status page
+
+### Verified
+
+- Pre-alpha readiness 100/100
+- Alpha readiness 100/100
+- `smoke:e2e` PASS (llama chat `e2e-ok`, DSH HTTP, guest bash + net env)
+- Gate alpha: OK (0 FAIL, 1 WARN TTY)
 
 ## [0.1.0-prealpha] — 2026-08-24
 

@@ -1,22 +1,27 @@
 # Release process (pre-alpha → 1.0)
 
-## Pre-alpha (сейчас)
+## Pre-alpha
 
-- Версия в `package.json`: `0.1.x-prealpha`
-- **Нет** npm publish / CDN
-- Gate: `npm test` + `npm run test:coverage` + `npm run audit` + `npm run infra:check`
-- Коммиты на `main` по запросу maintainer
+- `0.1.x-prealpha` — **shipped** (`2b91681`)
+- Gate: test + coverage 10% + audit pre-alpha + infra
 
-## Alpha
+## Alpha — **current tag `v0.2.0-alpha`**
 
-- `0.2.x-alpha`, Docker guest обязателен в CI smoke
-- Draft GitHub Release с артеfact checklist (без CDN или staging CDN)
+- `0.2.0-alpha`, revision `2026.08.24-alpha`
+- Docker guest CI smoke + `smoke:e2e` on maintainer host
+- Gate: `npm test` + coverage 30% + `audit:alpha` + `infra:check`
+- Install: **git only** (no CDN yet)
+
+```bash
+git checkout v0.2.0-alpha
+# or stay on main
+```
 
 ## Beta
 
 - `manifests/cli-releases.json` с url+sha256
 - `install-deep.*` тянет CLI с CDN
-- Signed checksums file per release
+- Hard egress, coverage ≥50% — [todo/README-beta.md](../../todo/README-beta.md)
 
 ## RC / 1.0
 
@@ -24,10 +29,11 @@
 - Coverage по [VERSION-PLAN.md](../VERSION-PLAN.md)
 - THIRD-PARTY и license scan в CI
 
-## Checklist перед любым тегом
+## Checklist перед тегом
 
-- [ ] `npm run infra:check`
-- [ ] `npm run audit -- --gate=alpha` (когда alpha)
-- [ ] CHANGELOG entry (unreleased section)
-- [ ] `manifests/channels.json` revision bumped
-- [ ] PRE-ALPHA / README статус обновлён
+- [x] `npm run infra:check`
+- [x] `npm run audit:alpha`
+- [x] CHANGELOG entry
+- [x] `manifests/channels.json` revision bumped
+- [x] ALPHA.md / VERSION-PLAN статус
+- [x] `npm run smoke:e2e` PASS

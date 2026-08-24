@@ -1,25 +1,25 @@
 {
   "schema": "deep-cli-releases/v1",
-  "note": "Pre-alpha: local/git install only. CDN URLs filled at beta.",
+  "note": "Alpha: git install only. CDN URLs filled at beta.",
   "channels": {
     "stable": {
-      "revision": "2026.08.24",
+      "revision": "2026.08.24-alpha",
       "cli": {
-        "version": "0.1.0-prealpha",
+        "version": "0.2.0-alpha",
         "artifacts": []
       }
     },
     "beta": {
-      "revision": "2026.08.24",
+      "revision": "2026.08.24-alpha",
       "cli": {
-        "version": "0.1.0-prealpha",
+        "version": "0.2.0-alpha",
         "artifacts": []
       }
     },
     "edge": {
-      "revision": "2026.08.24",
+      "revision": "2026.08.24-alpha",
       "cli": {
-        "version": "0.1.0-prealpha",
+        "version": "0.2.0-alpha",
         "artifacts": []
       }
     }

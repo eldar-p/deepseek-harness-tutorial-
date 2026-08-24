@@ -2,8 +2,8 @@
   "channel": "stable",
   "defaultGguf": "default-gguf.json",
   "revisions": {
-    "stable": "2026.08.24",
-    "beta": "2026.08.24",
-    "edge": "2026.08.24"
+    "stable": "2026.08.24-alpha",
+    "beta": "2026.08.24-alpha",
+    "edge": "2026.08.24-alpha"
   }
 }
