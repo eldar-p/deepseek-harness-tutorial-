@@ -1,6 +1,6 @@
 {
   "schema": "deep-cli-releases/v1",
-  "note": "CC BY-NC-SA 4.0. Artifact on GitHub Releases v0.4.0-beta. Local override: DEEP_CLI_ZIP.",
+  "note": "CC BY-NC-SA 4.0. Artifact on GitHub Releases v0.9.0-rc.0. Local override: DEEP_CLI_ZIP.",
   "channels": {
     "stable": {
       "revision": "2026.08.24-alpha",
@@ -10,49 +10,49 @@
       }
     },
     "beta": {
-      "revision": "2026.08.24-field-beta",
+      "revision": "2026.08.24-rc",
       "cli": {
-        "version": "0.4.0-beta",
+        "version": "0.9.0-rc.0",
         "artifacts": [
           {
             "os": "win32",
             "arch": "x64",
             "format": "zip",
-            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.4.0-beta/deep-cli-0.4.0-beta.zip",
-            "sha256": "0ee2e780c2c77405a767432c95f66db36bcc6f3b5c14b1c986e5ab64f3ace27d",
-            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.4.0-beta/deep-cli-0.4.0-beta.zip.sha256"
+            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.9.0-rc.0/deep-cli-0.9.0-rc.0.zip",
+            "sha256": "1d0c17293a129ca2b4fe9156380e456bb8b5984df1ddf9b9c27e45ae5dfec6e6",
+            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.9.0-rc.0/deep-cli-0.9.0-rc.0.zip.sha256"
           },
           {
             "os": "darwin",
             "arch": "arm64",
             "format": "zip",
-            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.4.0-beta/deep-cli-0.4.0-beta.zip",
-            "sha256": "0ee2e780c2c77405a767432c95f66db36bcc6f3b5c14b1c986e5ab64f3ace27d",
-            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.4.0-beta/deep-cli-0.4.0-beta.zip.sha256"
+            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.9.0-rc.0/deep-cli-0.9.0-rc.0.zip",
+            "sha256": "1d0c17293a129ca2b4fe9156380e456bb8b5984df1ddf9b9c27e45ae5dfec6e6",
+            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.9.0-rc.0/deep-cli-0.9.0-rc.0.zip.sha256"
           },
           {
             "os": "darwin",
             "arch": "x64",
             "format": "zip",
-            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.4.0-beta/deep-cli-0.4.0-beta.zip",
-            "sha256": "0ee2e780c2c77405a767432c95f66db36bcc6f3b5c14b1c986e5ab64f3ace27d",
-            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.4.0-beta/deep-cli-0.4.0-beta.zip.sha256"
+            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.9.0-rc.0/deep-cli-0.9.0-rc.0.zip",
+            "sha256": "1d0c17293a129ca2b4fe9156380e456bb8b5984df1ddf9b9c27e45ae5dfec6e6",
+            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.9.0-rc.0/deep-cli-0.9.0-rc.0.zip.sha256"
           },
           {
             "os": "linux",
             "arch": "x64",
             "format": "zip",
-            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.4.0-beta/deep-cli-0.4.0-beta.zip",
-            "sha256": "0ee2e780c2c77405a767432c95f66db36bcc6f3b5c14b1c986e5ab64f3ace27d",
-            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.4.0-beta/deep-cli-0.4.0-beta.zip.sha256"
+            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.9.0-rc.0/deep-cli-0.9.0-rc.0.zip",
+            "sha256": "1d0c17293a129ca2b4fe9156380e456bb8b5984df1ddf9b9c27e45ae5dfec6e6",
+            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v0.9.0-rc.0/deep-cli-0.9.0-rc.0.zip.sha256"
           }
         ]
       }
     },
     "edge": {
-      "revision": "2026.08.24-field-beta",
+      "revision": "2026.08.24-rc",
       "cli": {
-        "version": "0.4.0-beta",
+        "version": "0.9.0-rc.0",
         "artifacts": []
       }
     }

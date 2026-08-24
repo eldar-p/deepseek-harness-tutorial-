@@ -95,7 +95,13 @@ export async function cmdDoctor(flags = {}) {
 
   if (flags.readiness) {
     const stage =
-      flags.stage === 'beta' ? 'beta' : flags.stage === 'alpha' ? 'alpha' : 'pre-alpha'
+      flags.stage === 'rc'
+        ? 'rc'
+        : flags.stage === 'beta'
+          ? 'beta'
+          : flags.stage === 'alpha'
+            ? 'alpha'
+            : 'pre-alpha'
     const r = assessReadiness(stage)
     console.log(formatReadinessReport(r, { host, engine, gpu: gpu, stage }))
   }
@@ -500,7 +506,7 @@ export function cmdHelp() {
   console.log(`Deep CLI ${ver}`)
   console.log(bar)
   console.log(`Usage:
-  deep doctor [--readiness] [--stage pre-alpha|alpha|beta]
+  deep doctor [--readiness] [--stage pre-alpha|alpha|beta|rc]
   deep bootstrap [--gguf PATH] [--preset NAME] [--channel stable|beta|edge]
   deep start [--name STACK] [--gguf PATH] [--cpu] [--preset NAME]
   deep stop [--name STACK] [--emergency] [--wipe-session]

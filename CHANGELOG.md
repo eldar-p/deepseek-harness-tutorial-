@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.9.0-rc.0] — 2026-08-24
+
+### Added
+
+- `doctor --readiness --stage=rc` (RC_MILESTONES, 100/100)
+- `RC.md` + field matrix checklist
+- CLI tests: doctor/stacks/status/stop/bootstrap missing gguf
+- Detect/download tests: engineEnv, hostSummary, ensureCachedAsset cache hit
+
+### Changed
+
+- Coverage gate **70%** (src ~76%)
+- Version **0.9.0-rc.0**
+
 ## [0.4.0-beta] — 2026-08-24
 
 ### Added

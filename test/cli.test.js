@@ -1,6 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { parseArgs, cmdHelp, cmdPresets, main } from '../src/cli.js'
+import os from 'node:os'
+import path from 'node:path'
+import { parseArgs, cmdHelp, cmdPresets, cmdDoctor, cmdStacks, cmdStop, cmdStatus, main } from '../src/cli.js'
 
 test('parseArgs command and flags', () => {
   const r = parseArgs(['start', '--cpu', '--name', 'dev', '--preset=balanced'])
@@ -11,9 +13,9 @@ test('parseArgs command and flags', () => {
 })
 
 test('parseArgs equals form', () => {
-  const r = parseArgs(['doctor', '--stage=beta', '--readiness'])
+  const r = parseArgs(['doctor', '--stage=rc', '--readiness'])
   assert.equal(r.cmd, 'doctor')
-  assert.equal(r.flags.stage, 'beta')
+  assert.equal(r.flags.stage, 'rc')
   assert.equal(r.flags.readiness, true)
 })
 
@@ -29,6 +31,22 @@ test('cmdPresets lists presets', async () => {
   await cmdPresets()
 })
 
+test('cmdDoctor and readiness rc', async () => {
+  await cmdDoctor({ readiness: true, stage: 'rc' })
+})
+
+test('cmdStacks lists', async () => {
+  await cmdStacks()
+})
+
+test('cmdStatus --all', async () => {
+  await cmdStatus({ all: true })
+})
+
+test('cmdStop with no run state', async () => {
+  await cmdStop({ name: `__utest_stop_${process.pid}` })
+})
+
 test('main unknown command sets exitCode 2', async () => {
   const prev = process.exitCode
   process.exitCode = 0
@@ -39,4 +57,10 @@ test('main unknown command sets exitCode 2', async () => {
 
 test('main help ok', async () => {
   await main(['help'])
+})
+
+test('cmdBootstrap missing gguf throws', async () => {
+  const { cmdBootstrap } = await import('../src/cli.js')
+  const missing = path.join(os.tmpdir(), `no-gguf-${process.pid}.gguf`)
+  await assert.rejects(() => cmdBootstrap({ gguf: missing }), (e) => e.exitCode === 2)
 })
