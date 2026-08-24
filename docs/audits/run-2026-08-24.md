@@ -17,7 +17,7 @@ Gate: **security**
 | 11 | Изоляция | PASS | guest-exec; pwsh disabled |
 | 12 | Инсталляторы | PASS | install scripts + log mode |
 | 13 | Zero-traces | PASS | soft/hard hooks; workspace wipe guarded |
-| 14 | CDN / manifests | PASS | CPU win sha256 pinned |
+| 14 | CDN / manifests | PASS | win/linux/darwin sha256 pinned |
 | 15 | Кросс-платформенные пути | PASS | Win path helpers present |
 | 16 | GPU | PASS | detect + lock file |
 | 17 | Терминал RGB | PASS | status-ui one-screen |
