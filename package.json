@@ -1,10 +1,10 @@
 {
-  "name": "@deep-cli/deep",
-  "version": "1.1.1",
-  "description": "Deep CLI — llama.cpp + container guest + DSH (1.1.1)",
+  "name": "@gim-cli/gim",
+  "version": "2.0.0",
+  "description": "GIM CLI (Generative Intelligence Manager) — local LLM host + container guest + native UI",
   "type": "module",
   "bin": {
-    "deep": "./bin/deep.js"
+    "gim": "./bin/gim.js"
   },
   "engines": {
     "node": "^22.19.0 || >=24.0.0"
@@ -12,30 +12,34 @@
   "files": [
     "bin",
     "src",
+    "ui",
     "manifests",
     "assets",
     "presets",
     "docs",
     "LICENSE",
+    "NOTICE",
     "CHANGELOG.md"
   ],
   "scripts": {
-    "deep": "node bin/deep.js",
-    "start": "node bin/deep.js start",
-    "doctor": "node bin/deep.js doctor",
+    "start": "node bin/gim.js start",
+    "doctor": "node bin/gim.js doctor",
     "test": "node --test test/*.test.js",
     "test:coverage": "node scripts/coverage-gate.mjs",
     "smoke:guest": "node scripts/smoke-guest.mjs",
     "smoke:e2e": "node scripts/smoke-e2e.mjs",
     "smoke:api": "node scripts/smoke-api.mjs",
     "test:harness": "node scripts/harness-test-pack.mjs",
+    "test:security": "node scripts/security-eval.mjs",
     "field:lite": "node scripts/field-lite.mjs",
     "pack:release": "node scripts/pack-release.mjs",
     "audit": "node scripts/audit-run.mjs --gate=pre-alpha",
     "audit:alpha": "node scripts/audit-run.mjs --gate=alpha",
     "audit:prebeta": "node scripts/audit-run.mjs --gate=pre-beta",
     "audit:security": "node scripts/audit-run.mjs --gate=security",
-    "infra:check": "node scripts/infra-check.mjs"
+    "infra:check": "node scripts/infra-check.mjs",
+    "gim": "node bin/gim.js",
+    "download:colibri-model": "node scripts/download-colibri-model.mjs"
   },
-  "license": "CC-BY-NC-SA-4.0"
+  "license": "Apache-2.0"
 }

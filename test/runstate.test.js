@@ -6,9 +6,9 @@ import path from 'node:path'
 import { readRunState, writeRunState, clearRunState, listStacks, summarizeStacks, stackIsActive } from '../src/runstate.js'
 
 test('runstate roundtrip', () => {
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-run-'))
-  const prev = process.env.DEEP_HOME
-  process.env.DEEP_HOME = home
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-run-'))
+  const prev = process.env.GIM_HOME
+  process.env.GIM_HOME = home
   try {
     writeRunState('teststack', { stack: 'teststack', warming: true })
     const s = readRunState('teststack')
@@ -26,8 +26,8 @@ test('runstate roundtrip', () => {
     const summary = summarizeStacks()
     assert.ok(summary.some((s) => s.name === 'a' && s.active))
   } finally {
-    if (prev === undefined) delete process.env.DEEP_HOME
-    else process.env.DEEP_HOME = prev
+    if (prev === undefined) delete process.env.GIM_HOME
+    else process.env.GIM_HOME = prev
     fs.rmSync(home, { recursive: true, force: true })
   }
 })

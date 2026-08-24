@@ -28,7 +28,7 @@ const REQUIRED = [
 ]
 
 let fail = 0
-console.log('Deep infra check\n')
+console.log('GIM infra check\n')
 for (const rel of REQUIRED) {
   const ok = fs.existsSync(path.join(ROOT, rel))
   console.log(`${ok ? 'OK' : 'FAIL'}  ${rel}`)

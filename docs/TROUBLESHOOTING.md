@@ -10,22 +10,22 @@
 ```powershell
 powershell -File .\scripts\wait-docker.ps1
 docker version
-deep doctor
+gim doctor
 ```
 
-If `docker` works in a **new** terminal but `deep doctor` still fails, set:
+If `docker` works in a **new** terminal but `gim doctor` still fails, set:
 
 ```powershell
-$env:DEEP_DOCKER_BIN = "C:\Users\<you>\AppData\Local\Programs\DockerDesktop\resources\bin\docker.exe"
+$env:GIM_DOCKER_BIN = "C:\Users\<you>\AppData\Local\Programs\DockerDesktop\resources\bin\docker.exe"
 # or legacy install:
-# $env:DEEP_DOCKER_BIN = "C:\Program Files\Docker\Docker\resources\bin\docker.exe"
+# $env:GIM_DOCKER_BIN = "C:\Program Files\Docker\Docker\resources\bin\docker.exe"
 ```
 
-Then `deep start` again — guest should build `deep-guest:prealpha` on first run (~1 min).
+Then `gim start` again — guest should build `gim-guest:prealpha` on first run (~1 min).
 
 ## Guest build fails — docker-credential-desktop not found
 
-Symptom during `deep start`:
+Symptom during `gim start`:
 
 ```text
 error getting credentials - err: exec: "docker-credential-desktop": executable file not found in %PATH%
@@ -33,40 +33,40 @@ error getting credentials - err: exec: "docker-credential-desktop": executable f
 
 **Cause:** Node/DSH spawned `docker` without Docker Desktop's `resources\bin` on PATH (credential helper lives there).
 
-**Fix (built-in):** Deep CLI prepends the docker bin directory to **both** `Path` and `PATH` (`engineEnv` in `src/detect.js`) for guest ops **and** the DSH process. Update to latest `main` and retry.
+**Fix (built-in):** GIM CLI prepends the docker bin directory to **both** `Path` and `PATH` (`engineEnv` in `src/detect.js`) for guest ops **and** the DSH process. Update to latest `main` and retry.
 
 **Manual workaround:**
 
 ```powershell
 powershell -File .\scripts\wait-docker.ps1   # also prepends resources\bin
-$env:DEEP_DOCKER_BIN = "$env:LOCALAPPDATA\Programs\DockerDesktop\resources\bin\docker.exe"
-deep start --cpu
+$env:GIM_DOCKER_BIN = "$env:LOCALAPPDATA\Programs\DockerDesktop\resources\bin\docker.exe"
+gim start --cpu
 ```
 
 ## Llama RED / health timeout
 
 ```bash
 # Logs
-type %USERPROFILE%\.deep\run\default\llama.log   # Windows
-cat ~/.deep/run/default/llama.log               # Unix
+type %USERPROFILE%\.gim\run\default\llama.log   # Windows
+cat ~/.gim/run/default/llama.log               # Unix
 
 # CPU fallback
-deep start --cpu --gguf PATH
+gim start --cpu --gguf PATH
 ```
 
-CUDA build needs pinned zip or `DEEP_LLAMA_BIN`.
+CUDA build needs pinned zip or `GIM_LLAMA_BIN`.
 
 ## DSH RED / plugin tree failed
 
 Re-materialize:
 
 ```bash
-deep bootstrap
+gim bootstrap
 ```
 
-Check `~/.deep/dsh-home/profiles/web/cordis.patch.yml` — duplicate ids break DSH 0.1.1-rc.2.
+Check `~/.gim/dsh-home/profiles/web/cordis.patch.yml` — duplicate ids break DSH 0.1.1-rc.2.
 
-`deep doctor` runs **plugin validation** (no `ctx.tool(`, `defineTool` must have `output.render`). Failures here crash DSH at boot (see 1.1.1 lsp-bridge fix).
+`gim doctor` runs **plugin validation** (no `ctx.tool(`, `defineTool` must have `output.render`). Failures here crash DSH at boot (see 1.1.1 lsp-bridge fix).
 
 On Windows, plugin URLs in the patch use `file:///C|/…` form.
 
@@ -78,35 +78,35 @@ On Windows, plugin URLs in the patch use `file:///C|/…` form.
 
 ## Manifest JSON / PowerShell BOM
 
-If `channels.json` / config parse fails with `Unexpected token ''`, the file has a UTF-8 BOM. Deep strips BOM on read (`src/json-io.js`). Prefer Node/`writeJsonFile` — avoid `Set-Content` without `-Encoding utf8NoBOM`.
+If `channels.json` / config parse fails with `Unexpected token ''`, the file has a UTF-8 BOM. GIM strips BOM on read (`src/json-io.js`). Prefer Node/`writeJsonFile` — avoid `Set-Content` without `-Encoding utf8NoBOM`.
 
 ## Q3 quant warnings
 
 Prefer **Q4_K_M** or higher for tool-heavy agents. Full policy: [QUANT.md](./QUANT.md).
 
-- `deep start` prints `[YELLOW]` + `[HINT]`; writes `.deep/QUANT.md` for the agent
-- `deep status` / `deep doctor` show a **Quant** row
-- Soft gate: Q2− blocked; `deep start --require-q4` enforces Q4+; `--force-quant` overrides
-- Fix: `deep start --gguf /path/model.Q4_K_M.gguf`
+- `gim start` prints `[YELLOW]` + `[HINT]`; writes `.gim/QUANT.md` for the agent
+- `gim status` / `gim doctor` show a **Quant** row
+- Soft gate: Q2− blocked; `gim start --require-q4` enforces Q4+; `--force-quant` overrides
+- Fix: `gim start --gguf /path/model.Q4_K_M.gguf`
 
 ## Long sessions / context full
 
-DSH auto-compacts at ~50% of the context window (see `cordis.deep.patch.yml`).
+DSH auto-compacts at ~50% of the context window (see `cordis.gim.patch.yml`).
 
 - In DSH chat, run **`/compact`** to force a summary now
 - Large tool output is pruned at 4k chars — full logs belong in `workspace/logs/`
-- Durable facts (with user consent) → `.deep/memory.json` (see `AGENTS.md`)
+- Durable facts (with user consent) → `.gim/memory.json` (see `AGENTS.md`)
 
 After compaction, re-read files instead of relying on old tool output in history.
 
 ## Multi-stack
 
 ```bash
-deep start --name dev
-deep status --name dev
-deep status --all
-deep stacks
-deep stop --name dev
+gim start --name dev
+gim status --name dev
+gim status --all
+gim stacks
+gim stop --name dev
 ```
 
 Only one **GPU** stack at a time. If start fails with GPU lock, stop the other stack or use `--cpu`.
@@ -115,24 +115,24 @@ Only one **GPU** stack at a time. If start fails with GPU lock, stop the other s
 
 Preset `balanced` / `dev`:
 
-1. Host injects `DEEP_NET_MODE` / `DEEP_NET_ALLOWLIST`
-2. Guest entrypoint `deep-net-enforce` applies **iptables** OUTPUT allowlist (needs `NET_ADMIN`)
+1. Host injects `GIM_NET_MODE` / `GIM_NET_ALLOWLIST`
+2. Guest entrypoint `gim-net-enforce` applies **iptables** OUTPUT allowlist (needs `NET_ADMIN`)
 3. `offline` / `paranoia` → `--network none`
 
 ```bash
-docker exec deep-guest-default printenv DEEP_NET_ALLOWLIST
-docker logs deep-guest-default 2>&1 | findstr deep-net
+docker exec gim-guest-default printenv GIM_NET_ALLOWLIST
+docker logs gim-guest-default 2>&1 | findstr gim-net
 ```
 
 Hard proxy sidecar — future; current filter is DNS→IP iptables (IPv4).
 
 ## Port already in use
 
-`deep stop` then `deep start`. Stacks use random ports in 13000–14000 (DSH) and 18000–19000 (llama).
+`gim stop` then `gim start`. Stacks use random ports in 13000–14000 (DSH) and 18000–19000 (llama).
 
 ## Ctrl+C left processes
 
-Pre-alpha: signal handler runs `deep stop`. If hung: `deep stop --emergency`.
+Pre-alpha: signal handler runs `gim stop`. If hung: `gim stop --emergency`.
 
 ## GitHub / push
 

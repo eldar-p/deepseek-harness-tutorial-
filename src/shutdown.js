@@ -19,12 +19,12 @@ export async function stopAllStacks({ emergency = false } = {}) {
 }
 
 export function installShutdownHandlers() {
-  if (process.env.DEEP_NO_SIGNAL_HANDLERS === '1') return
+  if (process.env.GIM_NO_SIGNAL_HANDLERS === '1') return
 
   const onSignal = async (sig) => {
     if (stopping) return
     stopping = true
-    process.stderr.write(`\n[INFO] ${sig} — graceful stop (use deep stop --emergency if hung)\n`)
+    process.stderr.write(`\n[INFO] ${sig} — graceful stop (use gim stop --emergency if hung)\n`)
     try {
       const n = await stopAllStacks({ emergency: false })
       if (n === 0) process.stderr.write('[INFO] No active stacks\n')

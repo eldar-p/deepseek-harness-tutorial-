@@ -27,6 +27,26 @@ import {
 import { startGuest, stopGuest, mountSmoke, isGuestRunning, resolveAllowlist } from './guest.js'
 import { startDsh, stopDsh } from './dsh.js'
 import { isPidAlive, killTree, spawnDetached, runLogPath } from './proc.js'
+import {
+  colibriStatus,
+  resolveColibriModelPath,
+  resolveColibriCtx,
+  colibriModelReady,
+  DEFAULT_COLIBRI_MODEL_ID,
+  stopColibri,
+} from './colibri.js'
+import {
+  assertLlmDockerPlatform,
+  resolveLlmDockerBackend,
+  startLlmDocker,
+  stopLlmDocker,
+  resolveLlmDockerModelPath,
+  isLlmDockerRunning,
+  getDockerPublishedPort,
+  llmKeepWarm,
+  llmContainerName,
+} from './llm-docker.js'
+import { formatSpeedReport, assessSpeedHints } from './colibri-speed.js'
 import { cmdIndexBuild, cmdIndexSearch, cmdIndexStatus } from './code-index-cli.js'
 import { ensureSecretsTemplate } from './secrets.js'
 import {
@@ -35,6 +55,7 @@ import {
   saveApiToConfig,
   writeApiKeyToDshEnv,
   listApiProviderIds,
+  isLocalApiProvider,
 } from './api-provider.js'
 import { rotateLogIfLarge, cleanStalePartFiles } from './io-policy.js'
 import { assessGgufQuant, formatQuantWarning, quantStatusRow, enforceQuantPolicy, writeQuantHintFile } from './quant-warn.js'
@@ -47,10 +68,40 @@ import { cmdDaemon } from './daemon.js'
 import { classifyBashRisk, classifyBashRiskLlm, classifyWriteRisk } from './permission-risk.js'
 import { assessWorkspaceMemoryBudget } from './memory-budget.js'
 import { assessPolicyScore, formatPolicyScoreReport } from './policy-score.js'
+import { runSecurityEval, formatSecurityEvalReport } from './security-eval.js'
 import { cmdCoord } from './coordinator.js'
 import { validateDeepPlugins, formatPluginValidation } from './plugin-validate.js'
 import { resolveDshBin } from './dsh.js'
 import { formatMcpConfigHelp } from './mcp-config.js'
+
+/** Legacy DSH UI — off by default; enable with --dsh or GIM_USE_DSH=1 */
+export function wantDsh(flags = {}) {
+  if (flags['no-dsh'] === true || flags['no-dsh'] === '') return false
+  if (flags.dsh === true || flags.dsh === '') return true
+  return process.env.GIM_USE_DSH === '1'
+}
+
+/** Native GIM UI — on by default; disable with --no-ui or GIM_NO_UI=1 */
+export function wantUi(flags = {}) {
+  if (flags['no-ui'] === true || flags['no-ui'] === '') return false
+  return process.env.GIM_NO_UI !== '1'
+}
+
+/**
+ * @param {{ stack: string, uiPort: number, urls: object, state: object }} opts
+ */
+export function maybeStartGimUi({ stack, uiPort, urls, state }) {
+  const pid = spawnDetached(process.execPath, [path.join(PKG_ROOT, 'scripts', 'gim-ui.mjs'), '--name', stack, '--port', String(uiPort)], {
+    env: { GIM_UI_PORT: String(uiPort) },
+    logFile: runLogPath(stack, 'ui'),
+  })
+  state.pids = state.pids || {}
+  state.pids.ui = pid
+  state.ports = { ...(state.ports || {}), uiPort }
+  urls.ui = `http://127.0.0.1:${uiPort}/`
+  console.log(`[GREEN] GIM UI ${urls.ui}`)
+  return pid
+}
 
 /**
  * @param {string[]} argv
@@ -77,7 +128,15 @@ export function parseArgs(argv) {
         a === '--skip-fetch' ||
         a === '--all' ||
         a === '--force-quant' ||
-        a === '--require-q4'
+        a === '--require-q4' ||
+        a === '--dsh' ||
+        a === '--no-dsh' ||
+        a === '--no-ui' ||
+        a === '--colibri' ||
+        a === '--vllm' ||
+        a === '--full-stop' ||
+        a === '--speed' ||
+        a === '--security'
       ) {
         flags[a.slice(2)] = true
       } else {
@@ -98,7 +157,7 @@ export async function cmdDoctor(flags = {}) {
   const engine = detectContainerEngine()
   const gpu = detectGpu()
   const cfg = readConfig()
-  let llamaBin = which('llama-server') || process.env.DEEP_LLAMA_BIN || null
+  let llamaBin = which('llama-server') || process.env.GIM_LLAMA_BIN || null
   if (!llamaBin) {
     try {
       const { findFileRecursive } = await import('./proc.js')
@@ -109,7 +168,7 @@ export async function cmdDoctor(flags = {}) {
       /* */
     }
   }
-  console.log('Deep doctor')
+  console.log('GIM doctor')
   console.log(`  node     ${host.node} ${nodeOk() ? 'OK' : 'NEED >=22'}`)
   console.log(`  os       ${host.family} ${host.platform}/${host.arch}`)
   console.log(`  mem      ${host.freememGb}/${host.totalmemGb} GB free/total`)
@@ -121,7 +180,7 @@ export async function cmdDoctor(flags = {}) {
   console.log(`  gpu      ${gpu.kind} — ${gpu.detail}`)
   console.log(`  dsh      ${which('dsh') || 'not on PATH'}`)
   console.log(`  llama    ${llamaBin || 'not found (will fetch on start)'}`)
-  console.log(`  config   ${cfg ? paths().config : 'missing — run deep bootstrap'}`)
+  console.log(`  config   ${cfg ? paths().config : 'missing — run gim bootstrap'}`)
   if (cfg?.gguf) console.log(`  gguf     ${cfg.gguf}`)
   {
     const apiMode = !!(cfg?.api?.provider)
@@ -132,7 +191,7 @@ export async function cmdDoctor(flags = {}) {
       if (a.tier === 'severe') {
         console.log('  quant    policy  Q2− blocked on start (override: --force-quant)')
       } else if (a.tier === 'degraded' || a.tier === 'acceptable') {
-        console.log('  quant    policy  soft WARN; enforce with --require-q4 or DEEP_REQUIRE_Q4=1')
+        console.log('  quant    policy  soft WARN; enforce with --require-q4 or GIM_REQUIRE_Q4=1')
       }
     }
   }
@@ -189,6 +248,15 @@ export async function cmdDoctor(flags = {}) {
     console.log(formatPolicyScoreReport(assessPolicyScore()))
   }
 
+  if (flags.speed) {
+    console.log(formatSpeedReport(assessSpeedHints()))
+  }
+
+  if (flags.security) {
+    console.log(formatPolicyScoreReport(assessPolicyScore()))
+    console.log(formatSecurityEvalReport(runSecurityEval()))
+  }
+
   appendLog('event=doctor')
 }
 
@@ -229,7 +297,7 @@ export async function cmdBootstrap(flags) {
   if (!fs.existsSync(p.structure)) {
     fs.writeFileSync(
       p.structure,
-      '# STRUCTURE\n\nworkspace/\n  .deep/memory.json\n  logs/\n  (project files)\n',
+      '# STRUCTURE\n\nworkspace/\n  .gim/memory.json\n  logs/\n  (project files)\n',
       'utf8',
     )
   }
@@ -277,7 +345,7 @@ export async function cmdBootstrap(flags) {
     console.log('[INFO] API mode — llama-server not required')
   }
 
-  console.log(`[OK] Deep home: ${p.home}`)
+  console.log(`[OK] GIM home: ${p.home}`)
   console.log(`[OK] Workspace: ${p.workspace}`)
   console.log(`[OK] Preset:    ${cfg.preset} (net=${cfg.guestNetwork}, traces=${cfg.zeroTraces})`)
   if (cfg.gguf) console.log(`[OK] GGUF:      ${cfg.gguf}`)
@@ -294,19 +362,20 @@ export async function cmdBootstrap(flags) {
 export async function cmdStatus(flags) {
   if (flags.all) {
     const rows = summarizeStacks()
-    console.log(`Deep stacks (${rows.length})`)
+    console.log(`GIM stacks (${rows.length})`)
     console.log('─'.repeat(56))
     for (const row of rows) {
       const parts = []
       if (row.llama) parts.push('llama')
       if (row.guest) parts.push('guest')
+      if (row.ui) parts.push('ui')
       if (row.dsh) parts.push('dsh')
       const state = row.active ? parts.join('+') || 'active' : 'stopped'
-      const url = row.urls?.dsh ? `  ${row.urls.dsh}` : ''
+      const url = row.urls?.ui || row.urls?.dsh ? `  ${row.urls?.ui || row.urls?.dsh}` : ''
       console.log(`  ${row.name.padEnd(14)} ${state.padEnd(12)}${url}`)
     }
     console.log('─'.repeat(56))
-    console.log('Detail: deep status --name STACK')
+    console.log('Detail: gim status --name STACK')
     return
   }
 
@@ -336,9 +405,19 @@ export async function cmdStatus(flags) {
     dshDetail = run.urls?.dsh || `pid=${run.pids.dsh}`
   }
 
+  let uiLevel = 'red'
+  let uiDetail = 'not started'
+  if (run?.pids?.ui && isPidAlive(run.pids.ui)) {
+    uiLevel = 'green'
+    uiDetail = run.urls?.ui || `pid=${run.pids.ui}`
+  } else if (run?.urls?.ui) {
+    uiLevel = 'yellow'
+    uiDetail = run.urls.ui
+  }
+
   const guestOk = isGuestRunning(stack)
   const guestLevel = guestOk ? 'green' : 'red'
-  const guestDetail = guestOk ? `deep-guest-${stack}` : run?.guestSkip || 'not started'
+  const guestDetail = guestOk ? `gim-guest-${stack}` : run?.guestSkip || 'not started'
 
   const apiMode = !!(run?.apiProfile || cfg?.api?.provider)
   const quant = quantStatusRow(apiMode ? null : cfg?.gguf, { apiMode })
@@ -352,6 +431,7 @@ export async function cmdStatus(flags) {
     },
     guest: { level: guestLevel, detail: guestDetail },
     llama: { level: llamaLevel, detail: llamaDetail },
+    ui: { level: uiLevel, detail: uiDetail },
     dsh: { level: dshLevel, detail: dshDetail },
     quant,
     gpu: {
@@ -374,7 +454,7 @@ export async function cmdStatus(flags) {
 /** Cloud API stack — no local llama-server or GPU lock. */
 async function startStackApi({ stack, cfg, flags, engine }) {
   const profile = resolveApiProfile(flags, cfg)
-  if (!profile.apiKey && !process.env[profile.apiKeyEnv]) {
+  if (!profile.apiKey && !process.env[profile.apiKeyEnv] && !isLocalApiProvider(profile.id)) {
     throw Object.assign(
       new Error(
         `Missing API key for ${profile.apiKeyEnv} — pass --api-key or export ${profile.apiKeyEnv}`,
@@ -386,8 +466,9 @@ async function startStackApi({ stack, cfg, flags, engine }) {
   saveApiToConfig(cfg, profile)
   writeConfig(cfg)
 
-  const { dshPort, indexPort, proxyPort } = await allocateStackPorts()
+  const { dshPort, indexPort, proxyPort, uiPort } = await allocateStackPorts()
   const urls = {
+    ui: `http://127.0.0.1:${uiPort}/`,
     dsh: `http://127.0.0.1:${dshPort}/`,
     llama: profile.baseURL,
     index: `http://127.0.0.1:${indexPort}`,
@@ -397,11 +478,17 @@ async function startStackApi({ stack, cfg, flags, engine }) {
     stack,
     sessionId: `sess_${Date.now().toString(36)}`,
     device: 'api',
-    apiProfile: { id: profile.id, model: profile.model, baseURL: profile.baseURL },
+    apiProfile: {
+      id: profile.id,
+      model: profile.model,
+      baseURL: profile.baseURL,
+      apiKeyEnv: profile.apiKeyEnv,
+      contextWindow: profile.contextWindow,
+    },
     warming: false,
     guestRunning: false,
     pids: {},
-    ports: { dshPort, indexPort, proxyPort },
+    ports: { dshPort, indexPort, proxyPort, uiPort },
     urls,
     startedAt: new Date().toISOString(),
   }
@@ -412,17 +499,17 @@ async function startStackApi({ stack, cfg, flags, engine }) {
 
   if (cfg.guestNetwork !== 'none' && cfg.guestNetwork !== 'offline') {
     const allow = resolveAllowlist(cfg.guestNetwork)
-    state.pids.proxy = spawnDetached(process.execPath, [path.join(PKG_ROOT, 'scripts', 'deep-services.mjs'), 'egress-proxy'], {
-      env: { DEEP_PROXY_PORT: String(proxyPort), DEEP_NET_PRESET: cfg.guestNetwork, DEEP_PROXY_BIND: '0.0.0.0' },
+    state.pids.proxy = spawnDetached(process.execPath, [path.join(PKG_ROOT, 'scripts', 'gim-services.mjs'), 'egress-proxy'], {
+      env: { GIM_PROXY_PORT: String(proxyPort), GIM_NET_PRESET: cfg.guestNetwork, GIM_PROXY_BIND: '0.0.0.0' },
       logFile: runLogPath(stack, 'egress-proxy'),
     })
     console.log(`[GREEN] Egress proxy :${proxyPort} (${allow.length} hosts)`)
   }
 
-  state.pids.index = spawnDetached(process.execPath, [path.join(PKG_ROOT, 'scripts', 'deep-services.mjs'), 'index'], {
+  state.pids.index = spawnDetached(process.execPath, [path.join(PKG_ROOT, 'scripts', 'gim-services.mjs'), 'index'], {
     env: {
-      DEEP_INDEX_PORT: String(indexPort),
-      DEEP_WORKSPACE: paths(stack).workspace,
+      GIM_INDEX_PORT: String(indexPort),
+      GIM_WORKSPACE: paths(stack).workspace,
     },
     logFile: runLogPath(stack, 'code-index'),
   })
@@ -447,34 +534,220 @@ async function startStackApi({ stack, cfg, flags, engine }) {
   }
   writeRunState(stack, state)
 
-  const dsh = await startDsh({
-    stack,
-    port: dshPort,
-    apiProfile: profile,
-    guestName: state.guestName || `deep-guest-${stack}`,
-    engineBin: engine.bin || 'docker',
-    indexPort,
-  })
-  if (dsh.ok) {
-    state.pids.dsh = dsh.pid
-    console.log(`[GREEN] DSH ${urls.dsh}`)
+  if (wantDsh(flags)) {
+    const dsh = await startDsh({
+      stack,
+      port: dshPort,
+      apiProfile: profile,
+      guestName: state.guestName || `gim-guest-${stack}`,
+      engineBin: engine.bin || 'docker',
+      indexPort,
+    })
+    if (dsh.ok) {
+      state.pids.dsh = dsh.pid
+      console.log(`[GREEN] DSH ${urls.dsh}`)
+    } else {
+      state.dshSkip = dsh.detail
+      console.log(`[YELLOW] DSH: ${dsh.detail}`)
+    }
   } else {
-    state.dshSkip = dsh.detail
-    console.log(`[YELLOW] DSH: ${dsh.detail}`)
+    state.dshSkip = 'skipped (use --dsh for legacy UI)'
+    console.log(`[INFO] DSH skipped — native GIM UI is default`)
+  }
+
+  if (wantUi(flags)) {
+    maybeStartGimUi({ stack, uiPort, urls, state })
   }
   writeRunState(stack, state)
 
   console.log('')
   console.log('[OK] Stack started (cloud API mode)')
-  console.log(`DSH:   ${urls.dsh}`)
+  if (urls.ui) console.log(`UI:    ${urls.ui}`)
+  if (wantDsh(flags)) console.log(`DSH:   ${urls.dsh}`)
   console.log(`API:   ${profile.id} / ${profile.model}`)
   registerStack(cfg, stack, { preset: cfg.preset, device: 'api', guestNetwork: cfg.guestNetwork, urls })
   appendLog(`event=start_api stack=${stack} provider=${profile.id} model=${profile.model}`)
 }
 
+/** LLM in Docker — Colibri safetensors or vLLM (Win/Linux; macOS → --gguf/--api). */
+async function startStackLlmDocker({ stack, cfg, flags, engine, backend }) {
+  assertLlmDockerPlatform()
+  if (!engine.ok) {
+    throw Object.assign(new Error('Docker required for --colibri / --vllm — start Docker Desktop'), { exitCode: 4 })
+  }
+
+  if (flags.model) {
+    cfg.colibriModel = path.resolve(String(flags.model))
+    cfg.llm = backend
+    writeConfig(cfg)
+  } else if (!cfg.colibriModel && !cfg.colibri?.modelPath) {
+    cfg.colibriModel = resolveLlmDockerModelPath(backend, cfg)
+    cfg.llm = backend
+    writeConfig(cfg)
+  }
+
+  const modelPath = resolveLlmDockerModelPath(backend, cfg)
+  const st = backend === 'colibri' ? colibriStatus(cfg) : { modelPath, modelReady: colibriModelReady(modelPath) }
+  if (backend === 'colibri') {
+    console.log(`[INFO] Colibri root:  ${st.root || '(mount at runtime)'}`)
+  }
+  console.log(`[INFO] LLM model:     ${modelPath} (${st.modelReady.detail})`)
+  const ctx = resolveColibriCtx(cfg, flags)
+  console.log(`[INFO] Context:       ${ctx} (Docker)`)
+
+  if (!st.modelReady.ok) {
+    throw Object.assign(
+      new Error(`${st.modelReady.detail} — set GIM_LLM_MODEL or ~/.gim/models`),
+      { exitCode: 2 },
+    )
+  }
+
+  const prevRun = readRunState(stack)
+  let colibriPort = prevRun?.ports?.colibriPort
+  if (isLlmDockerRunning(stack, backend)) {
+    const engine = detectContainerEngine()
+    const published = getDockerPublishedPort(engine.bin, llmContainerName(stack, backend))
+    if (published) colibriPort = published
+  }
+  const allocated = await allocateStackPorts()
+  if (!colibriPort) colibriPort = allocated.colibriPort
+  const { dshPort, indexPort, proxyPort, uiPort } = allocated
+  const modelId =
+    backend === 'colibri'
+      ? flags['model-id'] || DEFAULT_COLIBRI_MODEL_ID
+      : flags['model-id'] || process.env.GIM_VLLM_MODEL_ID || 'default'
+  const llmUrl = `http://127.0.0.1:${colibriPort}/v1`
+  const urls = {
+    ui: `http://127.0.0.1:${uiPort}/`,
+    dsh: `http://127.0.0.1:${dshPort}/`,
+    llama: llmUrl,
+    colibri: backend === 'colibri' ? llmUrl : undefined,
+    vllm: backend === 'vllm' ? llmUrl : undefined,
+    index: `http://127.0.0.1:${indexPort}`,
+  }
+
+  const state = {
+    stack,
+    sessionId: `sess_${Date.now().toString(36)}`,
+    device: backend,
+    llm: backend,
+    llmDocker: { backend, container: null },
+    apiProfile: {
+      id: backend,
+      model: modelId,
+      baseURL: llmUrl,
+      apiKeyEnv: backend === 'vllm' ? 'VLLM_API_KEY' : 'GIM_COLIBRI_API_KEY',
+      contextWindow: ctx,
+    },
+    warming: true,
+    guestRunning: false,
+    pids: {},
+    ports: { dshPort, indexPort, proxyPort, uiPort, colibriPort, llamaPort: colibriPort },
+    urls,
+    colibriModel: modelPath,
+    colibriCtx: ctx,
+    startedAt: new Date().toISOString(),
+  }
+  writeRunState(stack, state)
+
+  const llm = await startLlmDocker({
+    stack,
+    backend,
+    port: colibriPort,
+    modelPath,
+    modelId,
+    ctx,
+    cfg,
+  })
+  if (!llm.ok) {
+    throw Object.assign(new Error(llm.detail || `LLM Docker (${backend}) start failed`), { exitCode: 1 })
+  }
+  state.llmDocker.container = llm.containerName
+  state.llmDocker.cacheId = llm.cacheId
+  state.warming = !!llm.warming
+  state.ports.colibriPort = llm.port || colibriPort
+  state.ports.llamaPort = llm.port || colibriPort
+  state.urls.llama = llm.url || llmUrl
+  state.urls.colibri = backend === 'colibri' ? state.urls.llama : state.urls.colibri
+  state.apiProfile.baseURL = state.urls.llama
+  if (llm.reused) console.log(`[GREEN] LLM Docker warm reuse ${llm.url}`)
+  else if (llm.warming) console.log(`[YELLOW] LLM Docker warming: ${llm.detail}`)
+  else console.log(`[GREEN] LLM Docker ${backend} ${llm.url}`)
+  if (llm.cacheId) console.log(`[INFO] LLM cache id: ${llm.cacheId} (~/.gim/cache/llm/${llm.cacheId})`)
+  writeRunState(stack, state)
+
+  if (cfg.guestNetwork !== 'none' && cfg.guestNetwork !== 'offline') {
+    const allow = resolveAllowlist(cfg.guestNetwork)
+    state.pids.proxy = spawnDetached(process.execPath, [path.join(PKG_ROOT, 'scripts', 'gim-services.mjs'), 'egress-proxy'], {
+      env: { GIM_PROXY_PORT: String(proxyPort), GIM_NET_PRESET: cfg.guestNetwork, GIM_PROXY_BIND: '0.0.0.0' },
+      logFile: runLogPath(stack, 'egress-proxy'),
+    })
+    console.log(`[GREEN] Egress proxy :${proxyPort} (${allow.length} hosts)`)
+  }
+
+  state.pids.index = spawnDetached(process.execPath, [path.join(PKG_ROOT, 'scripts', 'gim-services.mjs'), 'index'], {
+    env: { GIM_INDEX_PORT: String(indexPort), GIM_WORKSPACE: paths(stack).workspace },
+    logFile: runLogPath(stack, 'code-index'),
+  })
+  console.log(`[GREEN] Code index ${urls.index}`)
+
+  if (engine.ok) {
+    const g = await startGuest({ stack, presetNet: cfg.guestNetwork, proxyPort })
+    if (g.ok) {
+      const smoke = await mountSmoke(stack, g.engine)
+      if (smoke.ok) {
+        state.guestRunning = true
+        state.guestName = g.name
+        console.log(`[GREEN] Guest ${g.name}`)
+      } else {
+        state.guestSkip = smoke.detail
+        console.log(`[YELLOW] Guest mount: ${smoke.detail}`)
+      }
+    } else {
+      state.guestSkip = g.detail
+      console.log(`[YELLOW] Guest skipped: ${g.detail}`)
+    }
+  }
+  writeRunState(stack, state)
+
+  if (wantDsh(flags)) {
+    const dsh = await startDsh({
+      stack,
+      port: dshPort,
+      apiProfile: state.apiProfile,
+      guestName: state.guestName || `gim-guest-${stack}`,
+      engineBin: engine.bin || 'docker',
+      indexPort,
+    })
+    if (dsh.ok) {
+      state.pids.dsh = dsh.pid
+      console.log(`[GREEN] DSH ${urls.dsh}`)
+    } else {
+      state.dshSkip = dsh.detail
+      console.log(`[YELLOW] DSH: ${dsh.detail}`)
+    }
+  } else {
+    state.dshSkip = 'skipped (use --dsh for legacy UI)'
+    console.log(`[INFO] DSH skipped — native GIM UI is default`)
+  }
+
+  if (wantUi(flags)) {
+    maybeStartGimUi({ stack, uiPort, urls, state })
+  }
+  writeRunState(stack, state)
+
+  console.log('')
+  console.log(`[OK] Stack started (LLM Docker / ${backend})`)
+  if (urls.ui) console.log(`UI:    ${urls.ui}`)
+  console.log(`LLM:   ${llmUrl}  backend=${backend}  model=${modelId}`)
+  console.log(`Model: ${modelPath}`)
+  registerStack(cfg, stack, { preset: cfg.preset, device: backend, guestNetwork: cfg.guestNetwork, urls })
+  appendLog(`event=start_llm_docker stack=${stack} backend=${backend} model=${modelPath}`)
+}
+
 export async function cmdStart(flags) {
   if (isRoot()) {
-    throw Object.assign(new Error('Refuse deep start as root — use a normal user'), { exitCode: 2 })
+    throw Object.assign(new Error('Refuse gim start as root — use a normal user'), { exitCode: 2 })
   }
   const stack = assertStackName(flags.name || 'default')
   const cfg = getOrInitConfig({ preset: flags.preset, gguf: flags.gguf })
@@ -486,7 +759,7 @@ export async function cmdStart(flags) {
 
   const engine = detectContainerEngine()
   if (cfg.rebootRequired && !engine.ok) {
-    throw Object.assign(new Error('rebootRequired: start Docker/Podman (or reboot), then deep doctor'), {
+    throw Object.assign(new Error('rebootRequired: start Docker/Podman (or reboot), then gim doctor'), {
       exitCode: 4,
     })
   }
@@ -496,7 +769,7 @@ export async function cmdStart(flags) {
   }
 
   const prev = readRunState(stack)
-  if (prev?.pids?.llama || prev?.pids?.dsh || prev?.guestRunning) {
+  if (prev?.pids?.llama || prev?.pids?.dsh || prev?.pids?.ui || prev?.pids?.colibri || prev?.guestRunning) {
     console.log(`[INFO] Stopping existing stack ${stack} before start`)
     await cmdStop({ name: stack })
   }
@@ -506,6 +779,16 @@ export async function cmdStart(flags) {
 
   if (flags.gguf && isApiMode(cfg, flags)) {
     throw Object.assign(new Error('Use either --gguf (local) or --api (cloud), not both'), { exitCode: 2 })
+  }
+  if (flags.gguf && resolveLlmDockerBackend(cfg, flags)) {
+    throw Object.assign(new Error('Use either --gguf (llama) or --colibri/--vllm (Docker LLM), not both'), {
+      exitCode: 2,
+    })
+  }
+  const llmBackend = resolveLlmDockerBackend(cfg, flags)
+  if (llmBackend) {
+    await startStackLlmDocker({ stack, cfg, flags, engine, backend: llmBackend })
+    return
   }
   if (isApiMode(cfg, flags)) {
     await startStackApi({ stack, cfg, flags, engine })
@@ -525,9 +808,9 @@ export async function cmdStart(flags) {
     for (const line of qwarn.split('\n')) console.log(line)
   }
   const policy = enforceQuantPolicy(assessment, flags)
-  if (policy.forced) console.log('[YELLOW] Quant policy overridden via --force-quant / DEEP_FORCE_QUANT')
+  if (policy.forced) console.log('[YELLOW] Quant policy overridden via --force-quant / GIM_FORCE_QUANT')
 
-  const deepDir = path.join(paths(stack).workspace, '.deep')
+  const deepDir = path.join(paths(stack).workspace, '.gim')
   const hintPath = writeQuantHintFile(deepDir, assessment)
   if (hintPath) console.log(`[INFO] Low-quant agent hints → ${hintPath}`)
 
@@ -541,7 +824,7 @@ export async function cmdStart(flags) {
     if (holder) {
       const msg = holder.startsWith('pid:')
         ? `GPU in use by process ${holder.slice(4)} — stop other stacks or use --cpu`
-        : `GPU in use by stack "${holder}" — run deep stop --name ${holder} or use --cpu`
+        : `GPU in use by stack "${holder}" — run gim stop --name ${holder} or use --cpu`
       throw Object.assign(new Error(msg), { exitCode: 3 })
     }
   }
@@ -565,8 +848,9 @@ export async function cmdStart(flags) {
     // If cuda entry has null sha256, pickBinaryEntry still returns it; ensureCachedAsset needs sha.
     // Fix: when sha null, skip verify OR use cpu. Patch ensureLlamaBinary path — already falls back if url fetch fails.
 
-    const { llamaPort, dshPort, indexPort, proxyPort } = await allocateStackPorts()
+    const { llamaPort, dshPort, indexPort, proxyPort, uiPort } = await allocateStackPorts()
     const urls = {
+      ui: `http://127.0.0.1:${uiPort}/`,
       dsh: `http://127.0.0.1:${dshPort}/`,
       llama: `http://127.0.0.1:${llamaPort}/v1`,
       index: `http://127.0.0.1:${indexPort}`,
@@ -579,7 +863,7 @@ export async function cmdStart(flags) {
       warming: true,
       guestRunning: false,
       pids: {},
-      ports: { llamaPort, dshPort, indexPort, proxyPort },
+      ports: { llamaPort, dshPort, indexPort, proxyPort, uiPort },
       urls,
       gguf,
       llamaBin: bin,
@@ -612,11 +896,11 @@ export async function cmdStart(flags) {
     let proxyPid = null
     if (cfg.guestNetwork !== 'none' && cfg.guestNetwork !== 'offline') {
       const allow = resolveAllowlist(cfg.guestNetwork)
-      proxyPid = spawnDetached(process.execPath, [path.join(PKG_ROOT, 'scripts', 'deep-services.mjs'), 'egress-proxy'], {
+      proxyPid = spawnDetached(process.execPath, [path.join(PKG_ROOT, 'scripts', 'gim-services.mjs'), 'egress-proxy'], {
         env: {
-          DEEP_PROXY_PORT: String(proxyPort),
-          DEEP_NET_PRESET: cfg.guestNetwork,
-          DEEP_PROXY_BIND: '0.0.0.0',
+          GIM_PROXY_PORT: String(proxyPort),
+          GIM_NET_PRESET: cfg.guestNetwork,
+          GIM_PROXY_BIND: '0.0.0.0',
         },
         logFile: runLogPath(stack, 'egress-proxy'),
       })
@@ -625,11 +909,11 @@ export async function cmdStart(flags) {
     }
 
     // Code index HTTP service
-    const indexPid = spawnDetached(process.execPath, [path.join(PKG_ROOT, 'scripts', 'deep-services.mjs'), 'index'], {
+    const indexPid = spawnDetached(process.execPath, [path.join(PKG_ROOT, 'scripts', 'gim-services.mjs'), 'index'], {
       env: {
-        DEEP_INDEX_PORT: String(indexPort),
-        DEEP_WORKSPACE: paths(stack).workspace,
-        DEEP_LLAMA_URL: urls.llama,
+        GIM_INDEX_PORT: String(indexPort),
+        GIM_WORKSPACE: paths(stack).workspace,
+        GIM_LLAMA_URL: urls.llama,
       },
       logFile: runLogPath(stack, 'code-index'),
     })
@@ -663,28 +947,40 @@ export async function cmdStart(flags) {
     }
     writeRunState(stack, state)
 
-    const dsh = await startDsh({
-      stack,
-      port: dshPort,
-      llamaPort,
-      guestName: state.guestName || `deep-guest-${stack}`,
-      engineBin: engine.bin || 'docker',
-      indexPort,
-      apiProfile: null,
-    })
-    if (dsh.ok) {
-      state.pids.dsh = dsh.pid
-      console.log(`[GREEN] DSH ${urls.dsh}`)
+    let dshOk = false
+    if (wantDsh(flags)) {
+      const dsh = await startDsh({
+        stack,
+        port: dshPort,
+        llamaPort,
+        guestName: state.guestName || `gim-guest-${stack}`,
+        engineBin: engine.bin || 'docker',
+        indexPort,
+        apiProfile: null,
+      })
+      if (dsh.ok) {
+        state.pids.dsh = dsh.pid
+        dshOk = true
+        console.log(`[GREEN] DSH ${urls.dsh}`)
+      } else {
+        state.dshSkip = dsh.detail
+        if (dsh.pid) state.pids.dsh = dsh.pid
+        console.log(`[YELLOW] DSH: ${dsh.detail}`)
+      }
     } else {
-      state.dshSkip = dsh.detail
-      if (dsh.pid) state.pids.dsh = dsh.pid
-      console.log(`[YELLOW] DSH: ${dsh.detail}`)
+      state.dshSkip = 'skipped (use --dsh for legacy UI)'
+      console.log(`[INFO] DSH skipped — native GIM UI is default`)
+    }
+
+    if (wantUi(flags)) {
+      maybeStartGimUi({ stack, uiPort, urls, state })
     }
     writeRunState(stack, state)
 
     console.log('')
     console.log('[OK] Stack started')
-    console.log(`DSH:   ${urls.dsh}${dsh.ok ? '' : ' (not up)'}`)
+    if (urls.ui) console.log(`UI:    ${urls.ui}`)
+    if (wantDsh(flags)) console.log(`DSH:   ${urls.dsh}${dshOk ? '' : ' (not up)'}`)
     console.log(`Llama: ${urls.llama}`)
     console.log(`Stack: ${stack}  device=${llamaDevice}  preset=${cfg.preset}`)
     registerStack(cfg, stack, {
@@ -708,12 +1004,29 @@ export async function cmdStop(flags) {
     return
   }
 
+  if (run.pids?.ui) {
+    killTree(run.pids.ui, { force: !!flags.emergency })
+    console.log(`[OK] GIM UI stopped pid=${run.pids.ui}`)
+  }
+  if (run.llmDocker?.backend) {
+    const remove = flags['full-stop'] || !llmKeepWarm()
+    if (remove) {
+      stopLlmDocker(stack, run.llmDocker.backend, null, { remove: true })
+      console.log(`[OK] LLM Docker (${run.llmDocker.backend}) removed`)
+    } else {
+      console.log(`[OK] LLM Docker (${run.llmDocker.backend}) kept warm — gim stop --full-stop to remove`)
+    }
+  }
+  if (run.pids?.colibri) {
+    stopColibri(run.pids.colibri, { port: run.ports?.colibriPort })
+    console.log(`[OK] Colibri stopped pid=${run.pids.colibri}`)
+  }
   if (run.pids?.dsh) {
     stopDsh(run.pids.dsh, { emergency: !!flags.emergency })
     console.log(`[OK] DSH stopped pid=${run.pids.dsh}`)
   }
   if (run.pids?.llama) {
-    stopLlama(run.pids.llama, { emergency: !!flags.emergency })
+    stopLlama(run.pids.llama, { emergency: !!flags.emergency, port: run.ports?.llamaPort })
     console.log(`[OK] Llama stopped pid=${run.pids.llama}`)
   }
   stopGuest(stack)
@@ -721,7 +1034,7 @@ export async function cmdStop(flags) {
 
   // leftover pids
   for (const [name, pid] of Object.entries(run.pids || {})) {
-    if (name === 'llama' || name === 'dsh') continue
+    if (name === 'llama' || name === 'dsh' || name === 'ui' || name === 'colibri') continue
     if (pid) {
       killTree(pid, { force: !!flags.emergency })
       if (name === 'proxy') console.log(`[OK] Egress proxy stopped pid=${pid}`)
@@ -735,7 +1048,7 @@ export async function cmdStop(flags) {
 
   const hard = flags['wipe-session'] || cfg.zeroTraces === 'hard'
   console.log(`[INFO] zero-traces ${hard ? 'hard' : cfg.zeroTraces || 'soft'}: session cleared`)
-  rotateLogIfLarge(paths().deepLog)
+  rotateLogIfLarge(paths().gimLog)
   clearRunState(stack)
 
   console.log(`[OK] Stack ${stack} stopped`)
@@ -745,7 +1058,7 @@ export async function cmdStop(flags) {
 export async function cmdStacks() {
   const rows = summarizeStacks()
   const cfg = readConfig()
-  console.log('Deep stacks')
+  console.log('GIM stacks')
   console.log('─'.repeat(60))
   for (const row of rows) {
     const meta = cfg?.stacks?.[row.name]
@@ -760,8 +1073,8 @@ export async function cmdStacks() {
     if (row.urls?.llama) console.log(`    Llama: ${row.urls.llama}`)
   }
   console.log('─'.repeat(60))
-  console.log('Start:  deep start --name STACK')
-  console.log('Status: deep status --name STACK | deep status --all')
+  console.log('Start:  gim start --name STACK')
+  console.log('Status: gim status --name STACK | gim status --all')
 }
 
 export function cmdHelp(topic) {
@@ -771,95 +1084,97 @@ export function cmdHelp(topic) {
   const bar = wide ? '─'.repeat(48) : '---'
 
   const topics = {
-    doctor: `deep doctor [--readiness] [--policy] [--stage pre-alpha|alpha|beta|rc|0.5|1.0|1.1|field]
-  Host/engine/GPU probe. --readiness checklist; --policy isolation grade.`,
-    test: `deep test harness
-  Offline agent harness test pack (jail, risk, MCP, API mock).`,
-    field: `deep field lite [--skip-fetch]
+    doctor: `gim doctor [--readiness] [--policy] [--speed] [--security] [--stage pre-alpha|alpha|beta|rc|0.5|1.0|1.1|field]
+  Host/engine/GPU probe. --readiness checklist; --policy isolation; --speed Colibri/Docker hints; --security enforcement eval.`,
+    test: `gim test harness|security
+  harness — offline guardrail pack; security — P6 adversarial enforcement eval.`,
+    field: `gim field lite [--skip-fetch]
   OS field-lite probe: policy, harness, llama CPU fetch, materialize.`,
-    bootstrap: `deep bootstrap [--gguf PATH] [--preset NAME] [--channel stable|beta|edge] [--name STACK]
-  Create ~/.deep layout, config, workspace seeds.`,
-    start: `deep start [--name STACK] [--gguf PATH] [--cpu] [--preset NAME]
-           [--require-q4] [--force-quant]
-  Start llama + guest + DSH. Stops same stack first if already running.
-  Quant: Q2− blocked; --require-q4 enforces Q4_K_M+; --force-quant overrides.`,
-    stop: `deep stop [--name STACK] [--emergency] [--wipe-session]
-  Stop stack processes. --emergency force-kills.`,
-    status: `deep status [--name STACK] [--all]
-  One-screen health (Engine/Guest/Llama/DSH/Quant/…).`,
-    stacks: `deep stacks
+    bootstrap: `gim bootstrap [--gguf PATH] [--preset NAME] [--channel stable|beta|edge] [--name STACK]
+  Create ~/.gim layout, config, workspace seeds.`,
+    start: `gim start [--name STACK] [--gguf PATH] [--vllm] [--model PATH] [--cpu]
+           [--api PROVIDER] [--ctx N] [--dsh] [--no-ui]
+  Default (Win/Linux): Colibri in Docker. Escape: --gguf | --api | --vllm.
+  gim stop keeps LLM warm; gim stop --full-stop removes container.`,
+    ui: `gim ui [--name STACK] [--port N]
+  Open native GIM UI (chats, modes, streaming) against a running stack.`,
+    stop: `gim stop [--name STACK] [--emergency] [--full-stop] [--wipe-session]
+  Stop stack processes. Keeps Colibri Docker warm unless --full-stop or GIM_LLM_KEEP=0. --emergency force-kills.`,
+    status: `gim status [--name STACK] [--all]
+  One-screen health (Engine/Guest/Llama/UI/DSH/Quant/…).`,
+    stacks: `gim stacks
   List registered stacks and run state.`,
-    update: `deep update [--channel stable|beta|edge] [--dry-run]
-  Sync channel / install CLI zip (CDN or DEEP_CLI_ZIP).`,
-    version: `deep version [--channel stable|beta|edge]
+    update: `gim update [--channel stable|beta|edge] [--dry-run]
+  Sync channel / install CLI zip (CDN or GIM_CLI_ZIP).`,
+    version: `gim version [--channel stable|beta|edge]
   Print local version and CDN freshness.`,
-    check: `deep check [--channel …]
+    check: `gim check [--channel …]
   Version freshness + dependency probe.`,
-    deps: `deep deps
+    deps: `gim deps
   Check Node, Docker/Podman, DSH, llama, home writability.`,
-    presets: `deep presets
+    presets: `gim presets
   List built-in presets.`,
-    api: `deep api
+    api: `gim api
   List cloud API providers for --api.`,
-    index: `deep index build|search|status [--name STACK]
+    index: `gim index build|search|status [--name STACK]
   Semantic code index over the stack workspace.`,
-    lsp: `deep lsp servers|query|hover|definition|references|symbols
+    lsp: `gim lsp servers|query|hover|definition|references|symbols
   Host language-server helpers (typescript-language-server / pyright / …).`,
-    daemon: `deep daemon start|stop|status|tick [--name STACK] [--interval MS] [--proactive]
-  Background health poller for llama/DSH (Kairos-lite). --proactive writes .deep/PROACTIVE.md.`,
-    mcp: `deep mcp | deep mcp config
+    daemon: `gim daemon start|stop|status|tick [--name STACK] [--interval MS] [--proactive]
+  Background health poller for llama/DSH (Kairos-lite). --proactive writes .gim/PROACTIVE.md.`,
+    mcp: `gim mcp | gim mcp config
   Stdio MCP server, or print Cursor MCP JSON snippet.`,
-    coord: `deep coord --task="fix A; fix B" [--name STACK] [--workers N]
+    coord: `gim coord --task="fix A; fix B" [--name STACK] [--workers N]
   Parallel index-search workers (coordinator).`,
-    risk: `deep risk classify "bash command" [--llm]
+    risk: `gim risk classify "bash command" [--llm]
   Heuristic (or optional LLM) auto-mode risk label: allow|confirm|deny.
-  Also: deep risk write-path PATH`,
-    help: `deep help [command]
+  Also: gim risk write-path PATH`,
+    help: `gim help [command]
   This screen, or details for one command.`,
   }
 
   if (topic && topics[topic]) {
-    console.log(`Deep CLI ${ver} — help: ${topic}`)
+    console.log(`GIM CLI ${ver} — help: ${topic}`)
     console.log(bar)
     console.log(topics[topic])
     console.log(`\nHome: ${paths().home}`)
     return
   }
 
-  console.log(`Deep CLI ${ver}`)
+  console.log(`GIM CLI ${ver}`)
   console.log(bar)
   console.log(`Usage:
-  deep help [command]
-  deep version [--channel stable|beta|edge]
-  deep check [--channel …]
-  deep deps
-  deep doctor [--readiness] [--policy] [--stage …]
-  deep test harness
-  deep field lite
-  deep bootstrap [--gguf PATH | --api PROVIDER] [--api-model MODEL] [--api-key KEY] [--preset NAME]
-  deep start [--name STACK] [--gguf PATH | --api PROVIDER] [--api-model MODEL] [--api-key KEY] [--cpu] [--preset NAME]
+  gim help [command]
+  gim version [--channel stable|beta|edge]
+  gim check [--channel …]
+  gim deps
+  gim doctor [--readiness] [--policy] [--stage …]
+  gim test harness
+  gim field lite
+  gim bootstrap [--gguf PATH | --api PROVIDER] [--api-model MODEL] [--api-key KEY] [--preset NAME]
+  gim start [--name STACK] [--gguf PATH | --api PROVIDER] [--api-model MODEL] [--api-key KEY] [--cpu] [--preset NAME]
              [--require-q4] [--force-quant]
-  deep api
-  deep stop [--name STACK] [--emergency] [--wipe-session]
-  deep status [--name STACK] [--all]
-  deep stacks
-  deep update [--channel stable|beta|edge] [--dry-run]
-  deep presets
-  deep index build|search|status [--name STACK]
-  deep lsp servers|query …
-  deep daemon start|stop|status|tick [--name STACK] [--proactive]
-  deep mcp | deep mcp config
-  deep coord --task="fix A; fix B"
-  deep risk classify "cmd" [--llm]
-  deep risk write-path PATH
+  gim api
+  gim stop [--name STACK] [--emergency] [--wipe-session]
+  gim status [--name STACK] [--all]
+  gim stacks
+  gim update [--channel stable|beta|edge] [--dry-run]
+  gim presets
+  gim index build|search|status [--name STACK]
+  gim lsp servers|query …
+  gim daemon start|stop|status|tick [--name STACK] [--proactive]
+  gim mcp | gim mcp config
+  gim coord --task="fix A; fix B"
+  gim risk classify "cmd" [--llm]
+  gim risk write-path PATH
 
 Tips:
-  First run:  deep doctor && deep bootstrap --gguf MODEL.gguf && deep start
-  Cloud:      deep bootstrap --api deepseek --api-key sk-... && deep start --api deepseek
-  No banner:  set DEEP_NO_BANNER=1
-  Local zip:  set DEEP_CLI_ZIP=path\\to\\deep-cli-*.zip
-  MCP:        deep mcp config
-  Coordinator: deep coord --task="fix A; fix B"
+  First run:  gim doctor && gim bootstrap --gguf MODEL.gguf && gim start
+  Cloud:      gim bootstrap --api deepseek --api-key sk-... && gim start --api deepseek
+  No banner:  set GIM_NO_BANNER=1
+  Local zip:  set GIM_CLI_ZIP=path\\to\\gim-cli-*.zip
+  MCP:        gim mcp config
+  Coordinator: gim coord --task="fix A; fix B"
 
 Presets: ${PRESET_NAMES.join(', ')}
 Home: ${paths().home}
@@ -891,13 +1206,19 @@ export async function main(argv) {
         return await cmdDoctor(flags)
       case 'test': {
         const sub = (args[0] || 'harness').toLowerCase()
-        if (sub !== 'harness' && sub !== 'pack') {
-          console.error('Usage: deep test harness')
+        const scriptName =
+          sub === 'security' || sub === 'sec'
+            ? 'security-eval.mjs'
+            : sub === 'harness' || sub === 'pack'
+              ? 'harness-test-pack.mjs'
+              : null
+        if (!scriptName) {
+          console.error('Usage: gim test harness|security')
           process.exitCode = 2
           return
         }
         const { spawn } = await import('node:child_process')
-        const script = path.join(PKG_ROOT, 'scripts', 'harness-test-pack.mjs')
+        const script = path.join(PKG_ROOT, 'scripts', scriptName)
         const child = spawn(process.execPath, [script, ...args.slice(1)], {
           stdio: 'inherit',
           env: process.env,
@@ -915,7 +1236,7 @@ export async function main(argv) {
       case 'field': {
         const sub = (args[0] || 'lite').toLowerCase()
         if (sub !== 'lite') {
-          console.error('Usage: deep field lite [--skip-fetch]')
+          console.error('Usage: gim field lite [--skip-fetch]')
           process.exitCode = 2
           return
         }
@@ -944,6 +1265,13 @@ export async function main(argv) {
         printBanner({ tagline: true })
         return await cmdStart(flags)
       }
+      case 'ui': {
+        const { mainUi } = await import('./ui-server.js')
+        return await mainUi([
+          ...(flags.name ? ['--name', String(flags.name)] : []),
+          ...(flags.port ? ['--port', String(flags.port)] : []),
+        ])
+      }
       case 'stop':
         return await cmdStop(flags)
       case 'status':
@@ -959,8 +1287,8 @@ export async function main(argv) {
         for (const id of listApiProviderIds()) console.log(`  ${id}`)
         console.log('')
         console.log('Example:')
-        console.log('  deep bootstrap --api deepseek --api-model deepseek-chat --api-key sk-...')
-        console.log('  deep start --api deepseek')
+        console.log('  gim bootstrap --api deepseek --api-model deepseek-chat --api-key sk-...')
+        console.log('  gim start --api deepseek')
         return
       }
       case 'index': {
@@ -969,7 +1297,7 @@ export async function main(argv) {
         if (sub === 'build') return await cmdIndexBuild(flags)
         if (sub === 'search') return await cmdIndexSearch(flags, rest)
         if (sub === 'status') return await cmdIndexStatus(flags)
-        console.error('Usage: deep index build|search|status')
+        console.error('Usage: gim index build|search|status')
         process.exitCode = 2
         return
       }
@@ -983,7 +1311,7 @@ export async function main(argv) {
           return
         }
         const { spawn } = await import('node:child_process')
-        const script = path.join(PKG_ROOT, 'scripts', 'deep-mcp.mjs')
+        const script = path.join(PKG_ROOT, 'scripts', 'gim-mcp.mjs')
         const child = spawn(process.execPath, [script], {
           stdio: 'inherit',
           env: process.env,
@@ -1005,7 +1333,7 @@ export async function main(argv) {
         if (sub === 'write-path' || sub === 'write') {
           const p = args.slice(1).join(' ').trim()
           if (!p) {
-            console.error('Usage: deep risk write-path PATH')
+            console.error('Usage: gim risk write-path PATH')
             process.exitCode = 2
             return
           }
@@ -1015,8 +1343,8 @@ export async function main(argv) {
         }
         const cmdText = args.slice(1).join(' ').trim()
         if (sub !== 'classify' || !cmdText) {
-          console.error('Usage: deep risk classify "bash command" [--llm]')
-          console.error('       deep risk write-path PATH')
+          console.error('Usage: gim risk classify "bash command" [--llm]')
+          console.error('       gim risk write-path PATH')
           process.exitCode = 2
           return
         }

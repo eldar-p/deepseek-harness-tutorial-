@@ -71,7 +71,7 @@ function runAudits() {
   {
     const secrets = grepFiles(path.join(ROOT, 'src'), /(?:api[_-]?key|password|secret)\s*[:=]\s*['"][^'"]{8,}/i)
     const logOk = read('src/paths.js').includes('Never log prompt')
-    const rootRefuse = read('src/cli.js').includes('Refuse deep start as root')
+    const rootRefuse = read('src/cli.js').includes('Refuse gim start as root')
     if (secrets.length) results.push(fail(1, 'Безопасность', `Possible secrets in: ${secrets.join(', ')}`))
     else if (!logOk || !rootRefuse) results.push(warn(1, 'Безопасность', 'Missing log redact or root guard'))
     else results.push(pass(1, 'Безопасность', 'No hardcoded secrets; root refuse; log policy'))
@@ -86,7 +86,7 @@ function runAudits() {
 
   // 3 Docs
   {
-    const docs = ['README.md', 'PRE-ALPHA.md', 'docs/VERSION-PLAN.md', 'docs/AUDITS.md', 'docs/INFRASTRUCTURE.md', 'docs/INSTALL.md', 'LICENSE', 'CONTRIBUTING.md']
+    const docs = ['README.md', 'README_BEGINNER.md', 'ALPHA.md', 'docs/VERSION-PLAN.md', 'docs/AUDITS.md', 'docs/INFRASTRUCTURE.md', 'docs/INSTALL.md', 'LICENSE', 'CONTRIBUTING.md']
     const missing = docs.filter((d) => !fs.existsSync(path.join(ROOT, d)))
     results.push(missing.length ? fail(3, 'Документация', `Missing: ${missing.join(', ')}`) : pass(3, 'Документация', 'Core docs present'))
   }
@@ -122,7 +122,7 @@ function runAudits() {
     results.push(pkg.engines?.node ? pass(6, 'Версии среды', `node ${pkg.engines.node}`) : fail(6, 'Версии среды', 'engines.node missing'))
   }
 
-  // 7 Performance — timeouts / health gates present; deep profiling deferred
+  // 7 Performance — timeouts / health gates present; gim profiling deferred
   {
     const proc = read('src/proc.js')
     const llama = read('src/llama.js')
@@ -133,7 +133,7 @@ function runAudits() {
       (dsh.includes('90_000') || dsh.includes('timeoutMs') || dsh.includes('waitHttpOk'))
     const hasAbort = proc.includes('AbortSignal') || llama.includes('AbortSignal')
     if (hasTimeouts && hasAbort) {
-      results.push(pass(7, 'Производительность', 'Health timeouts + AbortSignal; deep profiling deferred to field beta'))
+      results.push(pass(7, 'Производительность', 'Health timeouts + AbortSignal; gim profiling deferred to field beta'))
     } else if (hasTimeouts) {
       results.push(warn(7, 'Производительность', 'Timeouts present; add AbortSignal on fetches'))
     } else {
@@ -164,7 +164,7 @@ function runAudits() {
 
   // 11 Isolation
   {
-    const patch = read('assets/cordis.deep.patch.yml')
+    const patch = read('assets/cordis.gim.patch.yml')
     const guestPlugin = fs.existsSync(path.join(ROOT, 'dsh-plugins/guest-bash-local/index.mjs'))
     const pwshOff = patch.includes('tool-pwsh') && patch.includes('disabled: true')
     results.push(guestPlugin && pwshOff ? pass(11, 'Изоляция', 'guest-exec; pwsh disabled') : warn(11, 'Изоляция', 'Check cordis + guest-bash-local'))
@@ -172,10 +172,10 @@ function runAudits() {
 
   // 12 Install
   {
-    const sh = fs.existsSync(path.join(ROOT, 'scripts/install-deep.sh'))
-    const ps1 = fs.existsSync(path.join(ROOT, 'scripts/install-deep.ps1'))
-    const logPolicy = read('scripts/install-deep.sh').includes('chmod 600') || read('scripts/install-deep.sh').includes('0600')
-    results.push(sh && ps1 ? pass(12, 'Инсталляторы', logPolicy ? 'install scripts + log mode' : 'scripts ok; log chmod partial') : fail(12, 'Инсталляторы', 'Missing install-deep'))
+    const sh = fs.existsSync(path.join(ROOT, 'scripts/install-gim.sh'))
+    const ps1 = fs.existsSync(path.join(ROOT, 'scripts/install-gim.ps1'))
+    const logPolicy = read('scripts/install-gim.sh').includes('chmod 600') || read('scripts/install-gim.sh').includes('0600')
+    results.push(sh && ps1 ? pass(12, 'Инсталляторы', logPolicy ? 'install scripts + log mode' : 'scripts ok; log chmod partial') : fail(12, 'Инсталляторы', 'Missing install-gim'))
   }
 
   // 13 Traces
@@ -236,7 +236,7 @@ function runAudits() {
   // 20 Help
   {
     const help = read('src/cli.js').includes('cmdHelp')
-    results.push(help ? pass(20, 'Помощь', 'deep help command') : fail(20, 'Помощь', 'No help'))
+    results.push(help ? pass(20, 'Помощь', 'gim help command') : fail(20, 'Помощь', 'No help'))
   }
 
   // 21 Multi-stack
@@ -248,9 +248,9 @@ function runAudits() {
 
   // 22 Context
   {
-    const cordis = read('assets/cordis.deep.patch.yml')
+    const cordis = read('assets/cordis.gim.patch.yml')
     const ctx = read('assets/CONTEXT.md')
-    const agents = read('assets/AGENTS.deep.md')
+    const agents = read('assets/AGENTS.gim.md')
     const mem = fs.existsSync(path.join(ROOT, 'assets/memory.template.json'))
     const compact = cordis.includes('compaction-basic') && cordis.includes('tool-result-pruner')
     const docs = /compact|compaction|pruner|memory\.json/i.test(ctx + agents)
@@ -266,7 +266,7 @@ function runAudits() {
   // 23 Shutdown / interruptions
   {
     const sh = read('src/shutdown.js').includes('installShutdownHandlers')
-    const bin = read('bin/deep.js').includes('installShutdownHandlers')
+    const bin = read('bin/gim.js').includes('installShutdownHandlers')
     const kill = read('src/proc.js').includes('killTree')
     const emerg = read('src/cli.js').includes('--emergency')
     const gpuRelease = read('src/gpu-lock.js').includes('finally')
@@ -337,7 +337,7 @@ function runAudits() {
       read('test/jail.test.js').includes('rewriteWorkspacePath')
     const hostShellOff =
       read('src/cli.js').includes('pwsh') === false ||
-      read('assets/cordis.deep.patch.yml').includes('workspace-jail') ||
+      read('assets/cordis.gim.patch.yml').includes('workspace-jail') ||
       read('src/materialize.js').includes('jail')
     if (jail && jailTest) {
       results.push(pass(28, 'Prompt/jail', 'workspace-jail + tests; tool FS rewritten'))
@@ -381,7 +381,7 @@ function runAudits() {
 
   // 31 Container surface
   {
-    const guest = read('src/guest.js') + read('Dockerfile.guest') + read('guest/deep-net-enforce.sh')
+    const guest = read('src/guest.js') + read('Dockerfile.guest') + read('guest/gim-net-enforce.sh')
     const noSock = !guest.includes('docker.sock')
     const netAdmin = guest.includes('NET_ADMIN') || guest.includes('cap-add')
     if (noSock) {
@@ -398,8 +398,8 @@ function runAudits() {
       upd.includes('verifySha256') ||
       upd.includes('sha256') ||
       read('src/checksums.js').includes('verifySha256')
-    const zipOverride = upd.includes('DEEP_CLI_ZIP') || upd.includes('DEEP_CLI_ZIP'.toLowerCase()) || upd.includes('CLI_ZIP')
-    const hasZip = upd.includes('DEEP_CLI_ZIP') || upd.includes('DEEP_CLI_SHA256') || upd.includes('pickCliArtifact')
+    const zipOverride = upd.includes('GIM_CLI_ZIP') || upd.includes('GIM_CLI_ZIP'.toLowerCase()) || upd.includes('CLI_ZIP')
+    const hasZip = upd.includes('GIM_CLI_ZIP') || upd.includes('GIM_CLI_SHA256') || upd.includes('pickCliArtifact')
     if (verify && hasZip) {
       results.push(pass(32, 'Update integrity', 'sha256 verify + local zip override path'))
     } else {

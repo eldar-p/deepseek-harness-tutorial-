@@ -19,7 +19,7 @@ test('isRoot false on win32', () => {
 })
 
 test('engineEnv prepends bin dir', () => {
-  const fake = path.join(os.tmpdir(), 'deep-docker-fake', 'docker.exe')
+  const fake = path.join(os.tmpdir(), 'gim-docker-fake', 'docker.exe')
   fs.mkdirSync(path.dirname(fake), { recursive: true })
   fs.writeFileSync(fake, 'x')
   const env = engineEnv(fake)
@@ -47,16 +47,16 @@ test('detectGpu returns kind', () => {
   assert.ok(['nvidia', 'metal', 'cpu'].includes(g.kind))
 })
 
-test('resolveEngineBin with DEEP_DOCKER_BIN', () => {
-  const prev = process.env.DEEP_DOCKER_BIN
+test('resolveEngineBin with GIM_DOCKER_BIN', () => {
+  const prev = process.env.GIM_DOCKER_BIN
   const fake = path.join(os.tmpdir(), `deep-eng-${process.pid}.exe`)
   fs.writeFileSync(fake, 'x')
-  process.env.DEEP_DOCKER_BIN = fake
+  process.env.GIM_DOCKER_BIN = fake
   try {
     assert.equal(resolveEngineBin('docker'), fake)
   } finally {
-    if (prev === undefined) delete process.env.DEEP_DOCKER_BIN
-    else process.env.DEEP_DOCKER_BIN = prev
+    if (prev === undefined) delete process.env.GIM_DOCKER_BIN
+    else process.env.GIM_DOCKER_BIN = prev
     try {
       fs.unlinkSync(fake)
     } catch {

@@ -26,9 +26,9 @@ test('defaultConfig merges preset', () => {
 })
 
 test('registerStack records stack metadata', () => {
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-cfg-'))
-  const prev = process.env.DEEP_HOME
-  process.env.DEEP_HOME = home
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-cfg-'))
+  const prev = process.env.GIM_HOME
+  process.env.GIM_HOME = home
   try {
     const cfg = defaultConfig()
     const out = registerStack(cfg, 'dev', { preset: 'dev', device: 'cpu' })
@@ -37,8 +37,8 @@ test('registerStack records stack metadata', () => {
     assert.ok(out.stacks.dev.updatedAt)
     assert.ok(fs.existsSync(path.join(home, 'config.json')))
   } finally {
-    if (prev === undefined) delete process.env.DEEP_HOME
-    else process.env.DEEP_HOME = prev
+    if (prev === undefined) delete process.env.GIM_HOME
+    else process.env.GIM_HOME = prev
     fs.rmSync(home, { recursive: true, force: true })
   }
 })

@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-/** Coverage gate — beta/pre-beta requires ≥50% line coverage in src/. Override with DEEP_COVERAGE_MIN. */
+/** Coverage gate — beta/pre-beta requires ≥50% line coverage in src/. Override with GIM_COVERAGE_MIN. */
 import { spawnSync } from 'node:child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
-const MIN = Number(process.env.DEEP_COVERAGE_MIN || '80')
+const MIN = Number(process.env.GIM_COVERAGE_MIN || '80')
 const TESTS = [
   'test/config.test.js',
   'test/ports.test.js',
@@ -46,6 +46,7 @@ const TESTS = [
   'test/coordinator.test.js',
   'test/mcp-config.test.js',
   'test/policy-score.test.js',
+  'test/security-eval.test.js',
 ]
 
 const r = spawnSync(
@@ -80,7 +81,7 @@ const pct =
     : NaN
 
 // Platform-specific branches (win32 path helpers, etc.) skew per-OS averages by ~1pp.
-const effectiveMin = Number.isFinite(MIN) ? Math.min(MIN, Number(process.env.DEEP_COVERAGE_FLOOR || MIN)) : MIN
+const effectiveMin = Number.isFinite(MIN) ? Math.min(MIN, Number(process.env.GIM_COVERAGE_FLOOR || MIN)) : MIN
 
 if (Number.isFinite(pct)) {
   console.log(`\nsrc/ coverage: ${pct}% (${srcPcts.length} files, min ${effectiveMin}% for beta)`)

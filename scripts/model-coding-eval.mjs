@@ -24,7 +24,7 @@ const llama = run.urls.llama.replace(/\/$/, '')
 const hostWs = paths(stack).workspace
 const engine = detectContainerEngine()
 const env = engineEnv(engine.bin)
-const guest = run.guestName || `deep-guest-${stack}`
+const guest = run.guestName || `gim-guest-${stack}`
 const workDir = path.join(hostWs, `_eval_${label.replace(/[^\w.-]+/g, '_')}`)
 fs.mkdirSync(workDir, { recursive: true })
 

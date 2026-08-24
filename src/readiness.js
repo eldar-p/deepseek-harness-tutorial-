@@ -8,14 +8,14 @@ import { loadManifest } from './download.js'
 
 /** Pre-alpha milestone weights (sum = 100). */
 export const PREALPHA_MILESTONES = [
-  { id: 'cli', label: 'CLI commands', weight: 10, check: () => fs.existsSync(path.join(PKG_ROOT, 'bin/deep.js')) },
+  { id: 'cli', label: 'CLI commands', weight: 10, check: () => fs.existsSync(path.join(PKG_ROOT, 'bin/gim.js')) },
   { id: 'config', label: 'Bootstrap / config', weight: 8, check: () => fs.existsSync(paths().config) },
   {
     id: 'llama-bin',
     label: 'llama-server binary',
     weight: 12,
     check: () => {
-      if (which('llama-server') || process.env.DEEP_LLAMA_BIN) return true
+      if (which('llama-server') || process.env.GIM_LLAMA_BIN) return true
       const exe = process.platform === 'win32' ? 'llama-server.exe' : 'llama-server'
       return !!findFileRecursive(paths().runtimeLlama, [exe])
     },
@@ -87,7 +87,7 @@ export const ALPHA_MILESTONES = [
     weight: 10,
     check: () => {
       const gate = fs.readFileSync(path.join(PKG_ROOT, 'scripts/coverage-gate.mjs'), 'utf8')
-      return /DEEP_COVERAGE_MIN\s*\|\|\s*['"](?:30|50)['"]/.test(gate)
+      return /GIM_COVERAGE_MIN\s*\|\|\s*['"](?:30|50)['"]/.test(gate)
     },
   },
   {
@@ -125,7 +125,7 @@ export const ALPHA_MILESTONES = [
 ]
 
 function cordisIncludes(needle) {
-  const p = path.join(PKG_ROOT, 'assets/cordis.deep.patch.yml')
+  const p = path.join(PKG_ROOT, 'assets/cordis.gim.patch.yml')
   return fs.existsSync(p) && fs.readFileSync(p, 'utf8').includes(needle)
 }
 
@@ -190,7 +190,7 @@ export const BETA_MILESTONES = [
     weight: 12,
     check: () => {
       const gate = fs.readFileSync(path.join(PKG_ROOT, 'scripts/coverage-gate.mjs'), 'utf8')
-      return /DEEP_COVERAGE_MIN\s*\|\|\s*['"]50['"]/.test(gate)
+      return /GIM_COVERAGE_MIN\s*\|\|\s*['"]50['"]/.test(gate)
     },
   },
   {
@@ -198,8 +198,8 @@ export const BETA_MILESTONES = [
     label: 'Guest iptables enforce',
     weight: 12,
     check: () =>
-      fs.existsSync(path.join(PKG_ROOT, 'guest/deep-net-enforce.sh')) &&
-      fs.readFileSync(path.join(PKG_ROOT, 'Dockerfile.guest'), 'utf8').includes('deep-net-enforce'),
+      fs.existsSync(path.join(PKG_ROOT, 'guest/gim-net-enforce.sh')) &&
+      fs.readFileSync(path.join(PKG_ROOT, 'Dockerfile.guest'), 'utf8').includes('gim-net-enforce'),
   },
   {
     id: 'context22',
@@ -228,11 +228,11 @@ export const BETA_MILESTONES = [
   },
   {
     id: 'license',
-    label: 'CC BY-NC-SA 4.0',
+    label: 'Apache-2.0',
     weight: 8,
     check: () => {
       const pkg = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'package.json'), 'utf8'))
-      return pkg.license === 'CC-BY-NC-SA-4.0' && fs.readFileSync(path.join(PKG_ROOT, 'LICENSE'), 'utf8').includes('CC-BY-NC-SA-4.0')
+      return pkg.license === 'Apache-2.0' && fs.readFileSync(path.join(PKG_ROOT, 'LICENSE'), 'utf8').includes('Apache-2.0')
     },
   },
   {
@@ -326,17 +326,17 @@ export const RC_MILESTONES = [
   },
   {
     id: 'rc-doc',
-    label: 'RC.md status page',
+    label: 'OS compat matrix',
     weight: 8,
-    check: () => fs.existsSync(path.join(PKG_ROOT, 'RC.md')),
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'docs/OS-COMPAT.md')),
   },
   {
     id: 'license',
-    label: 'CC BY-NC-SA 4.0',
+    label: 'Apache-2.0',
     weight: 10,
     check: () => {
       const pkg = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'package.json'), 'utf8'))
-      return pkg.license === 'CC-BY-NC-SA-4.0'
+      return pkg.license === 'Apache-2.0'
     },
   },
   {
@@ -355,9 +355,9 @@ export function assessRcReadiness() {
 export const CORE_MILESTONES = [
   {
     id: 'rc-complete',
-    label: 'RC readiness path',
+    label: 'Alpha status page',
     weight: 12,
-    check: () => fs.existsSync(path.join(PKG_ROOT, 'RC.md')),
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'ALPHA.md')),
   },
   {
     id: 'cov70',
@@ -372,7 +372,7 @@ export const CORE_MILESTONES = [
     id: 'win-field',
     label: 'Windows field note',
     weight: 10,
-    check: () => fs.readFileSync(path.join(PKG_ROOT, 'RC.md'), 'utf8').includes('[x] Windows'),
+    check: () => fs.readFileSync(path.join(PKG_ROOT, 'docs/OS-COMPAT.md'), 'utf8').includes('Windows'),
   },
   {
     id: 'proc-http',
@@ -404,17 +404,17 @@ export const CORE_MILESTONES = [
   },
   {
     id: 'core-doc',
-    label: 'CORE.md / 0.5 page',
+    label: 'ALPHA.md status',
     weight: 8,
-    check: () => fs.existsSync(path.join(PKG_ROOT, 'CORE.md')),
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'ALPHA.md')),
   },
   {
     id: 'license',
-    label: 'CC BY-NC-SA 4.0',
+    label: 'Apache-2.0',
     weight: 8,
     check: () => {
       const pkg = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'package.json'), 'utf8'))
-      return pkg.license === 'CC-BY-NC-SA-4.0'
+      return pkg.license === 'Apache-2.0'
     },
   },
   {
@@ -433,9 +433,9 @@ export function assessCoreReadiness() {
 export const V1_MILESTONES = [
   {
     id: 'core',
-    label: 'CORE.md present',
+    label: 'ALPHA.md present',
     weight: 10,
-    check: () => fs.existsSync(path.join(PKG_ROOT, 'CORE.md')),
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'ALPHA.md')),
   },
   {
     id: 'cov80',
@@ -478,15 +478,15 @@ export const V1_MILESTONES = [
     id: 'win-field',
     label: 'Windows field noted',
     weight: 10,
-    check: () => fs.readFileSync(path.join(PKG_ROOT, 'RC.md'), 'utf8').includes('[x] Windows'),
+    check: () => fs.readFileSync(path.join(PKG_ROOT, 'docs/OS-COMPAT.md'), 'utf8').includes('Windows'),
   },
   {
     id: 'license',
-    label: 'CC BY-NC-SA 4.0',
+    label: 'Apache-2.0',
     weight: 8,
     check: () => {
       const pkg = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'package.json'), 'utf8'))
-      return pkg.license === 'CC-BY-NC-SA-4.0'
+      return pkg.license === 'Apache-2.0'
     },
   },
   {

@@ -39,7 +39,7 @@ export function listStacks() {
 export function stackIsActive(stack) {
   const run = readRunState(stack)
   if (!run) return false
-  return !!(run.pids?.llama || run.pids?.dsh || run.guestRunning)
+  return !!(run.pids?.llama || run.pids?.dsh || run.pids?.ui || run.pids?.colibri || run.guestRunning)
 }
 
 /** @returns {{ name: string, active: boolean, llama: boolean, dsh: boolean, guest: boolean, urls: object|null }[]} */
@@ -59,6 +59,7 @@ export function summarizeStacks() {
       name,
       active: stackIsActive(name),
       llama: !!(run?.pids?.llama),
+      ui: !!(run?.pids?.ui),
       dsh: !!(run?.pids?.dsh),
       guest: run?.guestRunning === true,
       urls: run?.urls || null,

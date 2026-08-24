@@ -64,49 +64,49 @@ export function extractZip(zipPath, destDir) {
   assertExtractedInside(destDir)
 }
 
-/** Find package root inside extracted tree (bin/deep.js present). */
+/** Find package root inside extracted tree (bin/gim.js present). */
 export function findExtractedRoot(dir) {
-  const direct = path.join(dir, 'bin', 'deep.js')
+  const direct = path.join(dir, 'bin', 'gim.js')
   if (fs.existsSync(direct)) return dir
   for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
     if (!ent.isDirectory()) continue
     const cand = path.join(dir, ent.name)
-    if (fs.existsSync(path.join(cand, 'bin', 'deep.js'))) return cand
+    if (fs.existsSync(path.join(cand, 'bin', 'gim.js'))) return cand
   }
-  throw new Error('extracted archive missing bin/deep.js')
+  throw new Error('extracted archive missing bin/gim.js')
 }
 
-export function writeDeepShim(installRoot, version) {
-  const deepJs = path.join(installRoot, 'bin', 'deep.js')
-  if (!fs.existsSync(deepJs)) throw new Error(`missing ${deepJs}`)
+export function writeGimShim(installRoot, version) {
+  const gimJs = path.join(installRoot, 'bin', 'gim.js')
+  if (!fs.existsSync(gimJs)) throw new Error(`missing ${gimJs}`)
 
   const binDir =
-    process.env.DEEP_PREFIX ||
+    process.env.GIM_PREFIX ||
     (process.platform === 'win32'
-      ? path.join(process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local'), 'deep', 'bin')
+      ? path.join(process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local'), 'gim', 'bin')
       : path.join(os.homedir(), '.local', 'bin'))
 
   fs.mkdirSync(binDir, { recursive: true })
 
   if (process.platform === 'win32') {
-    const cmd = path.join(binDir, 'deep.cmd')
-    fs.writeFileSync(cmd, `@echo off\r\nnode "${deepJs}" %*\r\n`, 'utf8')
+    const cmd = path.join(binDir, 'gim.cmd')
+    fs.writeFileSync(cmd, `@echo off\r\nnode "${gimJs}" %*\r\n`, 'utf8')
     chmodOwnerOnly(cmd)
-    return { binDir, shim: cmd, deepJs, version }
+    return { binDir, shim: cmd, gimJs, version }
   }
 
-  const shim = path.join(binDir, 'deep')
-  fs.writeFileSync(shim, `#!/usr/bin/env bash\nexec node "${deepJs}" "$@"\n`, 'utf8')
+  const shim = path.join(binDir, 'gim')
+  fs.writeFileSync(shim, `#!/usr/bin/env bash\nexec node "${gimJs}" "$@"\n`, 'utf8')
   try {
     fs.chmodSync(shim, 0o755)
   } catch {
     /* */
   }
-  return { binDir, shim, deepJs, version }
+  return { binDir, shim, gimJs, version }
 }
 
 /**
- * Extract zip into ~/.deep/runtime/cli/<version> and write PATH shim.
+ * Extract zip into ~/.gim/runtime/cli/<version> and write PATH shim.
  */
 export function installFromZip(zipPath, version) {
   const runtime = path.join(paths().home, 'runtime', 'cli', version)
@@ -118,7 +118,7 @@ export function installFromZip(zipPath, version) {
   fs.mkdirSync(path.dirname(runtime), { recursive: true })
   fs.renameSync(root, runtime)
   fs.rmSync(staging, { recursive: true, force: true })
-  const shim = writeDeepShim(runtime, version)
+  const shim = writeGimShim(runtime, version)
   appendLog(`event=cli_install version=${version} root=${runtime}`)
   return { ...shim, installRoot: runtime }
 }

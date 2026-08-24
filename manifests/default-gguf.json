@@ -9,7 +9,7 @@
   "degradationNotes": {
     "Q4_K_M": "recommended default for coding agents",
     "Q3_K_M": "degraded tool use; shorter context tolerance",
-    "Q2_K": "severe degradation — chat only, not for Deep agent stack",
+    "Q2_K": "severe degradation — chat only, not for GIM agent stack",
     "below_Q4": "doctor/start will WARN; prefer Q4_K_M or Q5+ for multi-step tools"
   },
   "licenseNote": "Pin official/trusted mirror URL+sha before public CDN release"

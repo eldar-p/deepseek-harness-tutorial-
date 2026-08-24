@@ -1,650 +1,393 @@
-# Deep CLI — гайд для абсолютных новичков
+# GIM CLI — гайд для новичков
 
-> **Для кого:** вы впервые ставите Deep CLI, не знаете, что такое терминал, Docker и GGUF.  
-> **Цель:** запустить локального ИИ-агента в браузере **без поломок**.  
-> **Время:** 40–90 минут (половина — скачивание Docker и модели).
-
-Если вы уже умеете пользоваться терминалом — читайте [README.md](./README.md) или [docs/INSTALL.md](./docs/INSTALL.md).
+> **Для кого:** первый запуск GIM на своём ПК.  
+> **Время:** 30–60 мин (больше — если качаете Docker и GGUF).  
+> Опытным пользователям: [README.md](./README.md) · [docs/INSTALL.md](./docs/INSTALL.md).
 
 ---
 
 ## Содержание
 
-1. [Что вы вообще ставите](#1-что-вы-вообще-ставите)
-2. [Железные правила (прочитайте ДО установки)](#2-железные-правила-прочитайте-до-установки)
-3. [Шаг 0 — куда положить проект (папки и пути)](#3-шаг-0--куда-положить-проект-папки-и-пути)
-4. [Шаг 1 — Node.js](#4-шаг-1--nodejs)
-5. [Шаг 2 — Git](#5-шаг-2--git)
-6. [Шаг 3 — Docker Desktop (Windows)](#6-шаг-3--docker-desktop-windows)
-7. [Шаг 4 — скачать GGUF-модель](#7-шаг-4--скачать-gguf-модель)
-8. [Шаг 5 — скачать проект Deep CLI](#8-шаг-5--скачать-проект-deep-cli)
-9. [Шаг 6 — npm install (зачем и что именно)](#9-шаг-6--npm-install-зачем-и-что-именно)
-10. [Шаг 7 — открыть терминал и зайти в папку](#10-шаг-7--открыть-терминал-и-зайти-в-папку)
-11. [Шаг 8 — проверка: deep doctor](#11-шаг-8--проверка-deep-doctor)
-12. [Шаг 9 — bootstrap (один раз)](#12-шаг-9--bootstrap-один-раз)
-13. [Шаг 10 — start (запуск)](#13-шаг-10--start-запуск)
-14. [Шаг 11 — открыть браузер](#14-шаг-11--открыть-браузер)
-15. [Шаг 12 — stop (правильная остановка)](#15-шаг-12--stop-правильная-остановка)
-16. [Что НЕ делать (типичные «Патрики»)](#16-что-не-делать-типичные-патрики)
-17. [FAQ — ошибки и решения](#17-faq--ошибки-и-решения)
-18. [macOS — кратко](#18-macos--кратко)
+1. [Что вы ставите](#1-что-вы-ставите)
+2. [Выберите ОС](#2-выберите-ос)
+3. [Общие правила (все ОС)](#3-общие-правила-все-ос)
+4. [Windows](#4-windows)
+5. [Linux](#5-linux)
+6. [macOS](#6-macos)
+7. [Три способа подключить «мозг»](#7-три-способа-подключить-мозг)
+8. [Запуск и остановка](#8-запуск-и-остановка)
+9. [FAQ — только реальные ошибки](#9-faq--только-реальные-ошибки)
+10. [Шпаргалка](#10-шпаргалка)
 
 ---
 
-## 1. Что вы вообще ставите
+## 1. Что вы ставите
 
-Deep CLI — это **не одна кнопка «Включить ИИ»**. Это три части на вашем компьютере:
+GIM CLI — оркестратор на **вашем** компьютере:
 
-| Часть | Что делает | Аналогия |
-|-------|----------|----------|
-| **llama-server** | Запускает нейросеть (GGUF-файл) | «Мозг» |
-| **deep-guest** | Изолированная песочница в Docker | «Комната, где агент выполняет команды» |
-| **DSH** | Веб-интерфейс в браузере | «Экран, где вы пишете агенту» |
+| Часть | Назначение |
+|-------|------------|
+| **LLM** | Отвечает в чате (локальный GGUF, Colibri в Docker, или облачный API) |
+| **Guest (Docker)** | Песочница: агент выполняет bash только внутри контейнера |
+| **GIM UI** | Веб-интерфейс на `127.0.0.1` (поднимается при `gim start`) |
 
-Вы управляете этим **через команды в чёрном окне терминала**, а не голосом и не капслоком.
+Команды вводятся в **терминале** (cmd, PowerShell, bash). Это не чат с Windows — только команды вида `gim doctor`.
 
 ---
 
-## 2. Железные правила (прочитайте ДО установки)
+## 2. Выберите ОС
 
-**НЕ используйте русские буквы и пробелы в пути к папке проекта и к модели.**
+| ОС | Раздел | LLM по умолчанию в продукте |
+|----|--------|----------------------------|
+| **Windows** | [§4](#4-windows) | Colibri Docker *или* явно `--gguf` / `--api` |
+| **Linux** | [§5](#5-linux) | то же |
+| **macOS** | [§6](#6-macos) | **нет** Colibri Docker → `--gguf` или `--api` |
+
+**Почему раньше не было Linux:** первый черновик гайда писался под Windows. Linux и macOS — полноценные платформы (CI гоняет ubuntu + macos + windows). Отдельный каталог: [docs/LINUX.md](./docs/LINUX.md) · [MACOS.md](./MACOS.md).
+
+---
+
+## 3. Общие правила (все ОС)
+
+### Пути без кириллицы и пробелов
+
+Docker монтирует папки в Linux-контейнер. Пути с пробелами и non-ASCII часто ломают guest:
 
 | Плохо | Хорошо |
 |-------|--------|
-| `C:\Мои Нейросети И Роботы 2026\deep` | `C:\ai\deep` |
-| `D:\ИИ\модель.gguf` | `D:\ai\models\Qwen3-4B-Q4_K_M.gguf` |
-| `C:\Users\Иван\Desktop\deep` | `C:\Users\Ivan\ai\deep` |
+| `C:\Мои проекты\gim` | `C:\ai\gim` |
+| `~/Desktop/моя модель.gguf` | `~/ai/models/model.gguf` |
 
-Почему: Docker на Windows ломает пути с пробелами и кириллицей при монтировании в Linux-контейнер. Ошибка будет выглядеть как `Invalid volume format` — это **не расизм**, это технический баг путей.
+### Node.js обязателен
 
-**НЕ закрывайте чёрное окно консоли**, пока работаете в браузере с DSH. Закрытие окна = аварийная остановка. Используйте команду `deep stop`.
-
-**НЕ поливайте ноутбук водой**, когда он горячий под нагрузкой модели. Охлаждение — вентилятор, подставка, пауза. Перегрев ≠ «сломался Deep CLI».
-
-**НЕ нажимайте Ctrl+C десятки раз подряд.** Одно нажатие прерывает текущую команду. Остальное только ломает терминал и оставляет «зомби»-процессы. Правильная остановка — [шаг 12](#15-шаг-12--stop-правильная-остановка).
-
-**НЕ пишите в терминал человеческим языком.** Команды строго так, как в гайде. «ЭЙ НЕЙРОСЕТЬ ВКЛЮЧИСЬ» — **не команда**, Windows ответит: `"ЭЙ" не является внутренней или внешней командой`.
-
-**НЕ кликайте дважды по `deep.js` или `bin/deep.js`.** Так Node.js не запускается правильно. Только через терминал: `node bin/deep.js ...`
-
-**НЕ переименовывайте файл модели** после скачивания (особенно расширение `.gguf`).
-
----
-
-## 3. Шаг 0 — куда положить проект (папки и пути)
-
-1. Откройте проводник.
-2. Создайте папку **только латиницей, без пробелов**, например:
-   - `C:\ai\`
-3. Внутри будет:
-   - `C:\ai\deep\` — сам проект
-   - `C:\ai\models\` — GGUF-модель
-
-Запишите эти пути — они понадобятся дальше.
-
----
-
-## 4. Шаг 1 — Node.js
-
-### Что это
-
-**Node.js** — программа, которая запускает Deep CLI (это JavaScript-приложение). Без Node.js команда `node` не существует.
-
-### Скачать
-
-1. Откройте: **https://nodejs.org/**
-2. Скачайте версию **LTS** (рекомендуется) или **Current 22.x / 24.x**.
-3. Запустите установщик `.msi`.
-4. Жмите «Next» везде, **оставьте галочку «Add to PATH»** включённой.
-5. Перезагрузите компьютер (или хотя бы закройте все окна терминала и откройте новое).
-
-### Проверка
-
-Откройте терминал (см. [шаг 7](#10-шаг-7--открыть-терминал-и-зайти-в-папку)) и введите:
-
+```bash
+node --version   # нужно v22.19+ или v24+
 ```
+
+Без Node дальше нет смысла.
+
+### Docker — для guest
+
+Engine должен быть **запущен** (Docker Desktop или `systemctl start docker`), не только «установлен вчера».
+
+### Не спамить Ctrl+C
+
+Один Ctrl+C прерывает текущую команду. После прерывания `start` всё равно выполните `gim stop`, иначе порты и контейнеры останутся висеть.
+
+### Не запускать от root
+
+`gim start` от root **отказывает** — используйте обычного пользователя (на Linux добавьте себя в группу `docker`).
+
+---
+
+## 4. Windows
+
+### 4.1 Установить
+
+1. **Node.js LTS / 22+** — https://nodejs.org/ (галочка **Add to PATH**).
+2. **Git** (опционально) — https://git-scm.com/download/win или ZIP с GitHub.
+3. **Docker Desktop** — https://www.docker.com/products/docker-desktop/  
+   Включите **WSL 2**, дождитесь **Engine running**.
+
+Проверка:
+
+```powershell
 node --version
-```
-
-Должно показать что-то вроде `v22.19.0` или `v24.x.x`.  
-Если пишет «не является внутренней или внешней командой» — Node не установлен или PATH не обновился → [FAQ: node не является командой](#node-не-является-внутренней-или-внешней-командой).
-
-**Без работающего `node --version` дальше идти бессмысленно.**
-
----
-
-## 5. Шаг 2 — Git
-
-### Что это
-
-**Git** — программа для скачивания проекта с GitHub (`git clone`). Можно скачать ZIP, но Git удобнее для обновлений.
-
-### Скачать
-
-1. Откройте: **https://git-scm.com/download/win**
-2. Установите с настройками по умолчанию.
-3. Перезапустите терминал.
-
-### Проверка
-
-```
-git --version
-```
-
-Должно показать `git version 2.x.x`.
-
-**Альтернатива без Git:** на странице GitHub нажмите зелёную кнопку **Code → Download ZIP**, распакуйте в `C:\ai\deep\`.
-
----
-
-## 6. Шаг 3 — Docker Desktop (Windows)
-
-### Что это
-
-**Docker** — программа для запуска изолированного «гостевого» контейнера (`deep-guest`). Без Docker песочница агента не поднимется.
-
-### Скачать и установить
-
-1. Откройте: **https://www.docker.com/products/docker-desktop/**
-2. Скачайте **Docker Desktop for Windows**.
-3. Запустите установщик.
-4. **Обязательно включите WSL 2**, если установщик спросит (галочка «Use WSL 2 instead of Hyper-V»).
-5. Если Windows попросит установить **WSL** или компонент «Подсистема Windows для Linux» — согласитесь и перезагрузитесь.
-6. После перезагрузки **запустите Docker Desktop** из меню Пуск (иконка кита).
-7. Дождитесь статуса **Engine running** (кит перестал «крутиться», внизу зелёный/Running).
-
-**Нельзя** писать команды Deep, пока Docker Desktop **не запущен**. «Я установил вчера» ≠ «Docker сейчас работает».
-
-### Проверка
-
-В терминале:
-
-```
 docker version
 ```
 
-Должны быть строки `Client` и `Server` без ошибки `Cannot connect to the Docker daemon`.
+При необходимости: `powershell -File .\scripts\wait-docker.ps1`
 
-Если ошибка — откройте Docker Desktop вручную и подождите 1–2 минуты.
+### 4.2 Папки
 
-На Windows в папке проекта также можно:
-
-```
-powershell -File .\scripts\wait-docker.ps1
-```
-
-Скрипт ждёт, пока Docker станет доступен.
-
----
-
-## 7. Шаг 4 — модель: GGUF (локально) или API (облако)
-
-Deep — **гибридный** продукт. Можно без GPU и без скачивания 14 GB файла.
-
-### Вариант B — облачный API (проще для слабого ПК)
-
-```
-node bin/deep.js bootstrap --api deepseek --api-model deepseek-chat --api-key sk-ВАШ_КЛЮЧ
-node bin/deep.js start --api deepseek
-node bin/deep.js status
+```text
+C:\ai\gim\          ← репозиторий (git clone)
+C:\ai\models\       ← GGUF, если локальная модель
 ```
 
-Провайдеры: `node bin/deep.js api` (deepseek, openai, openrouter, groq, together, custom).
+### 4.3 Скачать проект
 
-### Вариант A — локальный GGUF (ниже)
-
-### Что это
-
-**GGUF** — файл с весами нейросети на диске. Deep CLI **не скачивает модель сам** (если вы не указали авто-загрузку) — вы скачиваете вручную.
-
-### Как скачать правильно (Hugging Face)
-
-1. Откройте страницу модели, например:  
-   **https://huggingface.co/lmstudio-community/Qwen3-4B-GGUF**
-2. Перейдите на вкладку **Files and versions**.
-3. Найдите файл, оканчивающийся на **`.gguf`** (для начала подойдёт `Q4_K_M` — баланс качества и размера, ~2–3 GB).
-4. Нажмите **стрелку скачивания (↓)** справа от файла — **НЕ** на название файла как на ссылку в тексте страницы.
-5. Дождитесь окончания загрузки в браузере.
-
-### Как понять, что вы скачали не то
-
-| Признак | Вы скачали |
-|---------|------------|
-| Размер ~2–15 GB, расширение `.gguf` | ✅ Верно |
-| Размер ~100–500 KB, можно открыть в блокноте, виден HTML | ❌ Страницу сайта, не модель |
-| Расширение `.html` или `.htm` | ❌ Неверно |
-
-### Куда положить
-
-Переместите файл в:
-
-```
-C:\ai\models\Qwen3-4B-Q4_K_M.gguf
-```
-
-**НЕ переименовывайте** файл (особенно не меняйте `.gguf` на `.txt` или `.bin`).
-
-Запишите **полный путь** — он нужен в команде `bootstrap`.
-
----
-
-## 8. Шаг 5 — скачать проект Deep CLI
-
-### Вариант A — через Git (рекомендуется)
-
-В терминале:
-
-```
+```powershell
 cd C:\ai
-git clone https://github.com/eldar-p/deepseek-harness-tutorial-.git deep
-cd deep
+git clone https://github.com/eldar-p/gim-cli.git gim
+cd gim
 ```
 
-### Вариант B — ZIP
+### 4.4 Проверка
 
-1. Скачайте ZIP с GitHub.
-2. Расакуйте в `C:\ai\deep\` так, чтобы путь был `C:\ai\deep\bin\deep.js` (не `C:\ai\deep\deepseek-harness-tutorial-\bin\deep.js` — если вложено лишнее, перетащите файлы на уровень выше).
+```powershell
+node bin/gim.js doctor
+```
+
+Engine должен быть **GREEN**. Если RED — Docker Desktop не запущен.
 
 ---
 
-## 9. Шаг 6 — npm install (зачем и что именно)
+## 5. Linux
 
-### Что такое npm
+Подробнее: **[docs/LINUX.md](./docs/LINUX.md)** (Ubuntu/Debian, Fedora, WSL).
 
-**npm** — менеджер пакетов Node.js. Он идёт вместе с Node.js (команда `npm --version`).
+### 5.1 Установить
 
-### Что установить
+```bash
+# Node 22+ (nodesource или nvm — см. LINUX.md)
+node --version
 
-Сам Deep CLI **не требует** `npm install` в корне проекта — он работает через `node bin/deep.js`.
-
-Но **веб-интерфейс DSH** (то, что открывается в браузере) — отдельная программа. Её нужно поставить **глобально**:
-
-```
-npm install -g @deepseek-ai/dsh@0.1.1-rc.2
-```
-
-Это может занять 1–3 минуты. Дождитесь окончания без Ctrl+C.
-
-### Проверка
-
-```
-dsh --version
+# Docker Engine + ваш пользователь в группе docker
+sudo usermod -aG docker "$USER"
+# перелогиниться, затем:
+docker version
 ```
 
-Если команда не найдена — закройте терминал, откройте новый, повторите. На Windows иногда нужен перезапуск после `-g` установки.
+**WSL на Windows:** предпочтительно **Docker Desktop → WSL integration**, а не отдельный apt-docker без Desktop (два разных daemon — типичная ловушка).
 
-### Зачем это нужно простыми словами
+### 5.2 Папки
 
-| Без `npm install -g dsh` | С установленным DSH |
-|--------------------------|---------------------|
-| `deep start` может поднять модель, но **браузерный UI не откроется** | Появится адрес `http://127.0.0.1:13xxx/` в `deep status` |
+```bash
+mkdir -p ~/ai/models
+git clone https://github.com/eldar-p/gim-cli.git ~/ai/gim
+cd ~/ai/gim
+```
+
+### 5.3 DSH (если понадобится legacy UI)
+
+```bash
+npm i -g --prefix ~/.local @deepseek-ai/dsh@0.1.1-rc.2
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Native GIM UI идёт без DSH; DSH только с `GIM_USE_DSH=1`.
+
+### 5.4 Проверка
+
+```bash
+node bin/gim.js doctor
+node bin/gim.js doctor --policy
+```
+
+Field-скрипт (опционально): `bash scripts/field-linux.sh --gguf ~/ai/models/model.gguf`
 
 ---
 
-## 10. Шаг 7 — открыть терминал и зайти в папку
+## 6. macOS
 
-### Windows — способ 1 (cmd)
+Подробнее: **[MACOS.md](./MACOS.md)**.
 
-1. Нажмите **Win + R**.
-2. Введите: `cmd`
-3. Нажмите **Enter** — откроется чёрное окно.
+### 6.1 Установить
 
-### Windows — способ 2 (PowerShell)
+1. **Node.js 22+** — https://nodejs.org/ или `brew install node@22`
+2. **Docker Desktop for Mac** — для guest (https://www.docker.com/products/docker-desktop/)
 
-1. **Win + R** → `powershell` → Enter.
+### 6.2 Ограничение macOS
 
-### Зайти в папку проекта
+**Colibri / vLLM в Docker на Mac не поддерживаются** (нет GPU passthrough как на Win/Linux). Варианты:
 
-Если проект в `C:\ai\deep`:
+- локальный **GGUF** через llama (Metal на Apple Silicon),
+- облако: **`gim start --api deepseek`** (и т.п.).
 
+### 6.3 Быстрый путь
+
+```bash
+mkdir -p ~/ai/models
+git clone https://github.com/eldar-p/gim-cli.git ~/ai/gim
+cd ~/ai/gim
+
+node bin/gim.js doctor
+
+# локальная модель (скачайте .gguf на Hugging Face → ~/ai/models/)
+node bin/gim.js bootstrap --gguf ~/ai/models/Qwen3-4B-Q4_K_M.gguf
+node bin/gim.js start --gguf ~/ai/models/Qwen3-4B-Q4_K_M.gguf
+
+# или облако без GGUF:
+# node bin/gim.js bootstrap --api deepseek --api-key sk-...
+# node bin/gim.js start --api deepseek
+
+node bin/gim.js status   # скопируйте URL UI
 ```
-cd /d C:\ai\deep
-```
 
-Проверка — должны увидеть файлы:
-
-```
-dir bin
-```
-
-В списке должен быть `deep.js`.
-
-### macOS
-
-1. **Cmd + Space** → введите `Terminal` → Enter.
-2. Перейдите в папку:
-
-```
-cd ~/ai/deep
-```
+Field-скрипт: `bash scripts/field-macos.sh --gguf ~/ai/models/model.gguf`
 
 ---
 
-## 11. Шаг 8 — проверка: deep doctor
+## 7. Три способа подключить «мозг»
 
-Убедитесь, что вы в папке проекта (`C:\ai\deep`), Docker Desktop **запущен**, Node работает.
+Выберите **один** для первого запуска.
 
+### A — Облачный API (без GPU, без скачивания GGUF)
+
+```bash
+node bin/gim.js bootstrap --api deepseek --api-model deepseek-chat --api-key sk-ВАШ_КЛЮЧ
+node bin/gim.js start --api deepseek
 ```
-node bin/deep.js doctor
+
+Список провайдеров: `node bin/gim.js api`
+
+### B — Локальный GGUF (llama-server)
+
+1. Скачайте файл **`.gguf`** с Hugging Face (кнопка **↓** у файла, не HTML-страницу).
+2. Размер обычно **сотни MB – десятки GB**. Файл ~200 KB с `<html>` внутри — ошибка загрузки.
+
+```bash
+node bin/gim.js bootstrap --gguf "/path/to/model.Q4_K_M.gguf"
+node bin/gim.js start --gguf "/path/to/model.Q4_K_M.gguf"
+# слабая GPU / ошибки VRAM:
+node bin/gim.js start --gguf "/path/to/model.gguf" --cpu
 ```
 
-Читайте вывод:
+### C — Colibri в Docker (Windows / Linux, большие MoE)
 
-| Строка | Что значит |
-|--------|------------|
-| Engine **GREEN** | Docker OK |
-| GPU/RAM **GREEN/YELLOW** | Можно пробовать GPU или `--cpu` |
-| Красные **RED** | Читайте текст — что именно не так |
+Нужны: Docker, NVIDIA (для GPU), модель safetensors, Linux `coli` в `GIM_COLIBRI_ROOT`.  
+Это путь по умолчанию для `gim start` **без** `--gguf`, если Colibri уже настроен.
 
-Если Engine RED → Docker не запущен → [Docker daemon not found](#docker-daemon-not-found--docker-engine-not-running).
+```bash
+# после настройки модели и Colibri — см. docs/ARCHITECTURE.md
+node bin/gim.js start
+```
+
+Если Colibri ещё не настроен — для первого раза используйте **A** или **B**.
 
 ---
 
-## 12. Шаг 9 — bootstrap (один раз)
+## 8. Запуск и остановка
 
-**Bootstrap** создаёт конфиг и папки в `%USERPROFILE%\.deep\` и привязывает путь к модели.
+### Bootstrap (один раз на стек)
 
-Подставьте **свой** путь к GGUF (в кавычках, если есть спецсимволы — но лучше путь без пробелов):
+Привязывает модель или API в `~/.gim/config.json`:
 
-```
-node bin/deep.js bootstrap --gguf "C:\ai\models\Qwen3-4B-Q4_K_M.gguf"
-```
-
-Дождитесь `[OK]` или сообщения об успехе. **Не жмите Ctrl+C**, если долго качается llama-server — это нормально при первом запуске.
-
----
-
-## 13. Шаг 10 — start (запуск)
-
-### Если видеокарта NVIDIA (рекомендуется)
-
-```
-node bin/deep.js start
+```bash
+node bin/gim.js bootstrap --gguf "/path/model.gguf"
+# или
+node bin/gim.js bootstrap --api deepseek --api-key sk-...
 ```
 
-Первый запуск может:
-- 1–3 минуты **прогревать** llama (строка `[YELLOW] Llama warming`)
-- 1–2 минуты **собирать** Docker-образ guest
+### Start
 
-**Это не зависание.** Терминал может молчать — подождите до 5 минут.
-
-### Если нет NVIDIA или ошибки GPU
-
-```
-node bin/deep.js start --cpu
+```bash
+node bin/gim.js start --gguf "/path/model.gguf"    # явный GGUF
+node bin/gim.js start --api deepseek               # облако
+node bin/gim.js start                              # Colibri, если уже настроен (Win/Linux)
 ```
 
-Медленнее, но работает.
+Первый запуск может занять **несколько минут** (Docker-образ guest, загрузка llama/Colibri). Тишина в консоли ≠ зависание — подождите до 5 мин.
 
-### Проверка статуса
+### Status и браузер
 
-```
-node bin/deep.js status
-```
-
-Ищите строки **GREEN** и URL:
-
-```
-DSH:   http://127.0.0.1:13454/
-Llama: http://127.0.0.1:18962/v1
+```bash
+node bin/gim.js status
 ```
 
-Порты **каждый раз разные** — смотрите свой вывод, не копируйте чужой.
+Откройте строку **UI:** (`http://127.0.0.1:…/`). Терминал с `start` можно свернуть, но не убивать процесс без `stop`.
 
----
+### Stop
 
-## 14. Шаг 11 — открыть браузер
-
-1. Скопируйте URL **DSH** из `status` (например `http://127.0.0.1:13454/`).
-2. Вставьте в Chrome / Edge / Firefox.
-3. **Не закрывайте** окно терминала, где выполнен `start`.
-
-Если в DSH есть модальное окно «Testing» — закройте его кнопкой в интерфейсе.
-
----
-
-## 15. Шаг 12 — stop (правильная остановка)
-
-Когда закончили работу:
-
-```
-node bin/deep.js stop
-```
-
-Дождитесь:
-
-```
-[OK] Stack default stopped
-```
-
-### Если нажали Ctrl+C один раз
-
-Это нормально — прервали текущую команду. Затем всё равно выполните:
-
-```
-node bin/deep.js stop
-```
-
-### Если наспамили Ctrl+C 50 раз
-
-1. Закройте терминал.
-2. Откройте **новый** терминал.
-3. Запустите Docker Desktop (если закрылся).
-4. Перейдите в папку проекта: `cd /d C:\ai\deep`
-5. Выполните:
-
-```
-node bin/deep.js stop
-node bin/deep.js doctor
-```
-
-6. Если `Port already in use` — см. [FAQ](#port-already-in-use--порт-занят).
-
-**Никогда** не считайте, что «раз нажал Ctrl+C — всё само освободилось».
-
----
-
-## 16. Что НЕ делать (типичные «Патрики»)
-
-### ❌ Спам Ctrl+C при «тишине» в консоли
-
-| Что видит Патрик | Что на самом деле |
-|------------------|-------------------|
-| Тишина 2 минуты | Качается образ Docker или грузится 13 GB модель в VRAM |
-| Жмёт Ctrl+C × 50 | Убивает Node, llama и guest остаются зомби |
-| «Всё сломалось навсегда» | Нужен `deep stop` + перезапуск Docker |
-
-**Правило:** подождать 5 минут → если всё ещё `[YELLOW] Llama warming` — одно Ctrl+C → `deep stop` → `deep start --cpu`.
-
-### ❌ Папка «Мои Нейросети И Роботы 2026»
-
-Docker не смонтирует путь → guest RED → «расистский ИИ».  
-**Решение:** только `C:\ai\...` латиницей.
-
-### ❌ «ЭЙ НЕЙРОСЕТЬ ВКЛЮЧИСЬ ПОЖАЛУЙСТА»
-
-Терминал — не чат. Только команды из этого гайда.
-
-### ❌ Двойной клик по deep.js
-
-Откроется и сразу закроется или выдаст ошибку. Только `node bin/deep.js ...`.
-
-### ❌ Скачал HTML вместо GGUF
-
-Размер файла ~200 KB, в блокноте видны `<html>`.  
-**Решение:** скачать заново через **стрелку ↓** на Hugging Face.
-
----
-
-## 17. FAQ — ошибки и решения
-
-### «node» не является внутренней или внешней командой
-
-**Причина:** Node.js не установлен или терминал открыт до установки.
-
-**Решение:**
-1. Установите Node.js с https://nodejs.org/ (галочка Add to PATH).
-2. **Перезагрузите ПК** или закройте все терминалы.
-3. `node --version` — должна быть версия.
-
----
-
-### «npm» не является внутренней или внешней командой
-
-То же, что с node — переустановите Node.js (npm идёт в комплекте).
-
----
-
-### Cannot find module
-
-**Причина A:** Вы не в папке проекта.
-
-```
-cd /d C:\ai\deep
-node bin/deep.js doctor
-```
-
-**Причина B:** Не установлен DSH.
-
-```
-npm install -g @deepseek-ai/dsh@0.1.1-rc.2
-```
-
-**Причина C:** Запускаете не тот файл. Путь должен быть `C:\ai\deep\bin\deep.js`.
-
----
-
-### Port already in use / порт занят
-
-**Причина:** Прошлый `start` не остановлен (часто после Ctrl+C).
-
-**Решение:**
-
-```
-node bin/deep.js stop
-```
-
-Подождите 10 секунд. Если не помогло — закройте Docker Desktop, откройте снова, снова `stop`, затем `start`.
-
-Крайний случай (Windows) — перезагрузка ПК освобождает порты.
-
----
-
-### Docker daemon not found / Docker Engine not running
-
-**Причина:** Docker Desktop не запущен.
-
-**Решение:**
-1. Пуск → **Docker Desktop** → дождаться **Engine running**.
-2. `docker version` — без ошибки connect.
-3. `node bin/deep.js doctor` — Engine GREEN.
-
----
-
-### Invalid volume format / mount failed / guest RED
-
-**Причина:** Пробелы или кириллица в пути к проекту или workspace.
-
-**Решение:**
-1. Перенесите проект в `C:\ai\deep`.
-2. Перенесите модель в `C:\ai\models\`.
-3. Заново:
-
-```
-node bin/deep.js bootstrap --gguf "C:\ai\models\YOUR_MODEL.gguf"
-node bin/deep.js start --cpu
+```bash
+node bin/gim.js stop              # UI/guest off; LLM warm (Colibri) по умолчанию
+node bin/gim.js stop --full-stop  # полностью снять LLM-контейнер
 ```
 
 ---
 
-### Llama RED / health timeout / модель не грузится
+## 9. FAQ — только реальные ошибки
 
-**Причина:** Нет VRAM, битый GGUF, неверный путь.
+### `node` / `npm` не найден
 
-**Решение:**
-1. Проверьте, что файл `.gguf` > 500 MB.
-2. CPU-режим:
+Node не в PATH или терминал открыт до установки. Переустановите Node с **Add to PATH**, закройте все терминалы, проверьте `node --version`.
 
+### Docker: `Cannot connect to the Docker daemon`
+
+Docker Desktop / `dockerd` не запущен. Windows: Пуск → Docker Desktop → **Engine running**. Linux: `sudo systemctl start docker`.
+
+### `Invalid volume format` / guest RED / mount failed
+
+Кириллица или пробелы в пути к проекту/workspace. Перенесите в `C:\ai\gim` или `~/ai/gim`, повторите `bootstrap` + `start`.
+
+### `Port already in use`
+
+Прошлый стек не остановлен:
+
+```bash
+node bin/gim.js stop
 ```
-node bin/deep.js start --cpu --gguf "C:\ai\models\Qwen3-4B-Q4_K_M.gguf"
+
+Если не помогло — перезапуск Docker, затем снова `stop` → `start`.
+
+### GGUF: Llama RED / health timeout
+
+- Проверьте, что файл `.gguf` > 500 MB и путь верный.
+- Нехватка VRAM → `gim start --gguf "…" --cpu`.
+- Лог: `~/.gim/run/default/llama.log` (Windows: `%USERPROFILE%\.gim\run\default\llama.log`).
+
+### Скачали HTML вместо модели
+
+На Hugging Face нажимайте **стрелку скачивания** у строки `.gguf`, не «Save page». Файл должен быть `.gguf`, не `.html`.
+
+### WSL: `dsh` не найден или Windows-shim
+
+Windows `dsh.exe` из `/mnt/c/...` не подходит. Установите Linux-копию:
+
+```bash
+npm i -g --prefix ~/.local @deepseek-ai/dsh@0.1.1-rc.2
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
-3. Лог: `%USERPROFILE%\.deep\run\default\llama.log`
+### `Refuse gim start as root`
+
+Запускайте от обычного пользователя; на Linux — `sudo usermod -aG docker $USER`.
+
+### Colibri: model / coli not found
+
+Colibri требует отдельной настройки (модель safetensors, Linux `coli`). Для первого опыта используйте `--gguf` или `--api`.
+
+### «Вчера работало»
+
+1. Docker запущен?  
+2. Вы в папке проекта?  
+3. `node bin/gim.js doctor`  
+4. `node bin/gim.js stop` → `start` с теми же флагами (`--gguf` / `--api`).
 
 ---
 
-### DSH RED / dsh not on PATH
+## 10. Шпаргалка
 
-```
-npm install -g @deepseek-ai/dsh@0.1.1-rc.2
-```
+**Windows**
 
-Новый терминал → `dsh --version` → `node bin/deep.js start`.
-
----
-
-### GPU lock timeout / GPU in use
-
-Другой стек уже использует GPU:
-
-```
-node bin/deep.js stop
-node bin/deep.js start --cpu
+```powershell
+cd C:\ai\gim
+node bin/gim.js doctor
+node bin/gim.js bootstrap --gguf "C:\ai\models\MODEL.gguf"
+node bin/gim.js start --gguf "C:\ai\models\MODEL.gguf"
+node bin/gim.js status
+node bin/gim.js stop
 ```
 
----
+**Linux**
 
-### «Я ничего не трогал, вчера работало»
-
-Чеклист:
-1. Docker Desktop запущен?
-2. `cd /d C:\ai\deep` — правильная папка?
-3. `node bin/deep.js doctor`
-4. `node bin/deep.js stop` → `node bin/deep.js start --cpu`
-
----
-
-## 18. macOS — кратко
-
-1. Node.js: https://nodejs.org/
-2. Docker Desktop for Mac: https://www.docker.com/products/docker-desktop/
-3. GGUF в `~/ai/models/` (без пробелов в пути).
-4. Терминал:
-
-```
-cd ~/ai/deep
-npm install -g @deepseek-ai/dsh@0.1.1-rc.2
-node bin/deep.js doctor
-node bin/deep.js bootstrap --gguf ~/ai/models/MODEL.gguf
-node bin/deep.js start --cpu
-node bin/deep.js status
+```bash
+cd ~/ai/gim
+node bin/gim.js doctor
+node bin/gim.js bootstrap --gguf ~/ai/models/MODEL.gguf
+node bin/gim.js start --gguf ~/ai/models/MODEL.gguf
+node bin/gim.js status
+node bin/gim.js stop
 ```
 
-Остановка: `node bin/deep.js stop`
+**macOS** — как Linux, но без Colibri; на Apple Silicon Metal часто без `--cpu`.
 
----
+**Облако (все ОС)**
 
-## Шпаргалка (скопируйте на стикер)
-
-```
-1. Пути: C:\ai\deep и C:\ai\models — БЕЗ пробелов и русских букв
-2. Docker Desktop ЗАПУЩЕН (кит Running)
-3. cd /d C:\ai\deep
-4. node bin/deep.js doctor
-5. node bin/deep.js bootstrap --gguf "C:\ai\models\MODEL.gguf"
-6. npm install -g @deepseek-ai/dsh@0.1.1-rc.2   (один раз)
-7. node bin/deep.js start --cpu
-8. node bin/deep.js status  → открыть DSH в браузере
-9. Закончили → node bin/deep.js stop
-10. НЕ спамить Ctrl+C. НЕ писать «ПОЖАЛУЙСТА» в терминал.
+```bash
+node bin/gim.js bootstrap --api deepseek --api-key sk-...
+node bin/gim.js start --api deepseek
+node bin/gim.js status
 ```
 
 ---
 
-## Куда дальше
+## Дальше
 
-- [README.md](./README.md) — обзор для опытных пользователей
-- [docs/TROUBLESHOOTING.md](./docs/TROUBLESHOOTING.md) — расширенный troubleshooting
-- [docs/INSTALL.md](./docs/INSTALL.md) — установка и каналы
+- [docs/TROUBLESHOOTING.md](./docs/TROUBLESHOOTING.md)
+- [docs/OS-COMPAT.md](./docs/OS-COMPAT.md)
+- [docs/LINUX.md](./docs/LINUX.md) · [MACOS.md](./MACOS.md)
+- [docs/SECURITY.md](./docs/SECURITY.md) — что продукт реально защищает
 
-**Лицензия проекта:** [CC BY-NC-SA 4.0](./LICENSE)
+**Лицензия:** [Apache-2.0](./LICENSE)

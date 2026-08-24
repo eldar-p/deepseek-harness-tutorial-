@@ -1,36 +1,30 @@
-# Документация Deep CLI
+# Документация GIM CLI
 
 | Документ | Для кого |
 |----------|----------|
 | [../README_BEGINNER.md](../README_BEGINNER.md) | **Новички** — пошаговый гайд с нуля |
+| [../ALPHA.md](../ALPHA.md) | Alpha 0.2 — статус и sign-off |
 | [CLAUDE-CODE-LEAK-TRIAGE.md](./CLAUDE-CODE-LEAK-TRIAGE.md) | Patterns: MCP / LSP / coordinator / Auto Mode |
-| [../PRE-ALPHA.md](../PRE-ALPHA.md) | Pre-alpha статус |
-| [../ALPHA.md](../ALPHA.md) | Alpha 0.2 **complete** |
 | [TYPES.md](./TYPES.md) | JSDoc / TS policy |
-| [../BETA.md](../BETA.md) | Beta track + CDN install |
-| [../todo/README.md](../todo/README.md) | Alpha backlog (archive) |
-| [../todo/README-beta.md](../todo/README-beta.md) | Beta backlog |
 | [../adr/README.md](../adr/README.md) | Architecture Decision Records |
 | [INSTALL.md](./INSTALL.md) | Установка всех ОС |
-| [OS-COMPAT.md](./OS-COMPAT.md) | Матрица ОС: CI + field (что работает) |
-| [QUANT.md](./QUANT.md) | Политика квантования GGUF (Q4+, soft gates) |
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | llama + guest + DSH |
+| [OS-COMPAT.md](./OS-COMPAT.md) | Матрица ОС: CI + field |
+| [LINUX.md](./LINUX.md) | GIM на Linux / WSL |
+| [../MACOS.md](../MACOS.md) | GIM на macOS |
+| [QUANT.md](./QUANT.md) | Политика квантования GGUF |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | Colibri / llama / guest / UI |
+| [PRINCIPLES.md](./PRINCIPLES.md) | Продуктовые правила |
+| [SPEED.md](./SPEED.md) | Speed bar P0–P6 |
 | [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) | Типичные ошибки |
-| [VERSION-PLAN.md](./VERSION-PLAN.md) | Этапы 0.1 → 1.0 |
-| [AUDITS.md](./AUDITS.md) | 26 аудитов |
-| [AUDIT-STATUS.md](./AUDIT-STATUS.md) | Статус прогона + ссылки на market / snap / extra security |
-| [MARKET-FIT.md](./MARKET-FIT.md) | Market fit / gap map |
+| [AUDITS.md](./AUDITS.md) | 32 аудита |
 | [SNAP-PUBLISH.md](./SNAP-PUBLISH.md) | Snap Store checklist |
-| [SECURITY-AUDITS-EXTRA.md](./SECURITY-AUDITS-EXTRA.md) | Аудиты 27+ сверх gate |
-| [INFRASTRUCTURE.md](./INFRASTRUCTURE.md) | Dist / docs / community / legal |
+| [SECURITY-AUDITS-EXTRA.md](./SECURITY-AUDITS-EXTRA.md) | Аудиты 27–32 |
+| [SECURITY.md](./SECURITY.md) · [THREAT-MODEL.md](./THREAT-MODEL.md) | Security posture |
+| [SECURITY-EVAL.md](./SECURITY-EVAL.md) | Adversarial enforcement pack |
+| [INFRASTRUCTURE.md](./INFRASTRUCTURE.md) | Dist / CI / legal |
 | [dist/CHANNELS.md](./dist/CHANNELS.md) | stable / beta / edge |
 | [../assets/PRIVACY.md](../assets/PRIVACY.md) | Приватность |
-| [../MACOS.md](../MACOS.md) | Legacy Mac stack |
-| [../README.md](../README.md) | Корень репо (Deep + legacy tutorial) |
-
-## Legacy tutorial
-
-`host/`, `guest/`, VirtualBox — отдельный трек; для нового продукта используйте **Deep CLI** (`bin/deep.js`).
+| [../README.md](../README.md) | Обзор продукта |
 
 ## Contributing
 

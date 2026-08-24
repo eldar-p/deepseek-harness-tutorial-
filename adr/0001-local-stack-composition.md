@@ -9,16 +9,16 @@
 
 ## Decision
 
-**Deep CLI** на хосте (Node 22+) оркестрирует три процесса:
+**GIM CLI** на хосте (Node 22+) оркестрирует три процесса:
 
-1. **llama-server** — OpenAI-compatible API на `127.0.0.1`
-2. **deep-guest** — контейнер с bash-only shell
-3. **DSH web** — UI + tools, модель → llama, shell → guest
+1. **LLM** — Colibri Docker (default Win/Linux), or llama GGUF / cloud API / vLLM Docker
+2. **gim-guest** — контейнер с bash-only shell
+3. **GIM UI** — native SPA (SSE agent loop); DSH опционально (`GIM_USE_DSH=1`)
 
 Один stack = один набор портов + workspace + guest container.
 
 ## Consequences
 
-- Простая mental model; multi-stack позже (`--name`)
-- DSH и llama на хосте — меньше latency, больше attack surface (mitigate jail + guest-only bash)
-- Legacy VirtualBox tutorial остаётся отдельным треком в репо
+- Простая mental model; multi-stack через `--name`
+- LLM и UI на хосте — jail + guest-only bash + security eval (P6)
+- Legacy VirtualBox tutorial удалён из репо (ADR-0002)

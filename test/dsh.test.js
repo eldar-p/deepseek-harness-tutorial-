@@ -5,15 +5,15 @@ import path from 'node:path'
 import { paths } from '../src/paths.js'
 import { resolveDshBin, writeDshRuntimeSettings, stopDsh, dshStatusFromRun, startDsh } from '../src/dsh.js'
 
-test('resolveDshBin respects DEEP_DSH_BIN', () => {
-  const prev = process.env.DEEP_DSH_BIN
+test('resolveDshBin respects GIM_DSH_BIN', () => {
+  const prev = process.env.GIM_DSH_BIN
   const fake = path.join(paths().home, 'fake-dsh-bin')
   fs.mkdirSync(paths().home, { recursive: true })
   fs.writeFileSync(fake, 'x')
-  process.env.DEEP_DSH_BIN = fake
+  process.env.GIM_DSH_BIN = fake
   assert.equal(resolveDshBin(), fake)
-  if (prev === undefined) delete process.env.DEEP_DSH_BIN
-  else process.env.DEEP_DSH_BIN = prev
+  if (prev === undefined) delete process.env.GIM_DSH_BIN
+  else process.env.GIM_DSH_BIN = prev
 })
 
 test('writeDshRuntimeSettings api profile', () => {
@@ -43,7 +43,7 @@ test('writeDshRuntimeSettings writes yaml and env', () => {
   assert.match(yaml, /defaultContextWindow: 4096/)
   const envPath = path.join(paths().dshHome, '.env')
   assert.ok(fs.existsSync(envPath))
-  assert.match(fs.readFileSync(envPath, 'utf8'), /DEEP_LLAMA_API_KEY/)
+  assert.match(fs.readFileSync(envPath, 'utf8'), /GIM_LLAMA_API_KEY/)
 })
 
 test('stopDsh no-op on falsy', () => {
@@ -59,10 +59,10 @@ test('dshStatusFromRun levels', () => {
 })
 
 test('startDsh without dsh binary returns not ok', async () => {
-  const prev = process.env.DEEP_DSH_BIN
+  const prev = process.env.GIM_DSH_BIN
   const prevPath = process.env.Path || process.env.PATH
-  // Point PATH away so which('dsh') fails; missing DEEP_DSH_BIN
-  delete process.env.DEEP_DSH_BIN
+  // Point PATH away so which('dsh') fails; missing GIM_DSH_BIN
+  delete process.env.GIM_DSH_BIN
   process.env.Path = 'C:\\Windows\\System32'
   process.env.PATH = process.env.Path
   try {
@@ -70,8 +70,8 @@ test('startDsh without dsh binary returns not ok', async () => {
     assert.equal(r.ok, false)
     assert.match(r.detail, /dsh not on PATH/i)
   } finally {
-    if (prev === undefined) delete process.env.DEEP_DSH_BIN
-    else process.env.DEEP_DSH_BIN = prev
+    if (prev === undefined) delete process.env.GIM_DSH_BIN
+    else process.env.GIM_DSH_BIN = prev
     process.env.Path = prevPath
     process.env.PATH = prevPath
   }

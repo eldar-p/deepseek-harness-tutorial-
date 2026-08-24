@@ -1,5 +1,5 @@
 /**
- * Deep MCP protocol handlers (stdio JSON-RPC) — testable without readline.
+ * GIM MCP protocol handlers (stdio JSON-RPC) — testable without readline.
  */
 import { indexStatus, defaultIndexDir } from './code-index/indexer.js'
 import { paths } from './paths.js'
@@ -9,13 +9,13 @@ import { searchDeferredTools, selectDeferredTool, formatToolSearchHits } from '.
 import { daemonTick } from './daemon.js'
 
 export const MCP_PROTOCOL = '2024-11-05'
-export const MCP_SERVER_INFO = { name: 'deep-cli', version: '1.1.1' }
+export const MCP_SERVER_INFO = { name: 'gim-cli', version: '1.1.1' }
 
 export const MCP_TOOLS = [
   {
     name: 'tool_search',
     description:
-      'Search deferred Deep tool catalog by keywords (ToolSearch pattern). Prefer this before guessing tools.',
+      'Search deferred GIM tool catalog by keywords (ToolSearch pattern). Prefer this before guessing tools.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -36,7 +36,7 @@ export const MCP_TOOLS = [
   },
   {
     name: 'code_search',
-    description: 'Semantic search over indexed workspace code. Run deep index build first if empty.',
+    description: 'Semantic search over indexed workspace code. Run gim index build first if empty.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -58,7 +58,7 @@ export const MCP_TOOLS = [
   },
   {
     name: 'stack_status',
-    description: 'List Deep stacks and active llama/DSH/guest flags.',
+    description: 'List GIM stacks and active llama/DSH/guest flags.',
     inputSchema: { type: 'object', properties: {} },
   },
   {
@@ -86,7 +86,7 @@ export const MCP_TOOLS = [
  * @param {{ indexUrl?: string, fetchFn?: typeof fetch }} [opts]
  */
 export async function callMcpTool(name, args = {}, opts = {}) {
-  const INDEX_URL = opts.indexUrl || process.env.DEEP_INDEX_URL || 'http://127.0.0.1:14150'
+  const INDEX_URL = opts.indexUrl || process.env.GIM_INDEX_URL || 'http://127.0.0.1:14150'
   const fetchFn = opts.fetchFn || globalThis.fetch
 
   if (name === 'tool_search') {

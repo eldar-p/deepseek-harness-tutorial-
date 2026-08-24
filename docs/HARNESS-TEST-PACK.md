@@ -1,12 +1,12 @@
 # Agent harness test pack
 
-Offline checks for Deep CLI **guardrails + hybrid API wiring** — no Docker, no GGUF, no API key.
+Offline checks for GIM CLI **guardrails + hybrid API wiring** — no Docker, no GGUF, no API key.
 
 ## Run
 
 ```bash
 npm run test:harness
-deep test harness
+gim test harness
 node scripts/harness-test-pack.mjs
 node scripts/harness-test-pack.mjs --json
 ```
@@ -31,13 +31,23 @@ node scripts/harness-test-pack.mjs --json
 | `npm run smoke:guest` | Docker |
 | `npm run smoke:e2e` | Full stack |
 | `npm test` / `npm run test:coverage` | Unit + coverage gate |
-| `DEEP_API_SMOKE=1 npm run smoke:api` | Real API key |
+| `GIM_API_SMOKE=1 npm run smoke:api` | Real API key |
 
 ## Policy score
 
 ```bash
-deep doctor --policy
-# or included in: deep doctor --readiness --stage=1.1
+gim doctor --policy
+gim doctor --security   # policy + P6 enforcement eval
+# or included in: gim doctor --readiness --stage=1.1
 ```
 
-See [MARKET-FIT.md](./MARKET-FIT.md) — this pack moves **AI testing** from partial toward cover for authors of the stack.
+## Security eval (P6)
+
+```bash
+npm run test:security
+gim test security
+```
+
+See [SECURITY-EVAL.md](./SECURITY-EVAL.md) — adversarial enforcement, separate from this harness pack.
+
+See [docs/SECURITY-EVAL.md](./SECURITY-EVAL.md) — adversarial enforcement pack.

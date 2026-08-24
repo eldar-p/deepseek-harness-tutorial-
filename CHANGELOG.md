@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.0.0] — 2026-08-24
+
+### Changed
+
+- **Rebrand:** Deep CLI → **GIM CLI** (Generative Intelligence Manager CLI)
+- Package `@gim-cli/gim`, binary `gim`, home `~/.gim`, env `GIM_*`
+- License **CC BY-NC-SA 4.0 → Apache-2.0** (commercial-friendly; Colibri orchestration OK — do not vendor Colibri C as package code)
+- GitHub repo → `eldar-p/gim-cli`
+- Breaking: migrate config from `~/.deep` to `~/.gim` (copy manually if upgrading)
+
+### Added
+
+- **Native GIM UI** (`ui/`, `gim ui`) — chats, Agent/Ask/Plan/Debug, model select, attachments, SSE streaming + thoughts
+- DSH is **optional** (`--dsh` / `GIM_USE_DSH=1`); default front-end is GIM UI
+- Agent/Debug **tools**: `list_dir`, `read_file`, `write_file`, `search_files`, `guest_bash` (+ risk deny)
+- Workspace **file browser** panel in GIM UI
+- **ask_user** clarifying polls (options + free text); Ask/Plan can clarify too; UI form resumes the agent loop
+- **Colibri backend** (`gim start --colibri`): safetensors via `coli serve`; default `E:\models\DeepSeek-V4-Flash-0731`; wired into GIM UI model list
+
 ## [1.1.1] — 2026-08-24
 
 ### Fixed
@@ -16,16 +35,16 @@
 
 ### Added
 
-- `deep coord --task=…` — parallel index-search coordinator
-- `deep mcp config` — Cursor/Claude Desktop MCP JSON snippet
+- `gim coord --task=…` — parallel index-search coordinator
+- `gim mcp config` — Cursor/Claude Desktop MCP JSON snippet
 - `npm run smoke:api` — mock (or live) API provider smoke
-- Write-path risk: `deep risk write-path` + one-shot-guard deny for `.env`/keys/`secrets.json`
-- Readiness stage `1.1` (`deep doctor --readiness --stage=1.1`)
-- Agent harness test pack: `deep test harness` / `npm run test:harness` + [docs/HARNESS-TEST-PACK.md](./docs/HARNESS-TEST-PACK.md)
-- Policy score: `deep doctor --policy` (isolation grade A–F)
+- Write-path risk: `gim risk write-path` + one-shot-guard deny for `.env`/keys/`secrets.json`
+- Readiness stage `1.1` (`gim doctor --readiness --stage=1.1`)
+- Agent harness test pack: `gim test harness` / `npm run test:harness` + [docs/HARNESS-TEST-PACK.md](./docs/HARNESS-TEST-PACK.md)
+- Policy score: `gim doctor --policy` (isolation grade A–F)
 - CI runs `smoke:api` + harness pack on all OS
 - GitHub Release **v1.1.0** zip + sha256; `manifests/cli-releases.json` channels → 1.1.0
-- Cross-OS field-lite: `deep field lite` + `field-linux.sh` / `field-macos.sh` / WSL helper; CI job on ubuntu+macos
+- Cross-OS field-lite: `gim field lite` + `field-linux.sh` / `field-macos.sh` / WSL helper; CI job on ubuntu+macos
 - Readiness `--stage=field` for OS parity assets
 
 ### Changed
@@ -36,25 +55,25 @@
 
 ### Added
 
-- Hybrid cloud mode: `deep bootstrap|start --api PROVIDER` (openai/deepseek/openrouter/groq/together/custom)
-- Semantic code index: `deep index build|search|status` + optional LanceDB
+- Hybrid cloud mode: `gim bootstrap|start --api PROVIDER` (openai/deepseek/openrouter/groq/together/custom)
+- Semantic code index: `gim index build|search|status` + optional LanceDB
 - Host egress proxy + `secrets.json` (never mounted into guest)
-- MCP stdio server: `scripts/deep-mcp.mjs`
-- LSP bridge: `deep lsp` + `dsh-plugins/lsp-bridge` + skill
+- MCP stdio server: `scripts/gim-mcp.mjs`
+- LSP bridge: `gim lsp` + `dsh-plugins/lsp-bridge` + skill
 - Coordinator: `scripts/coordinator.mjs` (parallel index workers)
 - Memory/CONTEXT budget checks in `bootstrap` / `doctor`
-- Auto-mode LLM classifier: `deep risk classify` + `DEEP_AUTO_MODE=llm` (heuristic first; LLM only on `confirm`)
-- Stack health daemon: `deep daemon start|stop|status|tick` (Kairos-lite)
-- Proactive nudge: `.deep/PROACTIVE.md` on unhealthy ticks (`DEEP_PROACTIVE=1` / `--proactive`)
+- Auto-mode LLM classifier: `gim risk classify` + `GIM_AUTO_MODE=llm` (heuristic first; LLM only on `confirm`)
+- Stack health daemon: `gim daemon start|stop|status|tick` (Kairos-lite)
+- Proactive nudge: `.gim/PROACTIVE.md` on unhealthy ticks (`GIM_PROACTIVE=1` / `--proactive`)
 - ToolSearch deferred catalog: `src/tool-search.js` + MCP `tool_search` / `tool_select`
-- `deep mcp` stdio server (index + stack + risk + daemon tools)
+- `gim mcp` stdio server (index + stack + risk + daemon tools)
 - Linux GPU: pinned **Vulkan** llama binary (official ggml has no Linux CUDA zip)
 - Beginner guide `README_BEGINNER.md`, `docs/OS-COMPAT.md`
 - ASCII banner (`assets/banner.txt`) on `help` / `start` / first run
-- `deep version` — local vs CDN freshness
-- `deep deps` / `deep check` — dependency + version probe
-- `deep help [command]` topic help
-- `DEEP_NO_BANNER=1` to silence art
+- `gim version` — local vs CDN freshness
+- `gim deps` / `gim check` — dependency + version probe
+- `gim help [command]` topic help
+- `GIM_NO_BANNER=1` to silence art
 - Pinned llama.cpp sha256 for win32 / linux / darwin (b9771)
 
 ### Changed
@@ -118,7 +137,7 @@
 ### Added
 
 - `src/checksums.js` + pack-release `.sha256` sidecar
-- `deep update` verifies sidecar / optional `sha256Url`
+- `gim update` verifies sidecar / optional `sha256Url`
 - Unit tests: `parseArgs`, help/presets, checksums
 - Nightly CI workflow (ubuntu / macos / windows)
 
@@ -138,36 +157,36 @@
 - `scripts/smoke-e2e.mjs` + `npm run smoke:e2e` (jail/HTTP/guest/chat)
 - Coverage gate raised to **30%** (src ~69%)
 - `npm run audit:alpha`
-- `deep doctor --readiness --stage=alpha`
-- `deep stacks`, `deep status --all`, `registerStack()` in config
-- Guest network env: `DEEP_NET_MODE`, `DEEP_NET_ALLOWLIST`
+- `gim doctor --readiness --stage=alpha`
+- `gim stacks`, `gim status --all`, `registerStack()` in config
+- Guest network env: `GIM_NET_MODE`, `GIM_NET_ALLOWLIST`
 - GPU lock tracks stack name; blocks second GPU stack
 - `ALPHA.md` status page
 
 ### Changed
 
-- **License:** MIT → **CC BY-NC-SA 4.0** (Attribution-NonCommercial-ShareAlike)
-- README rewritten for Deep CLI alpha (legacy VirtualBox moved to bottom)
+- **License:** MIT → **Apache-2.0** (Attribution-NonCommercial-ShareAlike)
+- README rewritten for GIM CLI alpha (legacy VirtualBox moved to bottom)
 - Coverage gate raised to **50%** (src ~69%)
 - Audit #18 TTY → PASS; Audit #22 context → PASS
-- Guest image `deep-guest:0.2-beta` with iptables allowlist (`deep-net-enforce`)
-- `deep update --dry-run` + CDN fetch path when artifact URLs set
-- `npm run pack:release` packs `dist/deep-cli-*.zip` with sha256 snippet
-- `deep update --channel beta` extracts zip + writes `%LOCALAPPDATA%\deep\bin\deep.cmd`
-- Local override: `DEEP_CLI_ZIP` / `DEEP_CLI_SHA256`
+- Guest image `gim-guest:0.2-beta` with iptables allowlist (`gim-net-enforce`)
+- `gim update --dry-run` + CDN fetch path when artifact URLs set
+- `npm run pack:release` packs `dist/gim-cli-*.zip` with sha256 snippet
+- `gim update --channel beta` extracts zip + writes `%LOCALAPPDATA%\gim\bin\gim.cmd`
+- Local override: `GIM_CLI_ZIP` / `GIM_CLI_SHA256`
 ### Changed
 
 - Pre-beta: audits #5/#7 PASS; `docs/TYPES.md`; `npm run audit:prebeta`
 - Tests: proc / llama / shutdown (74 total)
-- GitHub Release `v0.2.0-alpha` includes `deep-cli-0.2.0-alpha.zip` (CDN install verified)
-- `deep doctor --readiness --stage=beta` (100/100)
+- GitHub Release `v0.2.0-alpha` includes `gim-cli-0.2.0-alpha.zip` (CDN install verified)
+- `gim doctor --readiness --stage=beta` (100/100)
 - `BETA.md` / `PRE-BETA.md` status pages
 
 ## [0.1.0-prealpha] — 2026-08-24
 
 ### Added
 
-- Deep CLI: `doctor`, `bootstrap`, `start`, `stop`, `status`, `presets`, `update`, `help`
+- GIM CLI: `doctor`, `bootstrap`, `start`, `stop`, `status`, `presets`, `update`, `help`
 - `doctor --readiness` — 10-item pre-alpha milestone score
 - llama-server fetch (sha256), spawn, health yellow→green, quant warnings
 - DSH web spawn, settings → local llama, plugin/skill materialize

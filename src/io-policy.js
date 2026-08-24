@@ -2,11 +2,11 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { chmodOwnerOnly } from './paths.js'
 
-/** Soft cap for deep.log before rotate (SSD-friendly, events-only log). */
-export const DEEP_LOG_MAX_BYTES = Number(process.env.DEEP_LOG_MAX_BYTES || 512 * 1024)
+/** Soft cap for gim.log before rotate (SSD-friendly, events-only log). */
+export const GIM_LOG_MAX_BYTES = Number(process.env.GIM_LOG_MAX_BYTES || 512 * 1024)
 
-/** Rotate deep.log → deep.log.1 when over cap; keep one generation only. */
-export function rotateLogIfLarge(logPath, { maxBytes = DEEP_LOG_MAX_BYTES } = {}) {
+/** Rotate gim.log → gim.log.1 when over cap; keep one generation only. */
+export function rotateLogIfLarge(logPath, { maxBytes = GIM_LOG_MAX_BYTES } = {}) {
   if (!fs.existsSync(logPath)) return false
   const size = fs.statSync(logPath).size
   if (size <= maxBytes) return false

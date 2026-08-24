@@ -1,4 +1,4 @@
-# Инфраструктура вокруг Deep CLI
+# Инфраструктура вокруг GIM CLI
 
 Четыре опоры продукта (pre-alpha — каркас, без CDN publish).
 
@@ -7,14 +7,15 @@
 | **Распространение** | [dist/CHANNELS.md](./dist/CHANNELS.md) · [dist/RELEASE.md](./dist/RELEASE.md) | local install + manifests |
 | **Документация** | [README.md](./README.md) (индекс) | INSTALL, ARCHITECTURE, TROUBLESHOOTING |
 | **Сообщество** | [../CONTRIBUTING.md](../CONTRIBUTING.md) | templates + release process |
-| **Legal** | [legal/](./legal/) | CC BY-NC-SA 4.0, third-party, commercial notice |
+| **Legal** | [legal/](./legal/) | Apache-2.0, third-party, commercial notice |
 
 ## Команды
 
 ```bash
 npm run infra:check    # готовность дистрибутива (LICENSE, manifests, docs)
-npm run audit          # 26 аудитов
-node bin/deep.js update --channel stable   # pre-alpha: проверка канала
+npm run audit          # gate pre-alpha (7 checks)
+npm run audit:security # audits 1–32
+node bin/gim.js update --channel stable
 ```
 
 ## CI
@@ -24,4 +25,4 @@ node bin/deep.js update --channel stable   # pre-alpha: проверка кан�
 
 ## Связь с версиями
 
-См. [VERSION-PLAN.md](./VERSION-PLAN.md): CDN и signed releases — **beta+**; сейчас git clone + `scripts/install-deep.*`.
+См. [VERSION-PLAN.md](./VERSION-PLAN.md): CDN — **beta+**; установка: `scripts/install-gim.*` или git clone.

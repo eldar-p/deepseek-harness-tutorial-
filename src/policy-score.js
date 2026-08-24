@@ -61,7 +61,7 @@ export function assessPolicyScore() {
     'egress',
     'Egress proxy script',
     10,
-    fs.existsSync(path.join(PKG_ROOT, 'scripts/deep-services.mjs')) ||
+    fs.existsSync(path.join(PKG_ROOT, 'scripts/gim-services.mjs')) ||
       fs.existsSync(path.join(PKG_ROOT, 'src/egress-proxy.js')),
   )
   add(

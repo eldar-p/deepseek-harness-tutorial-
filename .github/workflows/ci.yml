@@ -31,8 +31,8 @@ jobs:
         run: npm run test:coverage
         shell: bash
         env:
-          DEEP_COVERAGE_MIN: '80'
-          DEEP_COVERAGE_FLOOR: '78'
+          GIM_COVERAGE_MIN: '80'
+          GIM_COVERAGE_FLOOR: '78'
 
       - name: Audit gate (pre-alpha)
         run: node scripts/audit-run.mjs --gate=pre-alpha
@@ -40,11 +40,11 @@ jobs:
       - name: Infrastructure check
         run: npm run infra:check
 
-      - name: deep doctor
-        run: node bin/deep.js doctor
+      - name: gim doctor
+        run: node bin/gim.js doctor
 
-      - name: deep help
-        run: node bin/deep.js help
+      - name: gim help
+        run: node bin/gim.js help
 
       - name: API smoke (mock)
         run: npm run smoke:api
@@ -67,7 +67,7 @@ jobs:
       - name: Field-lite (policy + llama CPU fetch)
         run: npm run field:lite
         env:
-          DEEP_NO_BANNER: '1'
+          GIM_NO_BANNER: '1'
 
   smoke-guest:
     name: smoke guest (ubuntu + docker)

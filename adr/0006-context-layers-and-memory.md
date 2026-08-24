@@ -14,11 +14,11 @@
 | Layer | Store |
 |-------|--------|
 | Code / logs | `workspace/` |
-| AI facts (consent) | `.deep/memory.json` |
+| AI facts (consent) | `.gim/memory.json` |
 | Session | DSH + compaction |
 | KV | llama (drop on stop) |
 
-DSH config (`cordis.deep.patch.yml`):
+DSH config (`cordis.gim.patch.yml`):
 
 - `compaction-basic`: auto at 50% window, retain 15%
 - `tool-result-pruner`: 4k char threshold

@@ -6,19 +6,15 @@ const BANNER_FILE = path.join(PKG_ROOT, 'assets', 'banner.txt')
 
 /** Fallback if assets/banner.txt missing. */
 const FALLBACK_ASCII = `
- ____                               ____     __     ______     
-/\\  _\`\\                            /\\  _\`\\  /\\ \\   /\\__  _\\    
-\\ \\ \\/\\ \\     __     __   _____    \\ \\ \\/\\_\\\\ \\ \\  \\/_/\\ \\/    
- \\ \\ \\ \\ \\  /'__\`\\ /'__\`\\/\\ '__\`\\   \\ \\ \\/_/_\\ \\ \\  __\\ \\ \\    
-  \\ \\ \\_\\ \\/\\  __//\\  __/\\ \\ \\L\\ \\   \\ \\ \\L\\ \\\\ \\ \\L\\ \\\\_\\ \\__ 
-   \\ \\____/\\ \\____\\ \\____\\\\ \\ ,__/    \\ \\____/ \\ \\____//\\_____\\
-    \\/___/  \\/____/\\/____/ \\ \\ \\/      \\/___/   \\/___/ \\/_____/
-                            \\ \\_\\                              
-                             \\/_/
+   ____ ___ __  __    ____ _     ___ 
+  / ___|_ _|  \\/  |  / ___| |   |_ _|
+ | |  _ | || |\\/| | | |   | |    | | 
+ | |_| || || |  | | | |___| |___ | | 
+  \\____|___|_|  |_|  \\____|_____|___|
 `.trimStart()
 
 function useColor() {
-  if (process.env.NO_COLOR || process.env.DEEP_NO_COLOR) return false
+  if (process.env.NO_COLOR || process.env.GIM_NO_COLOR) return false
   return !!(process.stdout.isTTY && process.env.TERM !== 'dumb')
 }
 
@@ -41,7 +37,7 @@ export function readPkgVersion() {
 }
 
 export function bannerEnabled() {
-  if (process.env.DEEP_NO_BANNER === '1') return false
+  if (process.env.GIM_NO_BANNER === '1') return false
   if (process.env.CI === 'true') return false
   return true
 }
@@ -51,7 +47,7 @@ export function printBanner({ tagline = true } = {}) {
   console.log(paint(loadAsciiArt(), '36'))
   if (tagline) {
     const ver = readPkgVersion()
-    console.log(paint(`  Deep CLI  v${ver}  ·  llama.cpp + guest + DSH`, '2'))
+    console.log(paint(`  GIM CLI  v${ver}  ·  llama.cpp + guest + GIM UI`, '2'))
     console.log('')
   }
 }
@@ -76,16 +72,16 @@ export function markWelcomed() {
   }
 }
 
-/** First-run greeting with ASCII art (once per DEEP_HOME). */
+/** First-run greeting with ASCII art (once per GIM_HOME). */
 export function maybePrintFirstRunWelcome() {
   if (!bannerEnabled() || !isFirstRun()) return false
   printBanner()
   console.log(paint('  Welcome — first run detected.', '1'))
   console.log('  Next:')
-  console.log('    deep doctor')
-  console.log('    deep bootstrap --gguf PATH\\to\\model.gguf')
-  console.log('    deep start')
-  console.log('    deep help')
+  console.log('    gim doctor')
+  console.log('    gim bootstrap --gguf PATH\\to\\model.gguf')
+  console.log('    gim start')
+  console.log('    gim help')
   console.log('')
   markWelcomed()
   return true

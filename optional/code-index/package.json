@@ -1,7 +1,7 @@
 {
-  "name": "@deep-cli/code-index-optional",
+  "name": "@gim-cli/code-index-optional",
   "private": true,
-  "description": "Optional LanceDB + tree-sitter for Deep code index (install from repo root optional/code-index)",
+  "description": "Optional LanceDB + tree-sitter for GIM code index (install from repo root optional/code-index)",
   "type": "module",
   "dependencies": {
     "@lancedb/lancedb": "^0.17.0",

@@ -20,11 +20,11 @@ git checkout v0.2.0-alpha
 ## Beta
 
 - `manifests/cli-releases.json` с url+sha256
-- `npm run pack:release` → `dist/deep-cli-*.zip` + sha256 snippet
+- `npm run pack:release` → `dist/gim-cli-*.zip` + sha256 snippet
 - Upload zip to GitHub Release; paste url+sha256 into beta channel artifacts
-- `deep update --channel beta` downloads when url set
+- `gim update --channel beta` downloads when url set
 - Hard egress, coverage ≥50% — [todo/README-beta.md](../../todo/README-beta.md)
-- License: **CC BY-NC-SA 4.0** (packaged in LICENSE inside archive)
+- License: **Apache-2.0** (packaged in LICENSE inside archive)
 
 ## RC / 1.0
 

@@ -8,8 +8,8 @@ import {
   shouldDenyBashAsync,
 } from '../src/permission-risk.js'
 
-test('allows deep index search', () => {
-  assert.equal(classifyBashRisk('deep index search "foo"').level, 'allow')
+test('allows gim index search', () => {
+  assert.equal(classifyBashRisk('gim index search "foo"').level, 'allow')
 })
 
 test('denies rm -rf', () => {

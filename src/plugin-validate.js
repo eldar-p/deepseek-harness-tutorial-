@@ -1,5 +1,5 @@
 /**
- * Static checks for Deep DSH plugins — catch the 1.1.1 lsp-bridge class of boot crashes.
+ * Static checks for GIM DSH plugins — catch the 1.1.1 lsp-bridge class of boot crashes.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -18,9 +18,9 @@ export function listPatchedPluginIds(patchText) {
  */
 export function validateDeepPlugins({ pluginRoot = path.join(PKG_ROOT, 'dsh-plugins') } = {}) {
   const issues = []
-  const patchPath = path.join(PKG_ROOT, 'assets', 'cordis.deep.patch.yml')
+  const patchPath = path.join(PKG_ROOT, 'assets', 'cordis.gim.patch.yml')
   if (!fs.existsSync(patchPath)) {
-    return { ok: false, issues: [{ level: 'fail', id: 'patch', msg: 'missing assets/cordis.deep.patch.yml' }] }
+    return { ok: false, issues: [{ level: 'fail', id: 'patch', msg: 'missing assets/cordis.gim.patch.yml' }] }
   }
   const patch = fs.readFileSync(patchPath, 'utf8')
   const ids = listPatchedPluginIds(patch)
@@ -68,6 +68,6 @@ export function formatPluginValidation(result) {
     lines.push(`  plugins  ${i.level.toUpperCase()}  ${i.id}: ${i.msg}`)
   }
   if (result.ok) lines.push('  plugins  OK (warns only)')
-  else lines.push('  plugins  FAIL — fix before deep start (DSH may not boot)')
+  else lines.push('  plugins  FAIL — fix before gim start (DSH may not boot)')
   return lines.join('\n')
 }

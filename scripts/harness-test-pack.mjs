@@ -4,7 +4,7 @@
  *
  * Usage:
  *   npm run test:harness
- *   deep test harness
+ *   gim test harness
  *   node scripts/harness-test-pack.mjs [--json]
  *
  * Scenarios: docs/HARNESS-TEST-PACK.md
@@ -89,7 +89,7 @@ const summary = {
 if (asJson) {
   console.log(JSON.stringify(summary, null, 2))
 } else {
-  console.log('Deep harness test pack')
+  console.log('GIM harness test pack')
   console.log('─'.repeat(48))
   for (const r of results) {
     console.log(`  ${r.ok ? 'PASS' : 'FAIL'}  ${r.id.padEnd(18)} ${r.detail}`)

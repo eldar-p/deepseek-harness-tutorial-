@@ -17,7 +17,7 @@ export async function runCoordinator(task, opts = {}) {
 
   const raw = String(task || '').trim()
   if (!raw) {
-    throw Object.assign(new Error('Usage: deep coord --task="..." [--name STACK]'), { exitCode: 2 })
+    throw Object.assign(new Error('Usage: gim coord --task="..." [--name STACK]'), { exitCode: 2 })
   }
 
   const subtasks = raw

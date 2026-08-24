@@ -1,3 +1,0 @@
-﻿# HARD RULES  
-Shell = VM whoami only (vbox_exec or vm-exec.ps1). Never host dir on F:\.
-Network = tor-net. Teammate = ask_researcher.

@@ -5,8 +5,8 @@
  *
  * Usage:
  *   node scripts/field-lite.mjs
- *   deep field lite
- *   DEEP_HOME=/tmp/deep-field node scripts/field-lite.mjs
+ *   gim field lite
+ *   GIM_HOME=/tmp/gim-field node scripts/field-lite.mjs
  */
 import fs from 'node:fs'
 import os from 'node:os'
@@ -25,8 +25,8 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const asJson = process.argv.includes('--json')
 const skipFetch = process.argv.includes('--skip-fetch')
 
-if (!process.env.DEEP_HOME) {
-  process.env.DEEP_HOME = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-field-'))
+if (!process.env.GIM_HOME) {
+  process.env.GIM_HOME = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-field-'))
 }
 
 /** @type {{ id: string, ok: boolean, detail: string }[]} */
@@ -89,10 +89,10 @@ try {
 }
 
 {
-  const r = spawnSync(process.execPath, [path.join(ROOT, 'bin', 'deep.js'), 'doctor', '--policy'], {
+  const r = spawnSync(process.execPath, [path.join(ROOT, 'bin', 'gim.js'), 'doctor', '--policy'], {
     cwd: ROOT,
     encoding: 'utf8',
-    env: { ...process.env, DEEP_NO_BANNER: '1' },
+    env: { ...process.env, GIM_NO_BANNER: '1' },
   })
   check('doctor', r.status === 0, `exit ${r.status}`)
 }
@@ -101,7 +101,7 @@ const failed = results.filter((r) => !r.ok)
 const summary = {
   pack: 'field-lite',
   os: `${host.platform}/${host.arch}`,
-  deepHome: process.env.DEEP_HOME,
+  gimHome: process.env.GIM_HOME,
   ok: failed.length === 0,
   passed: results.filter((r) => r.ok).length,
   failed: failed.length,
@@ -112,8 +112,8 @@ const summary = {
 if (asJson) {
   console.log(JSON.stringify(summary, null, 2))
 } else {
-  console.log(`Deep field-lite (${summary.os})`)
-  console.log(`DEEP_HOME=${summary.deepHome}`)
+  console.log(`GIM field-lite (${summary.os})`)
+  console.log(`GIM_HOME=${summary.gimHome}`)
   console.log('─'.repeat(48))
   for (const r of results) {
     console.log(`  ${r.ok ? 'PASS' : 'FAIL'}  ${r.id.padEnd(16)} ${r.detail}`)

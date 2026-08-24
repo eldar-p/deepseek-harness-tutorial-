@@ -2,3 +2,4 @@
 node_modules/
 install.log
 dist/
+.cursor/

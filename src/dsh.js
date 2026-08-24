@@ -7,7 +7,7 @@ import { loadManifest } from './download.js'
 import { buildDshApiYaml } from './api-provider.js'
 
 export function resolveDshBin() {
-  if (process.env.DEEP_DSH_BIN && fs.existsSync(process.env.DEEP_DSH_BIN)) return process.env.DEEP_DSH_BIN
+  if (process.env.GIM_DSH_BIN && fs.existsSync(process.env.GIM_DSH_BIN)) return process.env.GIM_DSH_BIN
   const found = which('dsh')
   if (!found) return null
   if (process.platform === 'win32') {
@@ -28,7 +28,7 @@ export function resolveDshBin() {
 /** Write $DSH_HOME/settings.yaml — local llama OR cloud API profile. */
 export function writeDshRuntimeSettings({
   llamaPort,
-  contextWindow = Number(process.env.DEEP_LLAMA_CTX || 32768),
+  contextWindow = Number(process.env.GIM_LLAMA_CTX || 32768),
   apiProfile = null,
 }) {
   const dshHome = paths().dshHome
@@ -47,7 +47,7 @@ llm-pi-ai:
   providers:
     llama:
       displayName: llama.cpp
-      apiKeyEnv: DEEP_LLAMA_API_KEY
+      apiKeyEnv: GIM_LLAMA_API_KEY
       api: openai-completions
       baseURL: ${baseURL}
       defaultContextWindow: ${contextWindow}
@@ -76,9 +76,9 @@ llm-pi-ai:
     }
   } else {
     if (!fs.existsSync(envPath)) {
-      fs.writeFileSync(envPath, 'DEEP_LLAMA_API_KEY=sk-deep-local\n', 'utf8')
-    } else if (!fs.readFileSync(envPath, 'utf8').includes('DEEP_LLAMA_API_KEY')) {
-      fs.appendFileSync(envPath, '\nDEEP_LLAMA_API_KEY=sk-deep-local\n', 'utf8')
+      fs.writeFileSync(envPath, 'GIM_LLAMA_API_KEY=sk-gim-local\n', 'utf8')
+    } else if (!fs.readFileSync(envPath, 'utf8').includes('GIM_LLAMA_API_KEY')) {
+      fs.appendFileSync(envPath, '\nGIM_LLAMA_API_KEY=sk-gim-local\n', 'utf8')
     }
   }
 
@@ -86,7 +86,7 @@ llm-pi-ai:
   const profileDir = path.join(dshHome, 'profiles', 'web')
   fs.mkdirSync(path.join(profileDir, 'dsh-plugins'), { recursive: true })
   const patchDst = path.join(profileDir, 'cordis.patch.yml')
-  const patchSrc = path.join(PKG_ROOT, 'assets', 'cordis.deep.patch.yml')
+  const patchSrc = path.join(PKG_ROOT, 'assets', 'cordis.gim.patch.yml')
   if (!fs.existsSync(patchDst) && fs.existsSync(patchSrc)) {
     fs.copyFileSync(patchSrc, patchDst)
   }
@@ -107,20 +107,20 @@ export async function startDsh({ stack, port, llamaPort, guestName = null, engin
   const dshHome = paths().dshHome
   const workspace = paths(stack).workspace
   writeDshRuntimeSettings({ llamaPort, apiProfile, contextWindow: apiProfile?.contextWindow })
-  const { writeDeepProfilePatch } = await import('./materialize.js')
-  writeDeepProfilePatch(stack)
+  const { writeGimProfilePatch } = await import('./materialize.js')
+  writeGimProfilePatch(stack)
   const logFile = runLogPath(stack, 'dsh')
-  const dockerBin = engineBin || resolveEngineBin('docker') || process.env.DEEP_ENGINE || 'docker'
+  const dockerBin = engineBin || resolveEngineBin('docker') || process.env.GIM_ENGINE || 'docker'
   const env = {
     ...engineEnv(typeof dockerBin === 'string' ? dockerBin : null),
     DSH_HOME: dshHome,
-    DEEP_LLAMA_API_KEY: process.env.DEEP_LLAMA_API_KEY || 'sk-deep-local',
-    DEEP_WORKSPACE: workspace,
-    DEEP_PKG_ROOT: PKG_ROOT,
+    GIM_LLAMA_API_KEY: process.env.GIM_LLAMA_API_KEY || 'sk-gim-local',
+    GIM_WORKSPACE: workspace,
+    GIM_PKG_ROOT: PKG_ROOT,
     HOST_SHARE: workspace,
-    DEEP_GUEST_NAME: guestName || `deep-guest-${stack}`,
-    DEEP_ENGINE: engineBin || (typeof dockerBin === 'string' ? dockerBin : 'docker'),
-    ...(indexPort ? { DEEP_INDEX_URL: `http://127.0.0.1:${indexPort}` } : {}),
+    GIM_GUEST_NAME: guestName || `gim-guest-${stack}`,
+    GIM_ENGINE: engineBin || (typeof dockerBin === 'string' ? dockerBin : 'docker'),
+    ...(indexPort ? { GIM_INDEX_URL: `http://127.0.0.1:${indexPort}` } : {}),
     ...(apiProfile?.apiKeyEnv && process.env[apiProfile.apiKeyEnv]
       ? {}
       : apiProfile?.apiKey

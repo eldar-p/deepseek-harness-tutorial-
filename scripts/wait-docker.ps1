@@ -18,7 +18,7 @@ $dockerDir = Split-Path -Parent $docker
 if ($env:Path -notlike "*$dockerDir*") {
   $env:Path = "$dockerDir;$env:Path"
 }
-$env:DEEP_DOCKER_BIN = $docker
+$env:GIM_DOCKER_BIN = $docker
 $desktop = "$env:ProgramFiles\Docker\Docker\Docker Desktop.exe"
 if (Test-Path $desktop) {
   $running = Get-Process "Docker Desktop" -ErrorAction SilentlyContinue
@@ -40,5 +40,5 @@ while ((Get-Date) -lt $deadline) {
   Start-Sleep -Seconds 3
 }
 Write-Host "FAIL: Docker not ready — open Docker Desktop manually, wait for whale icon green"
-Write-Host "Hint: `$env:DEEP_DOCKER_BIN = '$docker'"
+Write-Host "Hint: `$env:GIM_DOCKER_BIN = '$docker'"
 exit 1

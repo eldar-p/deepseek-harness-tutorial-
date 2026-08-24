@@ -1,12 +1,12 @@
-﻿# Deep CLI
+# GIM CLI
 
-**Гибридный AI-оркестратор:** локальные GGUF (llama.cpp) **или** облачные OpenAI-compatible API + Docker guest + DSH.  
-Работает **на вашей машине** (agent, sandbox, index) — модель может быть **локальной или в облаке**.
+**Гибридный AI-оркестратор:** Colibri Docker (default Win/Linux) **или** GGUF / cloud API + Docker guest + **native GIM UI**.  
+Работает **на вашей машине** (agent, sandbox, index, security eval).
 
-**Стадия:** [Alpha](./ALPHA.md) + [Beta](./BETA.md) · tag [`v0.2.0-alpha`](https://github.com/eldar-p/deepseek-harness-tutorial-/releases/tag/v0.2.0-alpha)  
-**Лицензия:** [CC BY-NC-SA 4.0](./LICENSE)
+**Стадия:** [Alpha](./ALPHA.md) · tag [`v0.2.0-alpha`](https://github.com/eldar-p/gim-cli/releases/tag/v0.2.0-alpha)  
+**Лицензия:** [Apache-2.0](./LICENSE)
 
-[Документация](./docs/README.md) · **[Гайд для новичков](./README_BEGINNER.md)** · [Установка](./docs/INSTALL.md) · [ОС-матрица](./docs/OS-COMPAT.md) · [Troubleshooting](./docs/TROUBLESHOOTING.md) · [ADR](./adr/README.md)
+[Документация](./docs/README.md) · **[Гайд для новичков](./README_BEGINNER.md)** · [Linux](./docs/LINUX.md) · [macOS](./MACOS.md) · [Security](./docs/SECURITY.md) · [Speed P0–P6](./docs/SPEED.md)
 
 > **Впервые?** → [README_BEGINNER.md](./README_BEGINNER.md)
 
@@ -16,11 +16,12 @@
 
 | Режим | Флаг | Когда использовать |
 |-------|------|-------------------|
-| **Локальный GGUF** | `--gguf PATH` | Приватность, офлайн, своя GPU (4070+), нет подписки на API |
-| **Облачный API** | `--api PROVIDER` | Нет GPU / слабый ПК, нужен SOTA-кодер, быстрый старт |
-| **Гибрид стеков** | `--name work` / `--name local` | Один стек на API, другой на GGUF |
+| **Colibri Docker** | `gim start` (Win/Linux) | Большие MoE локально, warm LLM, KV slots |
+| **Локальный GGUF** | `--gguf PATH` | macOS, офлайн, llama Metal/CUDA/Vulkan |
+| **Облачный API** | `--api PROVIDER` | Нет GPU, быстрый старт |
+| **Гибрид стеков** | `--name work` / `--name local` | Один стек на API, другой на Colibri/GGUF |
 
-Провайдеры API: `openai`, `deepseek`, `openrouter`, `groq`, `together`, `custom` — см. `deep api`.
+Провайдеры API: `openai`, `deepseek`, `openrouter`, `groq`, `together`, `custom` — см. `gim api`.
 
 ---
 
@@ -35,7 +36,7 @@
 | Qwen3-4B | Q4_K_M (~2.3 GB) | ~4 GB | 12/16 | Smoke / слабый ПК |
 | gemma-3-1b | Q6 (~1 GB) | минимум | слабый | Только проверка стека |
 
-Предпочитайте **Q4_K_M+** для tool-heavy задач; Q3 — с предупреждением `deep start`.
+Предпочитайте **Q4_K_M+** для tool-heavy задач; Q3 — с предупреждением `gim start`.
 
 ### Облачные API (через `--api`)
 
@@ -62,29 +63,29 @@
 ## Быстрый старт — локальный GGUF
 
 ```powershell
-git clone https://github.com/eldar-p/deepseek-harness-tutorial-.git
-cd deepseek-harness-tutorial-
+git clone https://github.com/eldar-p/gim-cli.git
+cd gim-cli
 powershell -File .\scripts\wait-docker.ps1
 npm install -g @deepseek-ai/dsh@0.1.1-rc.2
-node bin/deep.js bootstrap --gguf "C:\ai\models\Qwen3-4B-Q4_K_M.gguf"
-node bin/deep.js start
-node bin/deep.js status
+node bin/gim.js bootstrap --gguf "C:\ai\models\Qwen3-4B-Q4_K_M.gguf"
+node bin/gim.js start
+node bin/gim.js status
 ```
 
 ## Быстрый старт — облачный API (без GPU и без GGUF)
 
 ```powershell
-node bin/deep.js bootstrap --api deepseek --api-model deepseek-chat --api-key sk-...
-node bin/deep.js start --api deepseek
-node bin/deep.js status
+node bin/gim.js bootstrap --api deepseek --api-model deepseek-chat --api-key sk-...
+node bin/gim.js start --api deepseek
+node bin/gim.js status
 ```
 
-Или ключ через env: `$env:DEEPSEEK_API_KEY="sk-..."` → `deep start --api deepseek`
+Или ключ через env: `$env:DEEPSEEK_API_KEY="sk-..."` → `gim start --api deepseek`
 
 Свой endpoint:
 
 ```powershell
-node bin/deep.js bootstrap --api custom --api-base https://llm.example.com/v1 --api-model my-model --api-key ...
+node bin/gim.js bootstrap --api custom --api-base https://llm.example.com/v1 --api-model my-model --api-key ...
 ```
 
 ---
@@ -93,34 +94,34 @@ node bin/deep.js bootstrap --api custom --api-base https://llm.example.com/v1 --
 
 | Команда | Описание |
 |---------|----------|
-| `deep doctor` | Проверка окружения (+ `--policy`) |
-| `deep test harness` | Offline guardrail pack |
-| `deep field lite` | OS field-lite (llama fetch) |
-| `deep bootstrap --gguf PATH` | Локальная модель |
-| `deep bootstrap --api PROVIDER [--api-model M] [--api-key K]` | Облачная модель |
-| `deep start [--gguf PATH \| --api PROVIDER] [--cpu]` | Поднять стек |
-| `deep stop` | Остановить (не спамить Ctrl+C) |
-| `deep status` | DSH URL + модель |
-| `deep index build \| search \| status` | Семантический поиск по коду |
-| `deep lsp servers \| query …` | Host LSP (definition/hover/…) |
-| `deep daemon start \| stop \| status \| tick` | Health poller (llama/DSH) |
-| `deep mcp` | Stdio MCP (tool_search, code_search, …) |
-| `deep mcp config` | JSON для Cursor MCP |
-| `deep coord --task=…` | Параллельный index-search |
-| `deep risk classify "cmd" [--llm]` | Auto-mode risk label |
-| `deep risk write-path PATH` | Deny secrets/VCS paths |
-| `deep api` | Список API-провайдеров |
+| `gim doctor` | Проверка окружения (+ `--policy`) |
+| `gim test harness` | Offline guardrail pack |
+| `gim field lite` | OS field-lite (llama fetch) |
+| `gim bootstrap --gguf PATH` | Локальная модель |
+| `gim bootstrap --api PROVIDER [--api-model M] [--api-key K]` | Облачная модель |
+| `gim start [--gguf PATH \| --api PROVIDER] [--cpu]` | Поднять стек |
+| `gim stop` | Остановить (не спамить Ctrl+C) |
+| `gim status` | DSH URL + модель |
+| `gim index build \| search \| status` | Семантический поиск по коду |
+| `gim lsp servers \| query …` | Host LSP (definition/hover/…) |
+| `gim daemon start \| stop \| status \| tick` | Health poller (llama/DSH) |
+| `gim mcp` | Stdio MCP (tool_search, code_search, …) |
+| `gim mcp config` | JSON для Cursor MCP |
+| `gim coord --task=…` | Параллельный index-search |
+| `gim risk classify "cmd" [--llm]` | Auto-mode risk label |
+| `gim risk write-path PATH` | Deny secrets/VCS paths |
+| `gim api` | Список API-провайдеров |
 
 ---
 
 ## Архитектура
 
 ```text
-User → deep CLI (host)
+User → GIM CLI (host)
          ├── Model backend
          │     ├── llama-server  127.0.0.1:PORT/v1  (local --gguf)
          │     └── cloud API     OpenAI-compatible (--api)
-         ├── deep-guest          Docker sandbox @ /workspace
+         ├── gim-guest          Docker sandbox @ /workspace
          ├── egress-proxy        allowlist + secrets on host
          ├── code-index          semantic search (LanceDB optional)
          └── DSH web             127.0.0.1:PORT/
@@ -137,9 +138,10 @@ Guest + jail + index работают **одинаково** в local и API р�
 ```bash
 npm test
 npm run audit:security
+npm run test:security
 npm run smoke:e2e
 ```
 
 ---
 
-**Лицензия:** [CC BY-NC-SA 4.0](./LICENSE)
+**Лицензия:** [Apache-2.0](./LICENSE)

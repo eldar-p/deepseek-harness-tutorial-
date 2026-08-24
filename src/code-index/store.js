@@ -5,7 +5,7 @@ import { cosine, arrayToVec } from './embedder.js'
 /** @typedef {{ id: string, path: string, symbol: string, kind: string, startLine: number, endLine: number, text: string, lang: string, vector: number[], mtime: number }} StoredChunk */
 
 /**
- * @param {string} indexDir ~/.deep/workspace/<stack>/.deep/code-index
+ * @param {string} indexDir ~/.gim/workspace/<stack>/.gim/code-index
  */
 export function indexPaths(indexDir) {
   return {

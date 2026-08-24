@@ -17,7 +17,7 @@ const QUANT_SCORE = {
 export const RECOMMENDED_MIN = 'Q4_K_M'
 
 const HINT =
-  `For tool-heavy agents: same model at ${RECOMMENDED_MIN}+, or a smaller coder at Q4/Q5. Then: deep start --gguf PATH`
+  `For tool-heavy agents: same model at ${RECOMMENDED_MIN}+, or a smaller coder at Q4/Q5. Then: gim start --gguf PATH`
 
 export function parseQuantFromPath(ggufPath) {
   if (!ggufPath || typeof ggufPath !== 'string') return null
@@ -79,7 +79,7 @@ export function quantStatusRow(ggufPath, { apiMode = false } = {}) {
     return { level: 'green', detail: 'n/a (cloud API)' }
   }
   if (!ggufPath) {
-    return { level: 'yellow', detail: 'no gguf in config — deep start --gguf PATH' }
+    return { level: 'yellow', detail: 'no gguf in config — gim start --gguf PATH' }
   }
   const a = assessGgufQuant(ggufPath)
   if (!a.quant) {
@@ -105,18 +105,18 @@ function truthyFlag(flags, ...keys) {
 }
 
 /**
- * Soft policy for `deep start`:
- * - severe (Q2−): blocked unless --force-quant / DEEP_FORCE_QUANT=1
- * - --require-q4 / DEEP_REQUIRE_Q4=1: anything below Q4_K_M blocked (unless force)
+ * Soft policy for `gim start`:
+ * - severe (Q2−): blocked unless --force-quant / GIM_FORCE_QUANT=1
+ * - --require-q4 / GIM_REQUIRE_Q4=1: anything below Q4_K_M blocked (unless force)
  * - degraded (Q3): warn only by default
  *
  * @returns {{ ok: true, forced?: boolean }}
  */
 export function enforceQuantPolicy(assessment, flags = {}) {
   const force =
-    truthyFlag(flags, 'force-quant', 'forceQuant') || process.env.DEEP_FORCE_QUANT === '1'
+    truthyFlag(flags, 'force-quant', 'forceQuant') || process.env.GIM_FORCE_QUANT === '1'
   const requireQ4 =
-    truthyFlag(flags, 'require-q4', 'requireQ4') || process.env.DEEP_REQUIRE_Q4 === '1'
+    truthyFlag(flags, 'require-q4', 'requireQ4') || process.env.GIM_REQUIRE_Q4 === '1'
 
   if (!assessment) return { ok: true }
 
@@ -146,7 +146,7 @@ export function enforceQuantPolicy(assessment, flags = {}) {
   return { ok: true }
 }
 
-/** Markdown for workspace `.deep/QUANT.md` when quant is weak. */
+/** Markdown for workspace `.gim/QUANT.md` when quant is weak. */
 export function lowQuantAgentHints(assessment) {
   if (!assessment?.tier || assessment.tier === 'recommended') return null
   if (assessment.tier === 'acceptable') {
@@ -158,7 +158,7 @@ export function lowQuantAgentHints(assessment) {
       '- Re-read files after edits; do not trust long recalled context',
       '- Avoid parallel speculative tool spam',
       '',
-      `Upgrade: \`deep start --gguf PATH\` with ${RECOMMENDED_MIN}+`,
+      `Upgrade: \`gim start --gguf PATH\` with ${RECOMMENDED_MIN}+`,
       '',
     ].join('\n')
   }
@@ -184,7 +184,7 @@ export function lowQuantAgentHints(assessment) {
 }
 
 /**
- * Write or remove workspace `.deep/QUANT.md` based on assessment.
+ * Write or remove workspace `.gim/QUANT.md` based on assessment.
  * @returns {string|null} path written, or null if cleared/skipped
  */
 export function writeQuantHintFile(deepDir, assessment) {

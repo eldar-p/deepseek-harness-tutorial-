@@ -1,4 +1,4 @@
-# Upload dist/deep-cli-*.zip (+ .sha256) to GitHub Release (requires gh auth).
+# Upload dist/gim-cli-*.zip (+ .sha256) to GitHub Release (requires gh auth).
 # Usage: powershell -File .\scripts\publish-release.ps1 [-Tag v0.3.0-prebeta]
 param(
   [string]$Tag = "v1.0.0"
@@ -9,7 +9,7 @@ Set-Location $Root
 
 Write-Host "Packing…"
 npm run pack:release
-$zip = Get-ChildItem dist\deep-cli-*.zip | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+$zip = Get-ChildItem dist\gim-cli-*.zip | Sort-Object LastWriteTime -Descending | Select-Object -First 1
 if (-not $zip) { throw "no zip in dist/" }
 $side = "$($zip.FullName).sha256"
 Write-Host "Zip: $($zip.FullName)"
@@ -32,7 +32,7 @@ if (-not $gh) {
 $exists = gh release view $Tag 2>$null
 if ($LASTEXITCODE -ne 0) {
   Write-Host "Creating release $Tag…"
-  gh release create $Tag --title "Deep CLI $Tag" --notes "CC BY-NC-SA 4.0. See CHANGELOG.md / PRE-BETA.md." --target main
+  gh release create $Tag --title "GIM CLI $Tag" --notes "Apache-2.0. See CHANGELOG.md / ALPHA.md." --target main
 }
 gh release upload $Tag $zip.FullName --clobber
 if (Test-Path $side) { gh release upload $Tag $side --clobber }

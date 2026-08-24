@@ -1,6 +1,6 @@
 # Дополнительные security-аудиты (сверх 1–26)
 
-**Контекст:** gate `npm run audit:prebeta` закрывает **26/26** (см. `docs/AUDIT-STATUS.md`, `scripts/audit-run.mjs`).  
+**Контекст:** gate `npm run audit:prebeta` закрывает **26/26** (см. `docs/AUDITS.md`, `scripts/audit-run.mjs`).  
 Этот документ — **следующий слой**: угрозы, которые базовые аудиты покрывают слабо или только документально. Нумерация условная **27+** для будущего расширения `audit-run.mjs`.
 
 Не заменяет пентест; это чеклист PASS/FAIL для автоматизации.
@@ -25,7 +25,7 @@
 | 27.1 | `package.json` dependencies / optionalDependencies пусты (или allowlist) | нет неожиданных runtime deps |
 | 27.2 | `package-lock` / отсутствие lock согласовано с политикой | политика зафиксирована в аудите 8 |
 | 27.3 | Все URL в `manifests/*.json` имеют `sha256` (не null) для release-каналов | pin обязателен |
-| 27.4 | `pack-release` пишет sidecar `.sha256`; `deep update` отказывается без match | verify path в коде |
+| 27.4 | `pack-release` пишет sidecar `.sha256`; `gim update` отказывается без match | verify path в коде |
 | 27.5 | Guest image tag + digest (или build from pinned Dockerfile hash) задокументированы | нет «latest» без pin |
 | 27.6 | Предупреждение/FAIL если GGUF fetch URL появился без checksum API | нет голого HTTP model pull |
 
@@ -57,7 +57,7 @@
 ### Угрозы
 
 - Preset `open` = полный egress (осознанный WARN).
-- `allowlist` / `deep-net-enforce` не применился (нет NET_ADMIN, сломан entrypoint).
+- `allowlist` / `gim-net-enforce` не применился (нет NET_ADMIN, сломан entrypoint).
 - DNS/IP bypass (прямой IP, DoH, IPv6).
 
 ### PASS / FAIL
@@ -65,7 +65,7 @@
 | ID | Проверка | PASS если |
 |----|----------|-----------|
 | 29.1 | Manifest `allowlists.json` парсится; preset → непустой список для allowlist | readiness `allowlist` |
-| 29.2 | Guest env: `DEEP_NET_MODE` + domains передаются | `guestNetworkEnv` |
+| 29.2 | Guest env: `GIM_NET_MODE` + domains передаются | `guestNetworkEnv` |
 | 29.3 | Runtime: из guest `curl` к домену вне списка → fail; к allow → ok (или offline → все fail) | smoke с контейнером |
 | 29.4 | Preset `offline` / `network=none` → нет маршрута наружу | проверяемо |
 | 29.5 | Preset `open` → явный WARN в status/doctor | не тихий open |
@@ -117,7 +117,7 @@
 
 ### Угрозы
 
-- `deep update` тянет zip без sha256 / с подменённым `sha256Url`.
+- `gim update` тянет zip без sha256 / с подменённым `sha256Url`.
 - Канал edge/beta указывает на чужой URL.
 - Отсутствие GPG/cosign (известно; trust = pin).
 
@@ -127,7 +127,7 @@
 |----|----------|-----------|
 | 32.1 | Перед установкой zip обязателен локальный или sidecar sha256 match | код update |
 | 32.2 | `cli-releases.json`: для published channels sha256 не null | манифест |
-| 32.3 | `DEEP_CLI_ZIP` тоже проходит verify (не bypass) | тест |
+| 32.3 | `GIM_CLI_ZIP` тоже проходит verify (не bypass) | тест |
 | 32.4 | Отказ при mismatch — non-zero exit, без частичной установки | поведение |
 | 32.5 | Документирован отсутствие cosign; roadmap не выдаёт «signed» | RELEASE.md honesty |
 | 32.6 | Manifest cache path не исполняет произвольный JS из CDN | только zip extract allowlist |

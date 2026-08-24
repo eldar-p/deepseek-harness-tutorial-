@@ -14,7 +14,7 @@
 - `llama-binaries.json` — CPU/CUDA builds, URL + sha256
 - `guest-images.json`, `dsh-pin.json`, `cli-releases.json`, …
 
-Download → cache в `~/.deep/manifests-cache/` → sha256 verify перед использованием.
+Download → cache в `~/.gim/manifests-cache/` → sha256 verify перед использованием.
 
 Pre-alpha: git install only; CDN publish — beta+.
 

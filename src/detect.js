@@ -4,7 +4,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const WIN_DOCKER_CANDIDATES = [
-  process.env.DEEP_DOCKER_BIN,
+  process.env.GIM_DOCKER_BIN,
   path.join(process.env.LOCALAPPDATA || '', 'Programs/DockerDesktop/resources/bin/docker.exe'),
   path.join(process.env.ProgramFiles || 'C:\\Program Files', 'Docker/Docker/resources/bin/docker.exe'),
   path.join(process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)', 'Docker/Docker/resources/bin/docker.exe'),
@@ -20,9 +20,9 @@ export function which(cmd) {
   return (r.stdout || '').split(/\r?\n/).map((s) => s.trim()).filter(Boolean)[0] || null
 }
 
-/** Resolve docker/podman binary — PATH, DEEP_*_BIN, Windows default install dirs. */
+/** Resolve docker/podman binary — PATH, GIM_*_BIN, Windows default install dirs. */
 export function resolveEngineBin(prefer = 'docker') {
-  const envBin = prefer === 'podman' ? process.env.DEEP_PODMAN_BIN : process.env.DEEP_DOCKER_BIN
+  const envBin = prefer === 'podman' ? process.env.GIM_PODMAN_BIN : process.env.GIM_DOCKER_BIN
   if (envBin && fs.existsSync(envBin)) return envBin
 
   const fromPath = which(prefer)

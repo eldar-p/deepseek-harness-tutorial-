@@ -23,7 +23,7 @@ export async function cmdLsp(flags, args) {
     const fileArg = sub === 'query' ? args[2] || flags.file || flags.path : args[1] || flags.file || flags.path
     if (!fileArg) {
       throw Object.assign(
-        new Error('Usage: deep lsp query <op> <file> [--line N] [--character N]'),
+        new Error('Usage: gim lsp query <op> <file> [--line N] [--character N]'),
         { exitCode: 2 },
       )
     }
@@ -51,9 +51,9 @@ export async function cmdLsp(flags, args) {
   }
 
   console.log(`Usage:
-  deep lsp servers
-  deep lsp query <hover|definition|references|symbols> <file> [--line N] [--character N] [--name STACK]
-  deep lsp hover <file> [--line N]
+  gim lsp servers
+  gim lsp query <hover|definition|references|symbols> <file> [--line N] [--character N] [--name STACK]
+  gim lsp hover <file> [--line N]
 `)
   process.exitCode = 2
 }

@@ -16,25 +16,14 @@ export class JailEscapeError extends Error {
  */
 export function isPathInsideRoot(candidate, root) {
   const rootAbs = path.resolve(root)
-  const targetAbs = path.resolve(candidate)
-
-  // If the workspace root does not exist yet, compare logical paths only.
-  // Otherwise macOS may realpath /home (symlink) for the target while leaving
-  // a non-existent root unresolved, which false-triggers escapes in unit tests.
-  if (!fs.existsSync(rootAbs)) {
-    const rel = path.relative(rootAbs, targetAbs)
-    if (rel === '') return true
-    if (rel.startsWith('..') || path.isAbsolute(rel)) return false
-    return true
-  }
-
   let rootReal = rootAbs
   try {
-    rootReal = fs.realpathSync(rootAbs)
+    if (fs.existsSync(rootAbs)) rootReal = fs.realpathSync(rootAbs)
   } catch {
     /* keep rootAbs */
   }
 
+  const targetAbs = path.resolve(candidate)
   let targetReal = targetAbs
   try {
     if (fs.existsSync(targetAbs)) {
@@ -62,7 +51,7 @@ export function isPathInsideRoot(candidate, root) {
 }
 
 /**
- * Rewrite guest/virtual paths onto the Deep workspace root.
+ * Rewrite guest/virtual paths onto the GIM workspace root.
  * Throws JailEscapeError if a mapped path would escape the root (incl. symlinks).
  * @param {string} input
  * @param {string} workspaceRoot absolute host path

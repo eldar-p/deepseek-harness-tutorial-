@@ -26,6 +26,51 @@ export function spawnDetached(bin, args, { cwd, env, logFile, shell = false } = 
   return child.pid
 }
 
+/** PIDs listening on a TCP port (best-effort, cross-platform). */
+export function pidsListeningOnPort(port) {
+  const p = Number(port)
+  if (!p) return []
+  const found = new Set()
+  if (process.platform === 'win32') {
+    const r = spawnSync('netstat', ['-ano'], { encoding: 'utf8', windowsHide: true })
+    const suffix = `:${p}`
+    for (const line of (r.stdout || '').split('\n')) {
+      if (!line.includes('LISTENING')) continue
+      if (!line.includes(suffix)) continue
+      const parts = line.trim().split(/\s+/)
+      const pid = Number(parts[parts.length - 1])
+      if (pid > 0) found.add(pid)
+    }
+    return [...found]
+  }
+  for (const cmd of [
+    ['ss', ['-ltnp'], `:${p}`],
+    ['lsof', ['-ti', `TCP:${p}`, '-sTCP:LISTEN']],
+  ]) {
+    const r = spawnSync(cmd[0], cmd[1], { encoding: 'utf8' })
+    if (r.status !== 0) continue
+    for (const tok of (r.stdout || '').split(/\s+/)) {
+      const m = tok.match(/pid=(\d+)/) || tok.match(/^(\d+)$/)
+      if (m) found.add(Number(m[1]))
+    }
+    if (found.size) break
+  }
+  return [...found]
+}
+
+/**
+ * Stop a detached stack service: kill launcher pid tree, then port listeners.
+ * Generic — works for Colibri, llama-server, UI, etc. No model-specific names.
+ */
+export function stopService({ pid, port, force = true } = {}) {
+  if (pid) killTree(pid, { force })
+  if (port) {
+    for (const lp of pidsListeningOnPort(port)) {
+      if (lp !== pid) killTree(lp, { force })
+    }
+  }
+}
+
 /** Kill process tree. On Windows uses taskkill /T. */
 /** @param {number|null|undefined} pid @param {{ force?: boolean }} [opts] */
 export function killTree(pid, { force = false } = {}) {
@@ -59,12 +104,18 @@ export function isPidAlive(pid) {
   }
 }
 
-export async function waitHttpOk(url, { timeoutMs = 180_000, intervalMs = 2000, label = 'service' } = {}) {
+export async function waitHttpOk(
+  url,
+  { timeoutMs = 180_000, intervalMs = 2000, label = 'service', headers = undefined } = {},
+) {
   const start = Date.now()
   let lastErr = ''
   while (Date.now() - start < timeoutMs) {
     try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(3000) })
+      const res = await fetch(url, {
+        signal: AbortSignal.timeout(3000),
+        headers: headers || undefined,
+      })
       if (res.ok) return true
       lastErr = `HTTP ${res.status}`
     } catch (e) {

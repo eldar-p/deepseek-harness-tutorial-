@@ -7,6 +7,6 @@ cd optional/code-index
 npm install
 ```
 
-Deep CLI core stays zero-deps; these packages are loaded via dynamic import when present.
+GIM CLI core stays zero-deps; these packages are loaded via dynamic import when present.
 
 Without install: regex chunking + JSON index + hash/llama embeddings.

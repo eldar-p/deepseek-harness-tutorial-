@@ -1,0 +1,21 @@
+# gim-colibri — runs host-mounted Linux `coli` + safetensors model volume.
+# Build: docker build -t gim-colibri:prealpha -f docker/Dockerfile.colibri .
+# Runtime: mount GIM_COLIBRI_ROOT → /colibri, model dir → /model (read-only).
+FROM python:3.11-slim-bookworm
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgomp1 ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /colibri
+ENV COLI_MODEL=/model
+ENV COLI_HOST=0.0.0.0
+ENV COLI_PORT=8000
+
+COPY docker/colibri-entry.sh /usr/local/bin/colibri-entry.sh
+COPY docker/grammars /grammars
+RUN sed -i 's/\r$//' /usr/local/bin/colibri-entry.sh \
+    && chmod +x /usr/local/bin/colibri-entry.sh
+
+EXPOSE 8000
+ENTRYPOINT ["/usr/local/bin/colibri-entry.sh"]

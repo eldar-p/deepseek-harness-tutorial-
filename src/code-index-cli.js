@@ -27,7 +27,7 @@ export async function cmdIndexSearch(flags, queryParts) {
   const stack = flags.name || 'default'
   const query = queryParts.join(' ').trim()
   if (!query) {
-    throw Object.assign(new Error('Usage: deep index search <query>'), { exitCode: 2 })
+    throw Object.assign(new Error('Usage: gim index search <query>'), { exitCode: 2 })
   }
   const { workspace, indexDir } = stackPaths(stack)
   const run = readRunState(stack)

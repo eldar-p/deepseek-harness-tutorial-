@@ -1,11 +1,11 @@
 ---
 name: tool-search
-description: Deferred Deep tools — search catalog before guessing bash/MCP schemas.
+description: Deferred GIM tools — search catalog before guessing bash/MCP schemas.
 ---
 
 # Tool search (deferred catalog)
 
-When unsure which Deep capability to use, search first:
+When unsure which GIM capability to use, search first:
 
 ```bash
 # via CLI risk/daemon/index — or MCP tools:

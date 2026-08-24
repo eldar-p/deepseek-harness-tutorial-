@@ -1,6 +1,6 @@
 /**
  * Lightweight stack health daemon (Kairos-lite).
- * Polls llama/DSH URLs; optional proactive nudge file for the agent (DEEP_PROACTIVE=1).
+ * Polls llama/DSH URLs; optional proactive nudge file for the agent (GIM_PROACTIVE=1).
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -13,7 +13,7 @@ export function daemonStatePath(stack = 'default') {
 }
 
 export function proactivePath(stack = 'default') {
-  return path.join(paths(stack).workspace, '.deep', 'PROACTIVE.md')
+  return path.join(paths(stack).workspace, '.gim', 'PROACTIVE.md')
 }
 
 export function readDaemonState(stack = 'default') {
@@ -34,15 +34,15 @@ export function writeDaemonState(stack, state) {
 }
 
 /**
- * Write agent-visible nudge under workspace/.deep/PROACTIVE.md
+ * Write agent-visible nudge under workspace/.gim/PROACTIVE.md
  * @param {object} summary from daemonTick
  * @param {{ force?: boolean }} [opts]
  */
 export function writeProactiveNudge(summary, opts = {}) {
   const enabled =
     opts.force ||
-    process.env.DEEP_PROACTIVE === '1' ||
-    process.env.DEEP_PROACTIVE === 'true' ||
+    process.env.GIM_PROACTIVE === '1' ||
+    process.env.GIM_PROACTIVE === 'true' ||
     !summary.ok
   if (!enabled) return null
 
@@ -56,7 +56,7 @@ export function writeProactiveNudge(summary, opts = {}) {
   if (failed.length) {
     lines.push('Issues:')
     for (const c of failed) lines.push(`- ${c.name}: ${c.detail}`)
-    lines.push('', 'Next: `deep status` · `deep start` · `deep daemon tick`')
+    lines.push('', 'Next: `gim status` · `gim start` · `gim daemon tick`')
   } else {
     lines.push('All probes OK. Continue current task; no restart needed.')
   }
@@ -161,15 +161,15 @@ export async function cmdDaemon(flags = {}, args = []) {
       console.log(`Daemon already running pid=${existing.pid}`)
       return
     }
-    const interval = Number(flags.interval || process.env.DEEP_DAEMON_INTERVAL_MS || 30_000)
+    const interval = Number(flags.interval || process.env.GIM_DAEMON_INTERVAL_MS || 30_000)
     const logFile = runLogPath(stack, 'daemon')
-    const loop = path.join(PKG_ROOT, 'scripts', 'deep-daemon.mjs')
+    const loop = path.join(PKG_ROOT, 'scripts', 'gim-daemon.mjs')
     const wantProactive = flags.proactive === true || flags.proactive === ''
     const pid = spawnDetached(process.execPath, [loop, '--name', stack, '--interval', String(interval)], {
       cwd: PKG_ROOT,
       logFile,
       env: {
-        DEEP_PROACTIVE: process.env.DEEP_PROACTIVE || (wantProactive ? '1' : ''),
+        GIM_PROACTIVE: process.env.GIM_PROACTIVE || (wantProactive ? '1' : ''),
       },
     })
     writeDaemonState(stack, {
@@ -182,6 +182,6 @@ export async function cmdDaemon(flags = {}, args = []) {
     return
   }
 
-  console.error('Usage: deep daemon start|stop|status|tick [--name STACK] [--interval MS] [--proactive]')
+  console.error('Usage: gim daemon start|stop|status|tick [--name STACK] [--interval MS] [--proactive]')
   process.exitCode = 2
 }

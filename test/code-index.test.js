@@ -38,9 +38,9 @@ test('secretHeadersForHost matches domain', () => {
 })
 
 test('readSecrets skips underscore keys and bad json', () => {
-  const prev = process.env.DEEP_HOME
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-sec-'))
-  process.env.DEEP_HOME = home
+  const prev = process.env.GIM_HOME
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-sec-'))
+  process.env.GIM_HOME = home
   try {
     assert.deepEqual(readSecrets(), {})
     fs.writeFileSync(
@@ -53,16 +53,16 @@ test('readSecrets skips underscore keys and bad json', () => {
     fs.writeFileSync(path.join(home, 'secrets.json'), '{not-json')
     assert.deepEqual(readSecrets(), {})
   } finally {
-    if (prev === undefined) delete process.env.DEEP_HOME
-    else process.env.DEEP_HOME = prev
+    if (prev === undefined) delete process.env.GIM_HOME
+    else process.env.GIM_HOME = prev
     fs.rmSync(home, { recursive: true, force: true })
   }
 })
 
 test('ensureSecretsTemplate writes sample once', () => {
-  const prev = process.env.DEEP_HOME
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-sec-tpl-'))
-  process.env.DEEP_HOME = home
+  const prev = process.env.GIM_HOME
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-sec-tpl-'))
+  process.env.GIM_HOME = home
   try {
     ensureSecretsTemplate()
     const tpl = path.join(home, 'secrets.template.json')
@@ -70,14 +70,14 @@ test('ensureSecretsTemplate writes sample once', () => {
     ensureSecretsTemplate()
     assert.ok(fs.existsSync(tpl))
   } finally {
-    if (prev === undefined) delete process.env.DEEP_HOME
-    else process.env.DEEP_HOME = prev
+    if (prev === undefined) delete process.env.GIM_HOME
+    else process.env.GIM_HOME = prev
     fs.rmSync(home, { recursive: true, force: true })
   }
 })
 
 test('json store save load search', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-idx-'))
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-idx-'))
   const vec = Array.from(hashEmbed('hello world auth'))
   saveJsonStore(
     dir,
@@ -108,7 +108,7 @@ test('json store save load search', () => {
 })
 
 test('buildIndex and searchIndex roundtrip', async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-ws-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-ws-'))
   fs.writeFileSync(
     path.join(root, 'auth.js'),
     `export function login(user, token) {\n  return token\n}\n`,
@@ -141,9 +141,9 @@ test('buildIndex and searchIndex roundtrip', async () => {
 })
 
 test('cmdIndex CLI build search status', async () => {
-  const prev = process.env.DEEP_HOME
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-cli-idx-'))
-  process.env.DEEP_HOME = home
+  const prev = process.env.GIM_HOME
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-cli-idx-'))
+  process.env.GIM_HOME = home
   const stack = 'utest-idx'
   const ws = path.join(home, 'workspace', stack)
   fs.mkdirSync(ws, { recursive: true })
@@ -154,8 +154,8 @@ test('cmdIndex CLI build search status', async () => {
     await cmdIndexSearch({ name: stack }, ['add', 'function'])
     await cmdIndexStatus({ name: stack })
   } finally {
-    if (prev === undefined) delete process.env.DEEP_HOME
-    else process.env.DEEP_HOME = prev
+    if (prev === undefined) delete process.env.GIM_HOME
+    else process.env.GIM_HOME = prev
     fs.rmSync(home, { recursive: true, force: true })
   }
 })

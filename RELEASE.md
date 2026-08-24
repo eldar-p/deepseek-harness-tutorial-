@@ -1,10 +1,10 @@
-# Deep CLI — 1.0 Release
+# GIM CLI — 1.0 Release
 
 **Version:** `1.0.0`  
-**License:** [CC BY-NC-SA 4.0](./LICENSE) — non-commercial; attribution + share-alike
+**License:** [Apache-2.0](./LICENSE) — non-commercial; attribution + share-alike
 
 ```powershell
-node bin/deep.js doctor --readiness --stage=1.0
+node bin/gim.js doctor --readiness --stage=1.0
 npm test
 npm run test:coverage   # ≥80%
 npm run audit:prebeta
@@ -28,18 +28,18 @@ Local stack orchestrator: **llama.cpp** + **Docker guest** + **DSH**.
 
 ```powershell
 # From git
-git clone https://github.com/eldar-p/deepseek-harness-tutorial-.git
-cd deepseek-harness-tutorial-
+git clone https://github.com/eldar-p/gim-cli.git
+cd gim-cli
 npm link
 
 # Or from Release zip (after upload)
-node bin/deep.js update --channel beta
+node bin/gim.js update --channel beta
 ```
 
 ## Trust
 
 - Artifact sha256 pinned in `manifests/cli-releases.json`
-- Pack emits `deep-cli-*.zip.sha256` sidecar
+- Pack emits `gim-cli-*.zip.sha256` sidecar
 - GPG/cosign signing: optional future hardening (hex pin is the 1.0 trust path)
 
-See [CORE.md](./CORE.md) · [RC.md](./RC.md) · [CHANGELOG.md](./CHANGELOG.md)
+See [ALPHA.md](./ALPHA.md) · [docs/OS-COMPAT.md](./docs/OS-COMPAT.md) · [CHANGELOG.md](./CHANGELOG.md)

@@ -50,7 +50,7 @@
       "url": "https://github.com/ggml-org/llama.cpp/releases/download/b9771/llama-b9771-bin-ubuntu-vulkan-x64.tar.gz",
       "sha256": "b06642bcda879bf2fd7bde9ee067e097c9925d46c43c40e6d3da65a319cb90cb",
       "cacheName": "llama-b9771-bin-ubuntu-vulkan-x64.tar.gz",
-      "note": "Official ggml has no Linux CUDA zip — Vulkan is the pinned GPU path; CUDA via DEEP_LLAMA_BIN"
+      "note": "Official ggml has no Linux CUDA zip — Vulkan is the pinned GPU path; CUDA via GIM_LLAMA_BIN"
     }
   ]
 }

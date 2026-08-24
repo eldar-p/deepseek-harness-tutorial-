@@ -1,0 +1,16 @@
+{
+  "schema": "gim-colibri-catalog/v1",
+  "note": "Official safetensors for Colibri (not GGUF). Default path on E: SSD.",
+  "models": [
+    {
+      "id": "deepseek-v4-flash",
+      "family": "deepseek-v4",
+      "engine": "deepseek_v4",
+      "hf": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "localDir": "E:/models/DeepSeek-V4-Flash-0731",
+      "format": "safetensors",
+      "approxGb": 167,
+      "notes": "Official FP4/FP8 checkpoint — no conversion. Build/use deepseek_v4 engine."
+    }
+  ]
+}

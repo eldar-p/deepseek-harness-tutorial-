@@ -29,21 +29,21 @@ export function materializeAssets(stack = 'default') {
   copyDir(path.join(PKG_ROOT, 'dsh-plugins'), pluginsDst)
   syncJailCore(pluginsDst)
 
-  const agentsSrc = path.join(PKG_ROOT, 'assets', 'AGENTS.deep.md')
+  const agentsSrc = path.join(PKG_ROOT, 'assets', 'AGENTS.gim.md')
   const agentsDst = path.join(p.dshHome, 'AGENTS.md')
   if (fs.existsSync(agentsSrc)) {
     fs.copyFileSync(agentsSrc, agentsDst)
   }
 
-  writeDeepProfilePatch(stack)
+  writeGimProfilePatch(stack)
 
-  const ctx = path.join(p.workspace, '.deep', 'CONTEXT.md')
+  const ctx = path.join(p.workspace, '.gim', 'CONTEXT.md')
   fs.mkdirSync(path.dirname(ctx), { recursive: true })
   if (!fs.existsSync(ctx)) {
     fs.copyFileSync(path.join(PKG_ROOT, 'assets', 'CONTEXT.md'), ctx)
   }
 
-  const memDir = path.join(p.workspace, '.deep')
+  const memDir = path.join(p.workspace, '.gim')
   const memPath = path.join(memDir, 'memory.json')
   fs.mkdirSync(memDir, { recursive: true })
   if (!fs.existsSync(memPath)) {
@@ -52,12 +52,12 @@ export function materializeAssets(stack = 'default') {
   }
 }
 
-export function writeDeepProfilePatch(stack = 'default') {
+export function writeGimProfilePatch(stack = 'default') {
   const p = paths(stack)
   const profileDir = path.join(p.dshHome, 'profiles', 'web')
   fs.mkdirSync(profileDir, { recursive: true })
   const pluginDir = path.join(profileDir, 'dsh-plugins')
-  const src = path.join(PKG_ROOT, 'assets', 'cordis.deep.patch.yml')
+  const src = path.join(PKG_ROOT, 'assets', 'cordis.gim.patch.yml')
   if (!fs.existsSync(src)) return
   let text = fs.readFileSync(src, 'utf8')
   // Windows DSH expects file:///C|/… (pipe) — toFileUrl builds that.

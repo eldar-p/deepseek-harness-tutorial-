@@ -4,7 +4,7 @@
     "baseURL": "https://api.openai.com/v1",
     "apiKeyEnv": "OPENAI_API_KEY",
     "defaultModel": "gpt-4o-mini",
-    "contextWindow": 128000,
+    "contextWindow": 512000,
     "maxTokens": 8192,
     "supportsDeveloperRole": true
   },
@@ -13,7 +13,7 @@
     "baseURL": "https://api.anthropic.com/v1",
     "apiKeyEnv": "ANTHROPIC_API_KEY",
     "defaultModel": "claude-sonnet-4-20250514",
-    "contextWindow": 200000,
+    "contextWindow": 512000,
     "maxTokens": 8192,
     "supportsDeveloperRole": false,
     "note": "Use OpenRouter or LiteLLM if native Anthropic API shape differs"
@@ -23,7 +23,7 @@
     "baseURL": "https://api.deepseek.com/v1",
     "apiKeyEnv": "DEEPSEEK_API_KEY",
     "defaultModel": "deepseek-chat",
-    "contextWindow": 65536,
+    "contextWindow": 512000,
     "maxTokens": 8192,
     "supportsDeveloperRole": false
   },
@@ -32,7 +32,7 @@
     "baseURL": "https://openrouter.ai/api/v1",
     "apiKeyEnv": "OPENROUTER_API_KEY",
     "defaultModel": "deepseek/deepseek-chat",
-    "contextWindow": 65536,
+    "contextWindow": 512000,
     "maxTokens": 8192,
     "supportsDeveloperRole": false
   },
@@ -41,7 +41,7 @@
     "baseURL": "https://api.groq.com/openai/v1",
     "apiKeyEnv": "GROQ_API_KEY",
     "defaultModel": "llama-3.3-70b-versatile",
-    "contextWindow": 32768,
+    "contextWindow": 512000,
     "maxTokens": 8192,
     "supportsDeveloperRole": false
   },
@@ -50,16 +50,26 @@
     "baseURL": "https://api.together.xyz/v1",
     "apiKeyEnv": "TOGETHER_API_KEY",
     "defaultModel": "Qwen/Qwen2.5-Coder-32B-Instruct-Turbo",
-    "contextWindow": 32768,
+    "contextWindow": 512000,
     "maxTokens": 8192,
     "supportsDeveloperRole": false
+  },
+  "vllm": {
+    "displayName": "vLLM (local OpenAI /v1)",
+    "baseURL": "http://127.0.0.1:8000/v1",
+    "apiKeyEnv": "VLLM_API_KEY",
+    "defaultModel": "default",
+    "contextWindow": 512000,
+    "maxTokens": 8192,
+    "supportsDeveloperRole": false,
+    "note": "Run vllm serve separately; gim start --vllm wires guest+UI to it"
   },
   "custom": {
     "displayName": "Custom OpenAI-compatible",
     "baseURL": null,
-    "apiKeyEnv": "DEEP_API_KEY",
+    "apiKeyEnv": "GIM_API_KEY",
     "defaultModel": "default",
-    "contextWindow": 32768,
+    "contextWindow": 512000,
     "maxTokens": 4096,
     "supportsDeveloperRole": false
   }

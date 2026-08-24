@@ -32,5 +32,5 @@ test('handleMcpRequest initialize', async () => {
     { jsonrpc: '2.0', id: 2, method: 'initialize', params: {} },
     { reply: (m) => replies.push(m) },
   )
-  assert.equal(replies[0].result.serverInfo.name, 'deep-cli')
+  assert.equal(replies[0].result.serverInfo.name, 'gim-cli')
 })

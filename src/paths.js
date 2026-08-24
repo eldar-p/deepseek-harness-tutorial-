@@ -7,12 +7,12 @@ import { fileURLToPath } from 'node:url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 export const PKG_ROOT = path.resolve(__dirname, '..')
 
-export function deepHome() {
-  return process.env.DEEP_HOME || path.join(os.homedir(), '.deep')
+export function gimHome() {
+  return process.env.GIM_HOME || path.join(os.homedir(), '.gim')
 }
 
 export function paths(stack = 'default') {
-  const home = deepHome()
+  const home = gimHome()
   return {
     home,
     config: path.join(home, 'config.json'),
@@ -20,12 +20,12 @@ export function paths(stack = 'default') {
     runtimeLlama: path.join(home, 'runtime', 'llama'),
     dshHome: path.join(home, 'dsh-home'),
     workspace: path.join(home, 'workspace', stack),
-    memory: path.join(home, 'workspace', stack, '.deep', 'memory.json'),
+    memory: path.join(home, 'workspace', stack, '.gim', 'memory.json'),
     structure: path.join(home, 'workspace', stack, 'STRUCTURE.txt'),
     workspaceLogs: path.join(home, 'workspace', stack, 'logs'),
     run: path.join(home, 'run', stack),
     logs: path.join(home, 'logs'),
-    deepLog: path.join(home, 'logs', 'deep.log'),
+    gimLog: path.join(home, 'logs', 'gim.log'),
     manifestsCache: path.join(home, 'manifests-cache'),
     presets: path.join(home, 'presets'),
     lockGpu: path.join(home, 'run', '.gpu.lock'),
@@ -64,9 +64,9 @@ export function chmodOwnerOnly(filePath) {
 export function appendLog(line) {
   const p = paths()
   fs.mkdirSync(p.logs, { recursive: true })
-  rotateLogIfLarge(p.deepLog)
+  rotateLogIfLarge(p.gimLog)
   const stamp = new Date().toISOString()
   // Never log prompt bodies — callers must pass redacted events only
-  fs.appendFileSync(p.deepLog, `${stamp} ${line}\n`, { encoding: 'utf8' })
-  chmodOwnerOnly(p.deepLog)
+  fs.appendFileSync(p.gimLog, `${stamp} ${line}\n`, { encoding: 'utf8' })
+  chmodOwnerOnly(p.gimLog)
 }

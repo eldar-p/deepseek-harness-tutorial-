@@ -1,83 +1,83 @@
 {
-  "schema": "deep-cli-releases/v1",
-  "note": "CC BY-NC-SA 4.0. Artifact on GitHub Releases v1.1.1. Local override: DEEP_CLI_ZIP.",
+  "schema": "gim-cli-releases/v1",
+  "note": "Apache-2.0. Artifact on GitHub Releases v1.1.0. Local override: GIM_CLI_ZIP.",
   "channels": {
     "stable": {
-      "revision": "2026.08.24-1.1.1",
+      "revision": "2026.08.24-1.1",
       "cli": {
-        "version": "1.1.1",
+        "version": "1.1.0",
         "artifacts": [
           {
             "os": "win32",
             "arch": "x64",
             "format": "zip",
-            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.1/deep-cli-1.1.1.zip",
-            "sha256": "311914af7310692a5743e172f3354a4425976e5147059037f9d0646ea67397f5",
-            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.1/deep-cli-1.1.1.zip.sha256"
+            "url": "https://github.com/eldar-p/gim-cli/releases/download/v1.1.0/gim-cli-1.1.0.zip",
+            "sha256": "cde79df1ca6c7c828fb8c94c597d106c91654736e60fbfa7f7d7bfd4098a3e7b",
+            "sha256Url": "https://github.com/eldar-p/gim-cli/releases/download/v1.1.0/gim-cli-1.1.0.zip.sha256"
           },
           {
             "os": "darwin",
             "arch": "arm64",
             "format": "zip",
-            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.1/deep-cli-1.1.1.zip",
-            "sha256": "311914af7310692a5743e172f3354a4425976e5147059037f9d0646ea67397f5",
-            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.1/deep-cli-1.1.1.zip.sha256"
+            "url": "https://github.com/eldar-p/gim-cli/releases/download/v1.1.0/gim-cli-1.1.0.zip",
+            "sha256": "cde79df1ca6c7c828fb8c94c597d106c91654736e60fbfa7f7d7bfd4098a3e7b",
+            "sha256Url": "https://github.com/eldar-p/gim-cli/releases/download/v1.1.0/gim-cli-1.1.0.zip.sha256"
           },
           {
             "os": "darwin",
             "arch": "x64",
             "format": "zip",
-            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.1/deep-cli-1.1.1.zip",
-            "sha256": "311914af7310692a5743e172f3354a4425976e5147059037f9d0646ea67397f5",
-            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.1/deep-cli-1.1.1.zip.sha256"
+            "url": "https://github.com/eldar-p/gim-cli/releases/download/v1.1.0/gim-cli-1.1.0.zip",
+            "sha256": "cde79df1ca6c7c828fb8c94c597d106c91654736e60fbfa7f7d7bfd4098a3e7b",
+            "sha256Url": "https://github.com/eldar-p/gim-cli/releases/download/v1.1.0/gim-cli-1.1.0.zip.sha256"
           },
           {
             "os": "linux",
             "arch": "x64",
             "format": "zip",
-            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.1/deep-cli-1.1.1.zip",
-            "sha256": "311914af7310692a5743e172f3354a4425976e5147059037f9d0646ea67397f5",
-            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.1/deep-cli-1.1.1.zip.sha256"
+            "url": "https://github.com/eldar-p/gim-cli/releases/download/v1.1.0/gim-cli-1.1.0.zip",
+            "sha256": "cde79df1ca6c7c828fb8c94c597d106c91654736e60fbfa7f7d7bfd4098a3e7b",
+            "sha256Url": "https://github.com/eldar-p/gim-cli/releases/download/v1.1.0/gim-cli-1.1.0.zip.sha256"
           }
         ]
       }
     },
     "beta": {
-      "revision": "2026.08.24-1.1.1",
+      "revision": "2026.08.24-1.1",
       "cli": {
-        "version": "1.1.1",
+        "version": "1.1.0",
         "artifacts": [
           {
             "os": "win32",
             "arch": "x64",
             "format": "zip",
-            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.1/deep-cli-1.1.1.zip",
-            "sha256": "311914af7310692a5743e172f3354a4425976e5147059037f9d0646ea67397f5",
-            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.1/deep-cli-1.1.1.zip.sha256"
+            "url": "https://github.com/eldar-p/gim-cli/releases/download/v1.1.0/gim-cli-1.1.0.zip",
+            "sha256": "cde79df1ca6c7c828fb8c94c597d106c91654736e60fbfa7f7d7bfd4098a3e7b",
+            "sha256Url": "https://github.com/eldar-p/gim-cli/releases/download/v1.1.0/gim-cli-1.1.0.zip.sha256"
           },
           {
             "os": "darwin",
             "arch": "arm64",
             "format": "zip",
-            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.1/deep-cli-1.1.1.zip",
-            "sha256": "311914af7310692a5743e172f3354a4425976e5147059037f9d0646ea67397f5",
-            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.1/deep-cli-1.1.1.zip.sha256"
+            "url": "https://github.com/eldar-p/gim-cli/releases/download/v1.1.0/gim-cli-1.1.0.zip",
+            "sha256": "cde79df1ca6c7c828fb8c94c597d106c91654736e60fbfa7f7d7bfd4098a3e7b",
+            "sha256Url": "https://github.com/eldar-p/gim-cli/releases/download/v1.1.0/gim-cli-1.1.0.zip.sha256"
           },
           {
             "os": "darwin",
             "arch": "x64",
             "format": "zip",
-            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.1/deep-cli-1.1.1.zip",
-            "sha256": "311914af7310692a5743e172f3354a4425976e5147059037f9d0646ea67397f5",
-            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.1/deep-cli-1.1.1.zip.sha256"
+            "url": "https://github.com/eldar-p/gim-cli/releases/download/v1.1.0/gim-cli-1.1.0.zip",
+            "sha256": "cde79df1ca6c7c828fb8c94c597d106c91654736e60fbfa7f7d7bfd4098a3e7b",
+            "sha256Url": "https://github.com/eldar-p/gim-cli/releases/download/v1.1.0/gim-cli-1.1.0.zip.sha256"
           },
           {
             "os": "linux",
             "arch": "x64",
             "format": "zip",
-            "url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.1/deep-cli-1.1.1.zip",
-            "sha256": "311914af7310692a5743e172f3354a4425976e5147059037f9d0646ea67397f5",
-            "sha256Url": "https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v1.1.1/deep-cli-1.1.1.zip.sha256"
+            "url": "https://github.com/eldar-p/gim-cli/releases/download/v1.1.0/gim-cli-1.1.0.zip",
+            "sha256": "cde79df1ca6c7c828fb8c94c597d106c91654736e60fbfa7f7d7bfd4098a3e7b",
+            "sha256Url": "https://github.com/eldar-p/gim-cli/releases/download/v1.1.0/gim-cli-1.1.0.zip.sha256"
           }
         ]
       }

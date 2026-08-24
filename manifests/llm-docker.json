@@ -1,0 +1,16 @@
+{
+  "defaultBackend": "colibri",
+  "vllm": {
+    "image": "vllm/vllm-openai:latest",
+    "internalPort": 8000,
+    "pull": true,
+    "shmSize": "16g",
+    "ipc": "host"
+  },
+  "colibri": {
+    "image": "gim-colibri:prealpha",
+    "dockerfile": "docker/Dockerfile.colibri",
+    "internalPort": 8000,
+    "pull": false
+  }
+}

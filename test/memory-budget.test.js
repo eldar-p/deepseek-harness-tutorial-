@@ -12,7 +12,7 @@ import {
 } from '../src/memory-budget.js'
 
 test('checkFileBudget ok and over', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-mem-'))
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-mem-'))
   const f = path.join(dir, 'CONTEXT.md')
   fs.writeFileSync(f, 'x'.repeat(100))
   assert.equal(checkFileBudget(f, 200).ok, true)
@@ -22,7 +22,7 @@ test('checkFileBudget ok and over', () => {
 })
 
 test('assessMemoryJson caps facts', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-memj-'))
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-memj-'))
   const mem = path.join(dir, 'memory.json')
   fs.writeFileSync(
     mem,
@@ -39,15 +39,15 @@ test('assessMemoryJson caps facts', () => {
 })
 
 test('assessWorkspaceMemoryBudget', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-ws-mem-'))
-  const deep = path.join(dir, '.deep')
-  fs.mkdirSync(deep)
-  const memory = path.join(deep, 'memory.json')
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-ws-mem-'))
+  const gim = path.join(dir, '.gim')
+  fs.mkdirSync(gim)
+  const memory = path.join(gim, 'memory.json')
   fs.writeFileSync(memory, JSON.stringify({ version: 1, facts: [], recentChanges: [] }))
-  fs.writeFileSync(path.join(deep, 'CONTEXT.md'), '# ok\n')
+  fs.writeFileSync(path.join(gim, 'CONTEXT.md'), '# ok\n')
   const r = assessWorkspaceMemoryBudget({ workspace: dir, memory })
   assert.equal(r.ok, true)
-  fs.writeFileSync(path.join(deep, 'CONTEXT.md'), 'y'.repeat(MEMORY_MAX_BYTES))
+  fs.writeFileSync(path.join(gim, 'CONTEXT.md'), 'y'.repeat(MEMORY_MAX_BYTES))
   const over = assessWorkspaceMemoryBudget({ workspace: dir, memory })
   // CONTEXT cap is 20KiB; writing MEMORY_MAX_BYTES (25KiB) exceeds it
   assert.equal(over.ok, false)

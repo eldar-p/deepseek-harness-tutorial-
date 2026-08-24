@@ -12,27 +12,27 @@ export const DEFERRED_TOOLS = [
     keywords: ['search', 'index', 'semantic', 'symbol', 'find code', 'grep alternative'],
     summary: 'Semantic code search over workspace index',
     detail:
-      'Use deep index search / MCP code_search before bulk Grep. Requires deep index build once.',
+      'Use gim index search / MCP code_search before bulk Grep. Requires gim index build once.',
     when: 'Large repos, unknown symbol locations',
   },
   {
     id: 'code_index_build',
     keywords: ['index', 'rebuild', 'reindex', 'lance'],
     summary: 'Rebuild semantic code index',
-    detail: 'deep index build — scans workspace; may take minutes.',
+    detail: 'gim index build — scans workspace; may take minutes.',
     when: 'Empty index or after large refactors',
   },
   {
     id: 'lsp_query',
     keywords: ['lsp', 'definition', 'references', 'hover', 'symbols', 'typescript', 'pyright'],
     summary: 'Language-server navigation on host',
-    detail: 'deep lsp query|hover|definition|references|symbols — needs tsserver/pyright installed.',
+    detail: 'gim lsp query|hover|definition|references|symbols — needs tsserver/pyright installed.',
     when: 'Precise go-to-def / refs in TS/JS/Python',
   },
   {
     id: 'guest_bash',
     keywords: ['bash', 'shell', 'docker', 'guest', 'container', 'cwd'],
-    summary: 'Shell inside deep-guest container',
+    summary: 'Shell inside gim-guest container',
     detail: 'Tool bash runs in guest at /workspace. Host shell disabled.',
     when: 'Installs, tests, git, any shell work',
   },
@@ -40,14 +40,14 @@ export const DEFERRED_TOOLS = [
     id: 'risk_classify',
     keywords: ['risk', 'deny', 'allow', 'auto-mode', 'destructive', 'rm'],
     summary: 'Classify bash risk allow|confirm|deny',
-    detail: 'deep risk classify "cmd" [--llm]. Guard denies heuristic/LLM deny.',
+    detail: 'gim risk classify "cmd" [--llm]. Guard denies heuristic/LLM deny.',
     when: 'Before risky shell; policy debugging',
   },
   {
     id: 'daemon_health',
     keywords: ['daemon', 'health', 'llama', 'dsh', 'uptime', 'proactive'],
     summary: 'Background stack health poller',
-    detail: 'deep daemon start|tick — writes proactive nudge when unhealthy.',
+    detail: 'gim daemon start|tick — writes proactive nudge when unhealthy.',
     when: 'Long sessions; keep llama/DSH alive',
   },
   {
@@ -60,9 +60,9 @@ export const DEFERRED_TOOLS = [
   {
     id: 'mcp_bridge',
     keywords: ['mcp', 'cursor', 'claude desktop', 'stdio'],
-    summary: 'Deep MCP stdio server',
-    detail: 'deep mcp  OR  node scripts/deep-mcp.mjs — code_search + tool_search + status.',
-    when: 'Wire Deep tools into Cursor / Claude Desktop',
+    summary: 'GIM MCP stdio server',
+    detail: 'gim mcp  OR  node scripts/gim-mcp.mjs — code_search + tool_search + status.',
+    when: 'Wire GIM tools into Cursor / Claude Desktop',
   },
 ]
 

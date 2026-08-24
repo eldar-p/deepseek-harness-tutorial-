@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * API-mode smoke without a real key: resolve provider + build DSH yaml + mock chat call.
- * Live mode: DEEP_API_SMOKE=1 + DEEP_API_KEY (or provider env).
+ * Live mode: GIM_API_SMOKE=1 + GIM_API_KEY (or provider env).
  *
  * Usage: node scripts/smoke-api.mjs [--provider deepseek]
  */
@@ -9,19 +9,19 @@ import { resolveApiProfile, buildDshApiYaml, listApiProviderIds } from '../src/a
 
 const provider =
   process.argv.find((a) => a.startsWith('--provider='))?.split('=')[1] ||
-  process.env.DEEP_API_SMOKE_PROVIDER ||
+  process.env.GIM_API_SMOKE_PROVIDER ||
   'deepseek'
 
-const live = process.env.DEEP_API_SMOKE === '1' || process.env.DEEP_API_SMOKE === 'true'
+const live = process.env.GIM_API_SMOKE === '1' || process.env.GIM_API_SMOKE === 'true'
 
 console.log(`[smoke-api] providers: ${listApiProviderIds().join(', ')}`)
 
 const profile = resolveApiProfile(
   {
     api: provider,
-    'api-model': process.env.DEEP_API_MODEL,
-    'api-base': process.env.DEEP_API_BASE,
-    'api-key': live ? process.env.DEEP_API_KEY || process.env.DEEPSEEK_API_KEY : 'sk-smoke-test',
+    'api-model': process.env.GIM_API_MODEL,
+    'api-base': process.env.GIM_API_BASE,
+    'api-key': live ? process.env.GIM_API_KEY || process.env.DEEPSEEK_API_KEY : 'sk-smoke-test',
   },
   null,
 )
@@ -43,12 +43,12 @@ const body = {
 }
 
 if (!live) {
-  console.log('[OK] mock mode — skip live HTTP (set DEEP_API_SMOKE=1 to hit provider)')
+  console.log('[OK] mock mode — skip live HTTP (set GIM_API_SMOKE=1 to hit provider)')
   process.exit(0)
 }
 
 if (!profile.apiKey || profile.apiKey === 'sk-smoke-test') {
-  console.error('[FAIL] live mode needs DEEP_API_KEY / provider key env')
+  console.error('[FAIL] live mode needs GIM_API_KEY / provider key env')
   process.exit(1)
 }
 

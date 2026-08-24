@@ -49,7 +49,7 @@ async function main() {
   const run = readRunState(stack)
   if (!run?.urls?.llama || !run?.pids?.llama) {
     // Local: skip cleanly (not a product failure). CI: fail — e2e needs a live stack job.
-    console.log('[SKIP] no running stack — run `deep start` then smoke:e2e')
+    console.log('[SKIP] no running stack — run `gim start` then smoke:e2e')
     process.exit(process.env.CI ? 1 : 0)
   }
 
@@ -120,16 +120,16 @@ async function main() {
     const engine = detectContainerEngine()
     if (!engine.ok) fail(`engine: ${engine.detail}`)
     else {
-      const name = run.guestName || `deep-guest-${stack}`
+      const name = run.guestName || `gim-guest-${stack}`
       const envCheck = spawnSync(
         engine.bin,
-        ['exec', name, 'printenv', 'DEEP_NET_MODE'],
+        ['exec', name, 'printenv', 'GIM_NET_MODE'],
         { encoding: 'utf8', windowsHide: true, env: engineEnv(engine.bin) },
       )
       if (envCheck.status !== 0) {
-        info('DEEP_NET_MODE unset — restart stack after alpha guest-env patch')
+        info('GIM_NET_MODE unset — restart stack after alpha guest-env patch')
       } else {
-        ok(`guest DEEP_NET_MODE=${String(envCheck.stdout).trim()}`)
+        ok(`guest GIM_NET_MODE=${String(envCheck.stdout).trim()}`)
       }
 
       const bash = spawnSync(

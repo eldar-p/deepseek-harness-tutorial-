@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Hard runtime guard (tools/pre-execute -> deny).
  * - todo_write (always)
  * - bash: only pwd/ls/cd/--version/which/uname probes
@@ -146,7 +146,7 @@ export function apply(ctx) {
 
         if (tool === 'bash' || tool === 'Bash') {
           const command = bashCommand(exec)
-          const mode = (process.env.DEEP_AUTO_MODE || 'heuristic').toLowerCase()
+          const mode = (process.env.GIM_AUTO_MODE || 'heuristic').toLowerCase()
           const denyP =
             mode === 'llm' || mode === 'auto'
               ? shouldDenyBashAsync(command, { mode: 'llm' })

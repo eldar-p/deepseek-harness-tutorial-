@@ -57,9 +57,9 @@ test('resolveApiProfile rejects unknown and missing provider', () => {
 })
 
 test('saveApiToConfig and writeApiKeyToDshEnv', async () => {
-  const prev = process.env.DEEP_HOME
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-api-'))
-  process.env.DEEP_HOME = home
+  const prev = process.env.GIM_HOME
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-api-'))
+  process.env.GIM_HOME = home
   try {
     const { saveApiToConfig, writeApiKeyToDshEnv } = await import('../src/api-provider.js')
     const profile = resolveApiProfile(
@@ -73,8 +73,8 @@ test('saveApiToConfig and writeApiKeyToDshEnv', async () => {
     const envText = fs.readFileSync(path.join(home, 'dsh-home', '.env'), 'utf8')
     assert.match(envText, /OPENAI_API_KEY=sk-x/)
   } finally {
-    if (prev === undefined) delete process.env.DEEP_HOME
-    else process.env.DEEP_HOME = prev
+    if (prev === undefined) delete process.env.GIM_HOME
+    else process.env.GIM_HOME = prev
     fs.rmSync(home, { recursive: true, force: true })
   }
 })

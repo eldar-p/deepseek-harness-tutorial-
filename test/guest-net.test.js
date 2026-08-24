@@ -30,8 +30,8 @@ test('resolveAllowlist none empty', () => {
 
 test('guestNetworkEnv passes mode and csv allowlist', () => {
   const env = guestNetworkEnv('allowlist', ['a.example', 'b.example'])
-  assert.equal(env.DEEP_NET_MODE, 'allowlist')
-  assert.equal(env.DEEP_NET_ALLOWLIST, 'a.example,b.example')
+  assert.equal(env.GIM_NET_MODE, 'allowlist')
+  assert.equal(env.GIM_NET_ALLOWLIST, 'a.example,b.example')
 })
 
 test('guestNetworkArgs offline uses none network', () => {

@@ -1,11 +1,11 @@
 /**
- * Workspace path jail for Deep: rewrite guest /workspace and stray paths onto host workspace.
- * Env: DEEP_WORKSPACE (absolute host path).
+ * Workspace path jail for GIM: rewrite guest /workspace and stray paths onto host workspace.
+ * Env: GIM_WORKSPACE (absolute host path).
  */
 import SandboxedFileSystem from '@deepseek-ai/dsh-fs-sandbox'
 import { rewriteWorkspacePath } from './jail-core.mjs'
 
-const ROOT = (process.env.DEEP_WORKSPACE || process.env.HOST_SHARE || '').replace(/\\/g, '/')
+const ROOT = (process.env.GIM_WORKSPACE || process.env.HOST_SHARE || '').replace(/\\/g, '/')
 
 /** @param {string} input */
 export function rewritePath(input) {

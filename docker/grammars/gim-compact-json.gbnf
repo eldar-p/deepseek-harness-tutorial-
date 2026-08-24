@@ -1,0 +1,15 @@
+# Universal compact JSON — Colibri grammar draft source (temperature 0).
+# Works with any model; does not enumerate tool names.
+root ::= object
+object ::= "{" ws members ws "}"
+members ::= pair (ws "," ws pair)*
+pair ::= string ws ":" ws value
+value ::= string | number | object | array | "true" | "false" | "null"
+array ::= "[" ws (value (ws "," ws value)*)? ws "]"
+string ::= "\"" chars "\""
+chars ::= char*
+char ::= [^"\\] | "\\" escape
+escape ::= "\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t"
+number ::= "-"? digit+ ("." digit+)? ([eE] [+-]? digit+)?
+digit ::= [0-9]
+ws ::= [ \t\n\r]*

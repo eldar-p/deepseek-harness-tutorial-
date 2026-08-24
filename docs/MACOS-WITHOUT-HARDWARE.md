@@ -1,6 +1,6 @@
 # macOS without a physical Mac
 
-Deep has **no Mac in the lab**. That is fine — coverage strategy:
+GIM has **no Mac in the lab**. That is fine — coverage strategy:
 
 ## What we already use (free)
 
@@ -10,7 +10,7 @@ Deep has **no Mac in the lab**. That is fine — coverage strategy:
 | **Pinned darwin Metal binary** in `llama-binaries.json` | Auto-fetch path for Apple Silicon | Free |
 | **`scripts/field-macos.sh`** | Operator script if someone *does* have a Mac later | Free |
 
-This is the **accepted** macOS bar for Deep 1.1.x — not a backlog item.
+This is the **accepted** macOS bar for GIM 1.1.x — not a backlog item.
 
 ## Paid options (only if you want full GGUF e2e on real Mac)
 

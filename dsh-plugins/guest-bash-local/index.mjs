@@ -1,15 +1,15 @@
 /**
- * DSH bash executor → deep-guest container (docker/podman exec).
- * Env: DEEP_ENGINE (docker|podman), DEEP_GUEST_NAME, DEEP_WORKSPACE (host path, info only).
+ * DSH bash executor → gim-guest container (docker/podman exec).
+ * Env: GIM_ENGINE (docker|podman), GIM_GUEST_NAME, GIM_WORKSPACE (host path, info only).
  */
 import { LocalBashExecutor } from '@deepseek-ai/dsh-bash-local'
 
 function engineBin() {
-  return process.env.DEEP_ENGINE || 'docker'
+  return process.env.GIM_ENGINE || 'docker'
 }
 
 function guestName() {
-  return process.env.DEEP_GUEST_NAME || 'deep-guest-default'
+  return process.env.GIM_GUEST_NAME || 'gim-guest-default'
 }
 
 class GuestBashExecutor extends LocalBashExecutor {

@@ -9,7 +9,7 @@ import { loadJsonStore, saveJsonStore, searchJson, tryOpenLance } from './store.
  * @param {string} indexDir
  */
 export function defaultIndexDir(workspaceRoot) {
-  return path.join(workspaceRoot, '.deep', 'code-index')
+  return path.join(workspaceRoot, '.gim', 'code-index')
 }
 
 /**
@@ -30,7 +30,7 @@ export async function buildIndex(opts) {
   for (let i = 0; i < files.length; i++) {
     const abs = files[i]
     const rel = path.relative(workspaceRoot, abs).replace(/\\/g, '/')
-    if (rel.startsWith('.deep/')) continue
+    if (rel.startsWith('.gim/')) continue
     let stat
     try {
       stat = fs.statSync(abs)
@@ -96,7 +96,7 @@ export async function searchIndex(opts) {
   const queryVec = await embed(opts.query, opts.llamaBase)
   const store = loadJsonStore(indexDir)
   if (!store.chunks.length) {
-    return { ok: false, error: 'index empty — run: deep index build', hits: [] }
+    return { ok: false, error: 'index empty — run: gim index build', hits: [] }
   }
 
   const lance = await tryOpenLance(indexDir)

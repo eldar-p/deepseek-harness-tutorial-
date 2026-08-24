@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Pack Deep CLI sources into dist/ for CDN / GitHub Release upload.
+ * Pack GIM CLI sources into dist/ for CDN / GitHub Release upload.
  * Prints sha256 + suggested cli-releases.json artifact snippet.
  *
  * Usage: node scripts/pack-release.mjs [--version=0.2.0-alpha]
@@ -30,15 +30,15 @@ const INCLUDE = [
   'LICENSE',
   'CHANGELOG.md',
   'README.md',
+  'README_BEGINNER.md',
   'ALPHA.md',
-  'PRE-ALPHA.md',
-  'RELEASE-1.1.md',
+  'MACOS.md',
   'package.json',
 ]
 
 const outDir = path.join(ROOT, 'dist')
 fs.mkdirSync(outDir, { recursive: true })
-const base = `deep-cli-${version}`
+const base = `gim-cli-${version}`
 const staging = path.join(outDir, base)
 fs.rmSync(staging, { recursive: true, force: true })
 fs.mkdirSync(staging, { recursive: true })
@@ -106,13 +106,13 @@ console.log(
       os: process.platform === 'win32' ? 'win32' : process.platform === 'darwin' ? 'darwin' : 'linux',
       arch: process.arch === 'arm64' ? 'arm64' : 'x64',
       format: 'zip',
-      url: `https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v${version}/${zipName}`,
+      url: `https://github.com/eldar-p/gim-cli/releases/download/v${version}/${zipName}`,
       sha256: sha,
-      sha256Url: `https://github.com/eldar-p/deepseek-harness-tutorial-/releases/download/v${version}/${zipName}.sha256`,
+      sha256Url: `https://github.com/eldar-p/gim-cli/releases/download/v${version}/${zipName}.sha256`,
     },
     null,
     2,
   ),
 )
 console.log('')
-console.log('License of packaged sources: CC-BY-NC-SA-4.0 (see LICENSE inside archive)')
+console.log('License of packaged sources: Apache-2.0 (see LICENSE inside archive)')

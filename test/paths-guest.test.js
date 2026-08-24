@@ -5,19 +5,19 @@ import { toContainerHostPath, guestNetworkArgs } from '../src/guest.js'
 
 test('toFileUrl on posix path', () => {
   if (process.platform === 'win32') return
-  const u = toFileUrl('/tmp/deep/workspace')
+  const u = toFileUrl('/tmp/gim/workspace')
   assert.ok(u.startsWith('file://'))
 })
 
 test('toFileUrl on win drive path', () => {
   if (process.platform !== 'win32') return
-  const u = toFileUrl('C:\\Users\\test\\.deep')
+  const u = toFileUrl('C:\\Users\\test\\.gim')
   assert.ok(u.includes('file:///C|/'))
 })
 
 test('toContainerHostPath uses forward slashes on win', () => {
   if (process.platform !== 'win32') return
-  const p = toContainerHostPath('C:\\Users\\x\\.deep\\ws')
+  const p = toContainerHostPath('C:\\Users\\x\\.gim\\ws')
   assert.ok(!p.includes('\\'))
 })
 

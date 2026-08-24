@@ -2,7 +2,7 @@
 
 ## Our pledge
 
-We pledge to make participation in Deep CLI a harassment-free experience for everyone.
+We pledge to make participation in GIM CLI a harassment-free experience for everyone.
 
 ## Standards
 

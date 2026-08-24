@@ -16,7 +16,7 @@ const llama = run.urls.llama.replace(/\/$/, '')
 const hostWs = paths(stack).workspace
 const engine = detectContainerEngine()
 const env = engineEnv(engine.bin)
-const guest = run.guestName || `deep-guest-${stack}`
+const guest = run.guestName || `gim-guest-${stack}`
 
 function dex(cmd) {
   return spawnSync(engine.bin, ['exec', guest, 'bash', '-lc', cmd], {

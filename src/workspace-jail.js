@@ -62,7 +62,7 @@ export function isPathInsideRoot(candidate, root) {
 }
 
 /**
- * Rewrite guest/virtual paths onto the Deep workspace root.
+ * Rewrite guest/virtual paths onto the GIM workspace root.
  * Throws JailEscapeError if a mapped path would escape the root (incl. symlinks).
  * @param {string} input
  * @param {string} workspaceRoot absolute host path

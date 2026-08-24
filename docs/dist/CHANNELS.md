@@ -10,7 +10,7 @@
 
 1. **Git clone** + `npm link` или `scripts/install-deep.ps1|sh`
 2. **Манифесты** в `manifests/` (локально; CDN refresh — alpha)
-3. **cli-releases.json** — матрица бинарников `deep` (пусто до beta)
+3. **cli-releases.json** — матрица бинарников `gim` (пусто до beta)
 
 ## Установка
 
@@ -22,24 +22,24 @@ powershell -File .\scripts\install-deep.ps1 -Channel stable
 ./scripts/install-deep.sh --channel=stable
 ```
 
-Env: `DEEP_HOME`, `PREFIX` / `--prefix`, `CHANNEL`.
+Env: `GIM_HOME`, `PREFIX` / `--prefix`, `CHANNEL`.
 
 ## Обновление
 
 ```bash
-deep update --channel stable    # сверка revision; git hint если нет CDN
-deep update --channel beta --dry-run
+gim update --channel stable    # сверка revision; git hint если нет CDN
+gim update --channel beta --dry-run
 npm run pack:release            # локальный zip + sha256 для Release upload
 ```
 
 Канон: `manifests/channels.json` → revision per channel; install/update читают один контракт.
 
-**Лицензия артефактов:** CC BY-NC-SA 4.0 (см. `LICENSE` в zip).
+**Лицензия артефактов:** Apache-2.0 (см. `LICENSE` в zip).
 
 ## CDN (beta)
 
 ```
-GitHub Releases: deep-cli-{version}.zip
+GitHub Releases: gim-cli-{version}.zip
 manifests/cli-releases.json → artifacts[].url + sha256
 ```
 

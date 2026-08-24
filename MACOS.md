@@ -1,212 +1,162 @@
-# DeepSeek Harness — туториал для macOS
+# GIM CLI на macOS
 
-Стек тот же: **Mac host** + **Debian VM** + **LM Studio** + **DSH** + плагины из этого репо.  
-Гостевые скрипты (`guest/`) общие с Windows. Host-скрипты для Mac — в `host-mac/`.
+Актуальный продукт — **GIM CLI** (`bin/gim.js`): guest в Docker + native UI + LLM через **GGUF (Metal)** или **облачный API**.
 
-```bash
-git clone https://github.com/eldar-p/deepseek-harness-tutorial-.git
-cd deepseek-harness-tutorial-
-```
-
-Windows-гайд: [README.md](./README.md).
+Windows: [README_BEGINNER.md](./README_BEGINNER.md) · Linux: [docs/LINUX.md](./docs/LINUX.md)
 
 ---
 
-## Отличия от Windows
+## Что работает на Mac
 
-| | Windows | macOS |
-|--|---------|--------|
-| Установка стека | `install.ps1` + `env.ps1` | `install.sh` + `env.sh` |
-| SSH в VM | `host/vm-exec.ps1` | `host-mac/vm-exec.sh` |
-| Запуск | `start-solo-max.ps1` / `start-dsh.ps1` | `host-mac/start-solo-max.sh` / `start-dsh.sh` |
-| Ложные пути | junction `mklink /J` | symlink `ensure-hostshare-link.sh` |
-| Гипервизор | VirtualBox | VirtualBox **или** UTM (Apple Silicon) |
+| Компонент | Статус |
+|-----------|--------|
+| `gim doctor`, harness, security eval | ✅ CI `macos-latest` |
+| Docker guest (`gim-guest-*`) | ✅ Docker Desktop |
+| Native GIM UI | ✅ при `gim start` |
+| Локальный GGUF (llama, Metal) | ✅ Apple Silicon / Intel |
+| Облачный `--api` | ✅ |
+| **Colibri / vLLM в Docker** | ❌ не поддерживается |
+| NVIDIA CUDA llama zip | ❌ используйте Metal (darwin) или API |
 
-Плагины/skills/guest/config — те же папки репозитория.
+**Почему нет Colibri на Mac:** LLM Docker рассчитан на Win/Linux с NVIDIA; на macOS нет того же GPU passthrough в Docker. Обход — GGUF на Metal или cloud API (универсальный путь продукта, без отдельного «mac-only» бэкенда в core).
 
 ---
 
-## 0. Что поставить на Mac
+## Требования
 
-1. **Node.js** ^22.19 или ≥24 — https://nodejs.org/  
-2. **LM Studio** (Apple Silicon / Intel) — https://lmstudio.ai/  
-3. **Гипервизор + Debian:**
-   - **VirtualBox** (Intel; на Apple Silicon — если есть рабочая Arm-сборка) — https://www.virtualbox.org/
-   - или **UTM** (рекомендуется на Apple Silicon) — https://mac.getutm.app/
-4. Debian netinst ISO (arm64 на Apple Silicon, amd64 на Intel):  
-   https://www.debian.org/distrib/
+- **macOS** 12+ (Ventura+ рекомендуется для Docker Desktop)
+- **Node.js** ^22.19 или ≥24 — https://nodejs.org/ или `brew install node@22`
+- **Docker Desktop for Mac** — https://www.docker.com/products/docker-desktop/
+- **Модель:** файл `.gguf` **или** API-ключ
+
+Опционально **Homebrew** для зависимостей:
 
 ```bash
-# DSH CLI
-npm install -g @deepseek-ai/dsh
-# проверка
-node -v
-dsh --version
-lms --help   # CLI из LM Studio, обычно в PATH после установки
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+brew install node@22 git
 ```
 
 ---
 
-## 1. Debian VM
-
-### VirtualBox
-
-1. New VM → Linux → Debian (64-bit / Arm).
-2. RAM/CPU с запасом, диск VDI динамический.
-3. Storage → подключи ISO.
-4. Network → NAT.
-5. Shared Folders → папка на Mac (например `~/vm-share`), Auto-mount.
-6. Port Forwarding:
-
-| Name | Protocol | Host IP | Host Port | Guest Port |
-|------|----------|---------|-----------|------------|
-| ssh | TCP | 127.0.0.1 | 2222 | 22 |
-| torsocks | TCP | 127.0.0.1 | 9050 | 9050 |
-
-### UTM (Apple Silicon)
-
-1. Create → Virtualize → Linux → Debian arm64 ISO.
-2. В Sharing / Directory Share укажи `~/vm-share` (или аналог).
-3. Network: Shared Network / Emulated VLAN; добавь **port forward** 2222→22 и 9050→9050 (в UI UTM: Network → Port Forwarding).
-4. После установки гостя смонтируй share в `/mnt/hostshare` (virtio-fs / 9p — как в доке UTM).
-
-### Внутри Debian
+## Установка GIM
 
 ```bash
-su -
-apt-get update
-apt-get install -y openssh-server curl ca-certificates
-systemctl enable --now ssh
+mkdir -p ~/ai/models
+git clone https://github.com/eldar-p/gim-cli.git ~/ai/gim
+cd ~/ai/gim
+node bin/gim.js doctor
 ```
 
-С Mac:
+Пути **без пробелов** предпочтительны (`~/ai/gim`, не `~/Desktop/My AI`).
+
+---
+
+## Вариант 1 — локальный GGUF (Metal)
+
+### Скачать модель
+
+1. Hugging Face → вкладка **Files** → файл `*.gguf` (для начала Qwen3-4B **Q4_K_M**, ~2–3 GB).
+2. Сохранить в `~/ai/models/`.
+
+Проверка: `file ~/ai/models/*.gguf` — не HTML.
+
+### Bootstrap + start
 
 ```bash
-ssh-keygen -t ed25519   # если ещё нет ключа
-# на госте: authorized_keys, либо:
-SSH_PUBKEY="$(cat ~/.ssh/id_ed25519.pub)" bash /mnt/hostshare/guest-toolkit/guest-setup.sh
+node bin/gim.js bootstrap --gguf ~/ai/models/Qwen3-4B-Q4_K_M.gguf
+node bin/gim.js start --gguf ~/ai/models/Qwen3-4B-Q4_K_M.gguf
+node bin/gim.js status
 ```
 
-Проверка:
+На **Apple Silicon** Metal обычно включается автоматически. На Intel без GPU:
 
 ```bash
-ssh -p 2222 kodachi@127.0.0.1
+node bin/gim.js start --gguf ~/ai/models/MODEL.gguf --cpu
 ```
 
-Shared folder в госте часто `/media/sf_…` (VirtualBox) — сделай bind:
+Откройте **UI:** из вывода `status`.
+
+---
+
+## Вариант 2 — облачный API (без GGUF)
 
 ```bash
-sudo mkdir -p /mnt/hostshare
-sudo mount --bind /media/sf_ИМЯ_ШАРЫ /mnt/hostshare
-# или fstab / UTM virtio mount → /mnt/hostshare
+node bin/gim.js bootstrap --api deepseek --api-model deepseek-chat --api-key sk-...
+node bin/gim.js start --api deepseek
+node bin/gim.js status
+```
+
+Провайдеры: `node bin/gim.js api`
+
+---
+
+## Field-скрипт (проверка стека)
+
+```bash
+bash scripts/field-macos.sh --gguf ~/ai/models/MODEL.gguf
+```
+
+Без `--gguf` — только `doctor` + `field-lite` (offline checks).
+
+**Не работает на Mac:**
+
+```bash
+bash scripts/field-macos.sh --colibri   # exit 2 — use --gguf or --api
 ```
 
 ---
 
-## 2. LM Studio
-
-1. Установи LM Studio, скачай GGUF под свой чип (Metal).
-2. Developer → Local Server → порт **1234**.
-3. Или CLI:
+## Остановка
 
 ```bash
-lms load <model> -c 98304 --gpu max --parallel 1 --identifier coder -y
-lms ps
-curl -s http://127.0.0.1:1234/v1/models
-```
-
-На Apple Silicon ctx подбирай под unified memory (часто 32K–96K).
-
----
-
-## 3. Установка нашего стека
-
-```bash
-cp env.sh.example env.sh
-# nano env.sh  → DSH_HOME, HOST_SHARE, LM_STUDIO_MODEL, VM_SSH_USER
-chmod +x install.sh host-mac/*.sh guest/*.sh
-./install.sh
-```
-
-`install.sh` кладёт:
-
-- плагины → `$DSH_HOME/profiles/web/dsh-plugins/`
-- skills → `$DSH_HOME/skills/`
-- patch / AGENTS / settings → home профиля
-- `guest/*` → `$HOST_SHARE/guest-toolkit/`
-- `host-mac/*` → `$HOST_SHARE/ai/`
-- `VM_EXEC=$HOST_SHARE/ai/vm-exec.sh`
-
----
-
-## 4. Запуск
-
-```bash
-./host-mac/start-solo-max.sh
-./host-mac/start-dsh.sh
-```
-
-Открой http://127.0.0.1:3080 — **новый** чат.
-
-После ребута Mac / VM:
-
-```bash
-./host-mac/after-reboot-start.sh
-```
-
-Проверка SSH-обёртки:
-
-```bash
-./host-mac/vm-exec.sh 'uname -a && ls /mnt/hostshare | head'
+node bin/gim.js stop
+node bin/gim.js stop --full-stop   # если поднимали LLM через другие эксперименты
 ```
 
 ---
 
-## 5. Плагины (те же)
+## Типичные проблемы (macOS)
 
-| Плагин | Назначение |
-|--------|------------|
-| **vm-bash-local** | `bash` → `host-mac/vm-exec.sh` → SSH VM |
-| **path-fix-fs** | кривые пути → `HOST_SHARE` |
-| **one-shot-guard** | deny todo / probe / bare pip / root README / emoji |
-| **harness-narrative** | Think из tool-шагов |
+| Симптом | Причина | Действие |
+|---------|---------|----------|
+| Docker daemon not running | Docker Desktop закрыт | Запустить Docker, дождаться Ready |
+| Guest RED | путь с пробелами / Docker не готов | `~/ai/gim`, `gim doctor`, перезапуск Docker |
+| Llama timeout | модель слишком большая для RAM | меньшая модель или `--cpu` |
+| `arm64` vs `x64` binary | неверный llama pin | `gim doctor`; переустановка через bootstrap |
+| `--colibri` / `--vllm` ошибка | LLM Docker только Win/Linux | `--gguf` или `--api` |
+| Port in use | не было `gim stop` | `gim stop`, при необходимости quit Docker |
 
-Политика та же: solo `coder`, только bash в VM, файлы на share, Tor `:9050`, `[OK]`/`[FAIL]`, STOP после ответа.
-
----
-
-## 6. Порты
-
-| Порт | Сервис |
-|------|--------|
-| 1234 | LM Studio API |
-| 3080 | DSH web |
-| 2222 | SSH → Debian |
-| 9050 | Tor SOCKS (если поднят в госте) |
+Логи: `~/.gim/run/default/llama.log`, `~/.gim/logs/gim.log`
 
 ---
 
-## 7. Типичные проблемы на Mac
+## DSH (legacy UI, опционально)
 
-| Симптом | Что проверить |
-|---------|----------------|
-| `lms: command not found` | LM Studio → настройки CLI / PATH; или полный путь к `lms` |
-| SSH timeout на :2222 | VM запущена? Port forward в VirtualBox/UTM? `sshd` в госте? |
-| Share пустой в госте | Guest Additions / virtio share; bind в `/mnt/hostshare` |
-| `dsh` не стартует | `node -v` (нужен 22.19+ / 24+); `npm i -g @deepseek-ai/dsh` |
-| Плагин всё ещё зовёт `.ps1` | `echo $VM_EXEC` должен быть `…/vm-exec.sh`; перезапусти `start-dsh.sh` |
-| `/mnt/hostshare` на хосте | `host-mac/ensure-hostshare-link.sh` (может спросить sudo) |
+По умолчанию GIM поднимает **native UI**. Старый DSH:
+
+```bash
+npm i -g @deepseek-ai/dsh@0.1.1-rc.2
+GIM_USE_DSH=1 node bin/gim.js start --gguf ~/ai/models/MODEL.gguf
+```
 
 ---
 
-## 8. Чеклист macOS
+## Чеклист macOS
 
-- [ ] Node ^22.19 / ≥24, `dsh` на PATH  
-- [ ] LM Studio :1234, модель `coder`  
-- [ ] Debian VM, SSH `2222`, share → `/mnt/hostshare`  
-- [ ] `env.sh` + `./install.sh`  
-- [ ] `vm-exec.sh 'uname'` → Linux  
-- [ ] `start-dsh.sh` → :3080, новый чат, Write на share виден из bash  
+- [ ] `node --version` ≥ 22.19  
+- [ ] Docker Desktop running  
+- [ ] `node bin/gim.js doctor` — engine OK  
+- [ ] GGUF в `~/ai/models/` **или** API key в bootstrap  
+- [ ] `gim start --gguf …` **или** `gim start --api …`  
+- [ ] UI открывается из `gim status`  
+- [ ] `gim stop` после работы  
 
-Гостевой toolkit: `guest/TOOLKIT.md`.  
-Общая архитектура стека: [README.md](./README.md) §3.
+---
+
+## Без физического Mac
+
+CI: GitHub Actions `macos-latest` + `field-lite`. Локальный full e2e на Mac без железа — см. [docs/MACOS-WITHOUT-HARDWARE.md](./docs/MACOS-WITHOUT-HARDWARE.md).
+
+---
+
+См. также: [README_BEGINNER.md](./README_BEGINNER.md) · [docs/OS-COMPAT.md](./docs/OS-COMPAT.md) · [docs/INSTALL.md](./docs/INSTALL.md)

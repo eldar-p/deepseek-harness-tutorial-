@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Lightweight coordinator CLI shim.
- * Prefer: deep coord --task="..."
+ * Prefer: gim coord --task="..."
  */
 import { cmdCoord } from '../src/coordinator.js'
 

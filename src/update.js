@@ -28,19 +28,19 @@ export function getCliReleaseInfo(channel) {
 
 /**
  * Select CDN artifact for this host from cli-releases.json.
- * Prefers entries with a real url; falls back to DEEP_CLI_ZIP local override.
+ * Prefers entries with a real url; falls back to GIM_CLI_ZIP local override.
  * @param {string} channel
  * @param {{ platform?: string, arch?: string }} [opts]
  * @returns {object|null}
  */
 export function pickCliArtifact(channel, { platform = process.platform, arch = process.arch } = {}) {
-  if (process.env.DEEP_CLI_ZIP && fs.existsSync(process.env.DEEP_CLI_ZIP)) {
+  if (process.env.GIM_CLI_ZIP && fs.existsSync(process.env.GIM_CLI_ZIP)) {
     return {
       os: platform,
       arch,
       format: 'zip',
-      url: process.env.DEEP_CLI_ZIP,
-      sha256: process.env.DEEP_CLI_SHA256 || null,
+      url: process.env.GIM_CLI_ZIP,
+      sha256: process.env.GIM_CLI_SHA256 || null,
       version: getCliReleaseInfo(channel)?.version || readLocalVersion(),
     }
   }
@@ -73,12 +73,12 @@ export async function cmdUpdate(flags) {
   const artifact = pickCliArtifact(channel)
   const artifacts = cliRel?.artifacts?.filter((a) => a.url)?.length || 0
 
-  console.log('Deep update')
+  console.log('GIM update')
   console.log(`  channel    ${channel}`)
   console.log(`  revision   ${revision || '?'}`)
   console.log(`  cli local  ${localVer}`)
   console.log(`  cli CDN    ${cliRel?.version || 'n/a'} (${artifacts} artifacts with url)`)
-  console.log(`  license    CC-BY-NC-SA-4.0`)
+  console.log(`  license    Apache-2.0`)
 
   if (flags['dry-run']) {
     if (artifact) console.log(`  would get  ${artifact.url}`)
@@ -91,9 +91,9 @@ export async function cmdUpdate(flags) {
     console.log('')
     console.log('[INFO] CDN not wired for this OS — update via git:')
     console.log('       git pull && npm link')
-    console.log('       or re-run scripts/install-deep.ps1|sh')
-    console.log('[INFO] Local zip test: set DEEP_CLI_ZIP=path\\to\\deep-cli-*.zip')
-    console.log('[INFO] Manifest cache: ~/.deep/manifests-cache')
+    console.log('       or re-run scripts/install-gim.ps1|sh')
+    console.log('[INFO] Local zip test: set GIM_CLI_ZIP=path\\to\\gim-cli-*.zip')
+    console.log('[INFO] Manifest cache: ~/.gim/manifests-cache')
     appendLog(`event=update channel=${channel} mode=git-hint`)
     return
   }
@@ -155,7 +155,7 @@ export async function cmdUpdate(flags) {
   console.log(`     root  ${installed.installRoot}`)
   console.log(`     shim  ${installed.shim}`)
   console.log(`[INFO] Add to PATH if needed: ${installed.binDir}`)
-  console.log('[INFO] License: CC BY-NC-SA 4.0 — non-commercial use; see LICENSE')
+  console.log('[INFO] License: Apache-2.0 — non-commercial use; see LICENSE')
   appendLog(`event=update channel=${channel} mode=cdn-install version=${version}`)
 }
 

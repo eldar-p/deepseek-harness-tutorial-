@@ -5,18 +5,17 @@ import path from 'node:path'
 import { PKG_ROOT } from './paths.js'
 
 /**
- * @param {{ deepBin?: string, indexUrl?: string }} [opts]
+ * @param {{ gimBin?: string, indexUrl?: string }} [opts]
  */
 export function buildMcpClientConfig(opts = {}) {
-  const deepBin = opts.deepBin || path.join(PKG_ROOT, 'bin', 'deep.js')
-  const indexUrl = opts.indexUrl || process.env.DEEP_INDEX_URL || 'http://127.0.0.1:14150'
+  const gimBin = opts.gimBin || path.join(PKG_ROOT, 'bin', 'gim.js')
+  const indexUrl = opts.indexUrl || process.env.GIM_INDEX_URL || 'http://127.0.0.1:14150'
   return {
-    mcpServers: {
-      deep: {
+    mcpServers: { gim: {
         command: 'node',
-        args: [deepBin, 'mcp'],
+        args: [gimBin, 'mcp'],
         env: {
-          DEEP_INDEX_URL: indexUrl,
+          GIM_INDEX_URL: indexUrl,
         },
       },
     },
@@ -30,6 +29,6 @@ export function formatMcpConfigHelp(opts = {}) {
     '',
     JSON.stringify(cfg, null, 2),
     '',
-    'Or: node scripts/deep-mcp.mjs',
+    'Or: node scripts/gim-mcp.mjs',
   ].join('\n')
 }

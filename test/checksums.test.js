@@ -6,7 +6,7 @@ import path from 'node:path'
 import { sha256File, writeSha256Sidecar, verifySha256 } from '../src/checksums.js'
 
 test('writeSha256Sidecar and verifySha256', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-sum-'))
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-sum-'))
   const file = path.join(dir, 'payload.bin')
   fs.writeFileSync(file, 'hello-deep')
   const hex = sha256File(file)
@@ -19,7 +19,7 @@ test('writeSha256Sidecar and verifySha256', () => {
 })
 
 test('verifySha256 mismatch and missing', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-sum-'))
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-sum-'))
   const file = path.join(dir, 'a.bin')
   fs.writeFileSync(file, 'x')
   const bad = verifySha256(file, { expected: '0'.repeat(64) })

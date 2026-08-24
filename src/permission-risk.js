@@ -1,6 +1,6 @@
 /**
  * Heuristic bash/tool risk tiers (Auto Mode lite).
- * Optional LLM second-pass for `confirm` when DEEP_AUTO_MODE=llm (or classifyBashRiskLlm).
+ * Optional LLM second-pass for `confirm` when GIM_AUTO_MODE=llm (or classifyBashRiskLlm).
  * Inspired by Claude Code yoloClassifier allow/soft_deny split.
  */
 
@@ -28,8 +28,8 @@ const DENY_RE = [
 ]
 
 const ALLOW_RE = [
-  /^deep\s+(status|doctor|index\s+search|index\s+status|help|presets)\b/i,
-  /^node\s+bin\/deep\.js\s+(status|doctor|index\s+search|index\s+status|help|stop)\b/i,
+  /^gim\s+(status|doctor|index\s+search|index\s+status|help|presets)\b/i,
+  /^node\s+bin\/gim\.js\s+(status|doctor|index\s+search|index\s+status|help|stop)\b/i,
   /^(cat|head|tail|wc|file|stat)\s+/i,
   /^(ls|dir)(\s|$)/i,
   /^pwd\s*$/i,
@@ -69,7 +69,7 @@ export function classifyBashRisk(command) {
 
   if (parts.length === 1 || parts.every((p) => ALLOW_RE.some((re) => re.test(p)))) {
     if (ALLOW_RE.some((re) => re.test(cmd)) || parts.every((p) => ALLOW_RE.some((re) => re.test(p)))) {
-      return { level: 'allow', reason: 'read-only or deep meta', source: 'heuristic' }
+      return { level: 'allow', reason: 'read-only or gim meta', source: 'heuristic' }
     }
   }
 
@@ -84,7 +84,7 @@ export function classifyBashRisk(command) {
   return { level: 'confirm', reason: 'default', source: 'heuristic' }
 }
 
-/** Deep cordis uses approval: never — guard uses deny for destructive only. */
+/** GIM cordis uses approval: never — guard uses deny for destructive only. */
 export function shouldDenyBash(command) {
   return classifyBashRisk(command).level === 'deny'
 }
@@ -158,13 +158,13 @@ export async function classifyBashRiskLlm(command, opts = {}) {
     return heuristic
   }
 
-  const baseURL = (opts.baseURL || process.env.DEEP_CLASSIFIER_URL || 'http://127.0.0.1:8080/v1').replace(
+  const baseURL = (opts.baseURL || process.env.GIM_CLASSIFIER_URL || 'http://127.0.0.1:8080/v1').replace(
     /\/$/,
     '',
   )
-  const model = opts.model || process.env.DEEP_CLASSIFIER_MODEL || 'local'
-  const apiKey = opts.apiKey ?? process.env.DEEP_CLASSIFIER_KEY ?? process.env.DEEP_API_KEY ?? null
-  const timeoutMs = opts.timeoutMs ?? Number(process.env.DEEP_CLASSIFIER_TIMEOUT_MS || 4000)
+  const model = opts.model || process.env.GIM_CLASSIFIER_MODEL || 'local'
+  const apiKey = opts.apiKey ?? process.env.GIM_CLASSIFIER_KEY ?? process.env.GIM_API_KEY ?? null
+  const timeoutMs = opts.timeoutMs ?? Number(process.env.GIM_CLASSIFIER_TIMEOUT_MS || 4000)
   const fetchFn = opts.fetchFn || globalThis.fetch
 
   if (typeof fetchFn !== 'function') {
@@ -217,7 +217,7 @@ export async function classifyBashRiskLlm(command, opts = {}) {
  * @param {{ mode?: 'heuristic'|'llm', baseURL?: string, model?: string, apiKey?: string|null, fetchFn?: typeof fetch, timeoutMs?: number }} [opts]
  */
 export async function shouldDenyBashAsync(command, opts = {}) {
-  const mode = (opts.mode || process.env.DEEP_AUTO_MODE || 'heuristic').toLowerCase()
+  const mode = (opts.mode || process.env.GIM_AUTO_MODE || 'heuristic').toLowerCase()
   if (mode === 'llm' || mode === 'auto') {
     const v = await classifyBashRiskLlm(command, opts)
     return v.level === 'deny'

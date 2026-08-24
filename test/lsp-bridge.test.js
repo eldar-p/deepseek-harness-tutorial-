@@ -24,7 +24,7 @@ test('lspQuery missing file and missing server', async () => {
   assert.equal(missing.ok, false)
   assert.match(missing.error, /not found/)
 
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-lsp-'))
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-lsp-'))
   const f = path.join(tmp, 'x.md')
   fs.writeFileSync(f, '# hi\n')
   const r = await lspQuery({ op: 'hover', file: f })

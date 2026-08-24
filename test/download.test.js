@@ -14,7 +14,7 @@ test('loadManifest channels.json', () => {
 })
 
 test('sha256File stable hash', () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-sha-'))
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-sha-'))
   const f = path.join(tmp, 'x.txt')
   fs.writeFileSync(f, 'hello deep')
   const h = sha256File(f)

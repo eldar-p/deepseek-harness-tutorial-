@@ -56,7 +56,7 @@ export function assessVersionFreshness(channel) {
       remote,
       channel: ch,
       status: 'outdated',
-      detail: `update available: ${local} → ${remote} (deep update --channel ${ch})`,
+      detail: `update available: ${local} → ${remote} (gim update --channel ${ch})`,
     }
   }
   return {
@@ -123,8 +123,8 @@ export function checkDependencies() {
   })
 
   let llama = which('llama-server') || null
-  if (process.env.DEEP_LLAMA_BIN && fs.existsSync(process.env.DEEP_LLAMA_BIN)) {
-    llama = process.env.DEEP_LLAMA_BIN
+  if (process.env.GIM_LLAMA_BIN && fs.existsSync(process.env.GIM_LLAMA_BIN)) {
+    llama = process.env.GIM_LLAMA_BIN
   }
   if (!llama) {
     const exe = process.platform === 'win32' ? 'llama-server.exe' : 'llama-server'
@@ -177,19 +177,19 @@ export function cmdVersion(flags = {}) {
   const local = readLocalVersion()
   const fresh = assessVersionFreshness(flags.channel)
   const rev = getChannelRevision(fresh.channel)
-  console.log(`Deep CLI ${local}`)
+  console.log(`GIM CLI ${local}`)
   console.log(`  channel   ${fresh.channel}`)
   console.log(`  revision  ${rev || '—'}`)
   console.log(`  CDN       ${fresh.remote || 'n/a'}`)
   console.log(`  status    ${fresh.status} — ${fresh.detail}`)
-  console.log(`  license   CC-BY-NC-SA-4.0`)
+  console.log(`  license   Apache-2.0`)
   console.log(`  home      ${paths().home}`)
   if (fresh.status === 'outdated') process.exitCode = 3
 }
 
 export function cmdDeps() {
   const r = checkDependencies()
-  console.log('Deep dependencies')
+  console.log('GIM dependencies')
   for (const i of r.items) {
     const tag = i.ok ? 'OK  ' : i.required ? 'FAIL' : 'WARN'
     const req = i.required ? 'required' : 'optional'
@@ -201,7 +201,7 @@ export function cmdDeps() {
 
 /** Combined version freshness + deps. */
 export function cmdCheck(flags = {}) {
-  console.log('Deep check')
+  console.log('GIM check')
   console.log('─'.repeat(48))
   cmdVersion(flags)
   console.log('─'.repeat(48))

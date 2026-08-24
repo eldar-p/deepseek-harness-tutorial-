@@ -1,9 +1,9 @@
 /**
- * Code search integration for Deep DSH.
+ * Code search integration for GIM DSH.
  * - Auto-incremental index on write/edit
  * - Injects code-search hint when grep/read large trees
  *
- * Env: DEEP_INDEX_URL (http://127.0.0.1:PORT), DEEP_WORKSPACE
+ * Env: GIM_INDEX_URL (http://127.0.0.1:PORT), GIM_WORKSPACE
  */
 export const name = 'code-search'
 export const inject = []
@@ -16,7 +16,7 @@ function writePath(exec) {
 }
 
 async function reindexRel(rel) {
-  const base = process.env.DEEP_INDEX_URL
+  const base = process.env.GIM_INDEX_URL
   if (!base || !rel) return
   try {
     await fetch(`${base.replace(/\/$/, '')}/touch`, {
@@ -26,7 +26,7 @@ async function reindexRel(rel) {
       signal: AbortSignal.timeout(5000),
     })
   } catch {
-    /* best-effort — full rebuild via deep index build */
+    /* best-effort — full rebuild via gim index build */
   }
 }
 
@@ -48,8 +48,8 @@ export function apply(ctx) {
         const text = typeof result.content === 'string'
           ? result.content
           : (Array.isArray(result.content) ? result.content.map((c) => c?.text ?? '').join('') : '')
-        if (text.length > 12000 && process.env.DEEP_INDEX_URL) {
-          pushHint('Large grep result — prefer: deep index search "your question"')
+        if (text.length > 12000 && process.env.GIM_INDEX_URL) {
+          pushHint('Large grep result — prefer: gim index search "your question"')
         }
       }
     } catch {

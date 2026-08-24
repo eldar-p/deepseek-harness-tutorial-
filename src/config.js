@@ -72,7 +72,7 @@ export function getOrInitConfig(opts = {}) {
       channel: opts.channel,
       gguf: opts.gguf || null,
     })
-    // seed presets into ~/.deep/presets
+    // seed presets into ~/.gim/presets
     const src = path.join(PKG_ROOT, 'presets')
     for (const name of PRESET_NAMES) {
       const f = `${name}.json`

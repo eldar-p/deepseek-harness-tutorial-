@@ -14,7 +14,7 @@ npm i -g typescript-language-server typescript   # JS/TS
 npm i -g pyright                                 # Python (pyright-langserver)
 ```
 
-If a server is missing, Deep returns a clear error — fall back to `deep index search` / read.
+If a server is missing, GIM returns a clear error — fall back to `gim index search` / read.
 
 ## Notes
 

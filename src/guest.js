@@ -7,7 +7,7 @@ import { loadManifest } from './download.js'
 
 /** @param {string} stack */
 function containerName(stack) {
-  return `deep-guest-${stack}`
+  return `gim-guest-${stack}`
 }
 
 /** Windows host path → Docker Desktop mount form when needed.
@@ -37,7 +37,7 @@ export function resolveAllowlist(presetNet) {
 
 export function guestCapabilityArgs(presetNet) {
   if (presetNet === 'none' || presetNet === 'offline') return []
-  // iptables in deep-net-enforce needs NET_ADMIN
+  // iptables in gim-net-enforce needs NET_ADMIN
   return ['--cap-add', 'NET_ADMIN']
 }
 
@@ -65,12 +65,12 @@ export function guestProxyEnv(proxyPort) {
   }
 }
 
-/** Env vars passed into guest for network policy (iptables via deep-net-enforce). */
+/** Env vars passed into guest for network policy (iptables via gim-net-enforce). */
 export function guestNetworkEnv(presetNet, allowlistDomains = []) {
   const domains = allowlistDomains.length ? allowlistDomains : resolveAllowlist(presetNet)
   return {
-    DEEP_NET_MODE: presetNet === 'allowlist' || presetNet === 'dev' ? 'allowlist' : presetNet,
-    DEEP_NET_ALLOWLIST: domains.join(','),
+    GIM_NET_MODE: presetNet === 'allowlist' || presetNet === 'dev' ? 'allowlist' : presetNet,
+    GIM_NET_ALLOWLIST: domains.join(','),
   }
 }
 
@@ -86,7 +86,7 @@ export async function ensureGuestImage() {
   if (!engine.ok || !engine.bin) return { ok: false, reason: engine.detail || engine.reason || 'no engine' }
 
   const man = loadManifest('guest-images.json')
-  const image = man.image || 'deep-guest:prealpha'
+  const image = man.image || 'gim-guest:prealpha'
   const check = spawnSync(engine.bin, ['image', 'inspect', image], {
     encoding: 'utf8',
     windowsHide: true,
@@ -152,9 +152,9 @@ export async function startGuest({ stack, presetNet = 'allowlist', proxyPort = n
   const proxyEnv =
     proxyPort && presetNet !== 'none' && presetNet !== 'offline' ? guestProxyEnv(proxyPort) : {}
   if (proxyPort && Object.keys(proxyEnv).length) {
-    netEnv.DEEP_NET_MODE = 'proxy'
-    netEnv.DEEP_PROXY_HOST = process.platform === 'win32' || process.platform === 'darwin' ? 'host.docker.internal' : '172.17.0.1'
-    netEnv.DEEP_PROXY_PORT = String(proxyPort)
+    netEnv.GIM_NET_MODE = 'proxy'
+    netEnv.GIM_PROXY_HOST = process.platform === 'win32' || process.platform === 'darwin' ? 'host.docker.internal' : '172.17.0.1'
+    netEnv.GIM_PROXY_PORT = String(proxyPort)
   }
   console.log(`[INFO] Guest net: ${formatAllowlistLog(presetNet, resolved)}`)
   const envArgs = Object.entries({ ...netEnv, ...proxyEnv }).flatMap(([k, v]) => ['-e', `${k}=${v}`])
@@ -186,7 +186,7 @@ export async function startGuest({ stack, presetNet = 'allowlist', proxyPort = n
 
 export async function mountSmoke(stack, engineBin) {
   const name = containerName(stack)
-  const marker = `.deep-smoke-${Date.now()}`
+  const marker = `.gim-smoke-${Date.now()}`
   const touch = spawnSync(engineBin, ['exec', name, 'sh', '-c', `touch /workspace/${marker} && ls /workspace/${marker}`], {
     encoding: 'utf8',
     windowsHide: true,

@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { paths, chmodOwnerOnly } from './paths.js'
 import { loadManifest } from './download.js'
+import { resolveContextWindow } from './context-policy.js'
 
 /** @typedef {{ id: string, displayName: string, baseURL: string, model: string, apiKeyEnv: string, apiKey: string|null, contextWindow: number, maxTokens: number, supportsDeveloperRole: boolean }} ApiProfile */
 
@@ -46,7 +47,7 @@ export function resolveApiProfile(flags = {}, cfg = null) {
     )
   }
 
-  const apiKeyEnv = preset.apiKeyEnv || 'DEEP_API_KEY'
+  const apiKeyEnv = preset.apiKeyEnv || 'GIM_API_KEY'
   const apiKey = flags['api-key'] || process.env[apiKeyEnv] || null
 
   return {
@@ -56,7 +57,7 @@ export function resolveApiProfile(flags = {}, cfg = null) {
     model,
     apiKeyEnv,
     apiKey,
-    contextWindow: Number(flags['api-ctx'] || cfg?.api?.contextWindow || preset.contextWindow || 32768),
+    contextWindow: resolveContextWindow(cfg || {}, flags, null),
     maxTokens: Number(preset.maxTokens || 4096),
     supportsDeveloperRole: preset.supportsDeveloperRole === true,
   }
@@ -87,7 +88,21 @@ export function writeApiKeyToDshEnv(profile) {
 
 export function isApiMode(cfg, flags = {}) {
   if (flags.gguf || cfg?.gguf) return false
+  if (isVllmMode(cfg, flags)) return true
   return !!(flags.api || cfg?.api?.provider)
+}
+
+/** Local backends that do not require a cloud API key. */
+export function isLocalApiProvider(id) {
+  return id === 'vllm' || id === 'colibri'
+}
+
+export function isVllmMode(cfg, flags = {}) {
+  if (flags.vllm === true || flags.vllm === '') return true
+  if (flags.llm === 'vllm' || flags.backend === 'vllm') return true
+  if (process.env.GIM_LLM === 'vllm' || process.env.GIM_BACKEND === 'vllm') return true
+  if (cfg?.llm === 'vllm' || cfg?.backend === 'vllm') return true
+  return false
 }
 
 export function buildDshApiYaml(profile) {

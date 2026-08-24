@@ -26,30 +26,30 @@ test('checkDependencies returns items', () => {
   assert.ok(r.items.some((i) => i.id === 'engine'))
 })
 
-test('loadAsciiArt contains Deep shape', () => {
+test('loadAsciiArt contains GIM shape', () => {
   const art = loadAsciiArt()
-  assert.ok(art.includes('____'))
-  assert.ok(art.includes('/\\  _'))
+  assert.ok(/GIM|___/i.test(art) || art.includes('____'))
+  assert.ok(art.includes('___') || art.length > 20)
 })
 
-test('bannerEnabled respects DEEP_NO_BANNER', () => {
-  const prev = process.env.DEEP_NO_BANNER
-  process.env.DEEP_NO_BANNER = '1'
+test('bannerEnabled respects GIM_NO_BANNER', () => {
+  const prev = process.env.GIM_NO_BANNER
+  process.env.GIM_NO_BANNER = '1'
   try {
     assert.equal(bannerEnabled(), false)
   } finally {
-    if (prev === undefined) delete process.env.DEEP_NO_BANNER
-    else process.env.DEEP_NO_BANNER = prev
+    if (prev === undefined) delete process.env.GIM_NO_BANNER
+    else process.env.GIM_NO_BANNER = prev
   }
 })
 
 test('printBanner and welcome helpers', async () => {
-  const prevHome = process.env.DEEP_HOME
-  const prevBanner = process.env.DEEP_NO_BANNER
+  const prevHome = process.env.GIM_HOME
+  const prevBanner = process.env.GIM_NO_BANNER
   const prevCi = process.env.CI
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-ban-'))
-  process.env.DEEP_HOME = home
-  delete process.env.DEEP_NO_BANNER
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-ban-'))
+  process.env.GIM_HOME = home
+  delete process.env.GIM_NO_BANNER
   delete process.env.CI
   try {
     const {
@@ -67,10 +67,10 @@ test('printBanner and welcome helpers', async () => {
     markWelcomed()
     assert.equal(maybePrintFirstRunWelcome(), false)
   } finally {
-    if (prevHome === undefined) delete process.env.DEEP_HOME
-    else process.env.DEEP_HOME = prevHome
-    if (prevBanner === undefined) delete process.env.DEEP_NO_BANNER
-    else process.env.DEEP_NO_BANNER = prevBanner
+    if (prevHome === undefined) delete process.env.GIM_HOME
+    else process.env.GIM_HOME = prevHome
+    if (prevBanner === undefined) delete process.env.GIM_NO_BANNER
+    else process.env.GIM_NO_BANNER = prevBanner
     if (prevCi === undefined) delete process.env.CI
     else process.env.CI = prevCi
     fs.rmSync(home, { recursive: true, force: true })

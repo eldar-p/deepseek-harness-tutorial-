@@ -29,7 +29,7 @@ test('isPidAlive dead pid', () => {
 })
 
 test('findFileRecursive finds nested file', () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-find-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-find-'))
   try {
     const nest = path.join(root, 'a', 'b')
     fs.mkdirSync(nest, { recursive: true })
@@ -43,16 +43,16 @@ test('findFileRecursive finds nested file', () => {
 })
 
 test('runLogPath joins stack run dir', () => {
-  const prev = process.env.DEEP_HOME
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-rlp-'))
-  process.env.DEEP_HOME = home
+  const prev = process.env.GIM_HOME
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-rlp-'))
+  process.env.GIM_HOME = home
   try {
     const p = runLogPath('s1', 'llama')
     assert.ok(p.includes('s1'))
     assert.ok(p.endsWith(`${path.sep}llama.log`) || p.endsWith('/llama.log'))
   } finally {
-    if (prev === undefined) delete process.env.DEEP_HOME
-    else process.env.DEEP_HOME = prev
+    if (prev === undefined) delete process.env.GIM_HOME
+    else process.env.GIM_HOME = prev
     fs.rmSync(home, { recursive: true, force: true })
   }
 })
@@ -85,7 +85,7 @@ test('waitHttpOk times out', async () => {
 
 test('extractArchive expands zip on win32', () => {
   if (process.platform !== 'win32') return
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-zip-'))
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-zip-'))
   const src = path.join(dir, 'payload.txt')
   const zip = path.join(dir, 'a.zip')
   const dest = path.join(dir, 'out')
@@ -102,7 +102,7 @@ test('extractArchive expands zip on win32', () => {
 })
 
 test('spawnDetached starts and can be killed', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-spawn-'))
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-spawn-'))
   const logFile = path.join(dir, 'out.log')
   const bin = process.execPath
   const pid = spawnDetached(bin, ['-e', 'setInterval(()=>{},1000)'], { cwd: dir, logFile })

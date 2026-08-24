@@ -1,6 +1,6 @@
 /**
- * LSP bridge for Deep DSH — hover / definition / references / symbols via host LSP.
- * Env: DEEP_WORKSPACE, DEEP_PKG_ROOT (optional)
+ * LSP bridge for GIM DSH — hover / definition / references / symbols via host LSP.
+ * Env: GIM_WORKSPACE, GIM_PKG_ROOT (optional)
  */
 export const name = 'lsp-bridge'
 export const inject = ['tools']
@@ -11,7 +11,7 @@ import { pathToFileURL } from 'node:url'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 
 function hostRoot() {
-  return process.env.DEEP_WORKSPACE || process.cwd()
+  return process.env.GIM_WORKSPACE || process.cwd()
 }
 
 function toHostPath(guestOrRel) {
@@ -21,7 +21,7 @@ function toHostPath(guestOrRel) {
 
 async function loadLsp() {
   const candidates = [
-    process.env.DEEP_PKG_ROOT ? path.join(process.env.DEEP_PKG_ROOT, 'src', 'lsp-bridge.js') : null,
+    process.env.GIM_PKG_ROOT ? path.join(process.env.GIM_PKG_ROOT, 'src', 'lsp-bridge.js') : null,
     path.join(hostRoot(), '..', '..', 'src', 'lsp-bridge.js'),
   ].filter(Boolean)
   for (const c of candidates) {

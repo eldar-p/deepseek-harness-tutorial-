@@ -10,7 +10,7 @@ const CODE_EXTS = new Set([
 ])
 
 const IGNORE_DIRS = new Set([
-  'node_modules', '.git', '.deep', 'dist', 'build', '.lance', '__pycache__',
+  'node_modules', '.git', '.gim', 'dist', 'build', '.lance', '__pycache__',
   '.next', 'coverage', '.cache', 'vendor',
 ])
 

@@ -1,6 +1,6 @@
 {
-  "image": "deep-guest:0.2-beta",
+  "image": "gim-guest:0.2-beta",
   "digest": null,
   "build": "Dockerfile.guest",
-  "note": "Local build via deep start; includes deep-net-enforce (iptables allowlist). CDN digest later."
+  "note": "Local build via gim start; includes gim-net-enforce (iptables allowlist). CDN digest later."
 }

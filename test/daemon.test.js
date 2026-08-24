@@ -7,9 +7,9 @@ import { daemonTick, writeDaemonState, readDaemonState, cmdDaemon } from '../src
 import { writeRunState, clearRunState } from '../src/runstate.js'
 
 test('daemonTick probes urls from runstate', async () => {
-  const prevHome = process.env.DEEP_HOME
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-daemon-'))
-  process.env.DEEP_HOME = home
+  const prevHome = process.env.GIM_HOME
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-daemon-'))
+  process.env.GIM_HOME = home
   try {
     writeRunState('default', {
       urls: { llama: 'http://127.0.0.1:9', dsh: 'http://127.0.0.1:9' },
@@ -22,16 +22,16 @@ test('daemonTick probes urls from runstate', async () => {
     assert.equal(summary.ok, true)
     assert.equal(summary.checks.length, 2)
   } finally {
-    if (prevHome === undefined) delete process.env.DEEP_HOME
-    else process.env.DEEP_HOME = prevHome
+    if (prevHome === undefined) delete process.env.GIM_HOME
+    else process.env.GIM_HOME = prevHome
     fs.rmSync(home, { recursive: true, force: true })
   }
 })
 
 test('writeProactiveNudge on unhealthy', async () => {
-  const prevHome = process.env.DEEP_HOME
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-proactive-'))
-  process.env.DEEP_HOME = home
+  const prevHome = process.env.GIM_HOME
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-proactive-'))
+  process.env.GIM_HOME = home
   try {
     const { writeProactiveNudge, proactivePath } = await import('../src/daemon.js')
     const f = writeProactiveNudge({
@@ -44,24 +44,24 @@ test('writeProactiveNudge on unhealthy', async () => {
     assert.ok(fs.existsSync(proactivePath('default')))
     assert.match(fs.readFileSync(proactivePath('default'), 'utf8'), /UNHEALTHY/)
   } finally {
-    if (prevHome === undefined) delete process.env.DEEP_HOME
-    else process.env.DEEP_HOME = prevHome
+    if (prevHome === undefined) delete process.env.GIM_HOME
+    else process.env.GIM_HOME = prevHome
     fs.rmSync(home, { recursive: true, force: true })
   }
 })
 
 test('daemon status when stopped', async () => {
-  const prevHome = process.env.DEEP_HOME
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-daemon-st-'))
-  process.env.DEEP_HOME = home
+  const prevHome = process.env.GIM_HOME
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-daemon-st-'))
+  process.env.GIM_HOME = home
   try {
     clearRunState('default')
     writeDaemonState('default', { pid: null })
     assert.equal(readDaemonState('default').pid, null)
     await cmdDaemon({ name: 'default' }, ['status'])
   } finally {
-    if (prevHome === undefined) delete process.env.DEEP_HOME
-    else process.env.DEEP_HOME = prevHome
+    if (prevHome === undefined) delete process.env.GIM_HOME
+    else process.env.GIM_HOME = prevHome
     fs.rmSync(home, { recursive: true, force: true })
   }
 })

@@ -1,8 +1,8 @@
-# Реестр аудитов (26)
+# Реестр аудитов (32)
 
 Статус: **PASS** | **WARN** | **FAIL** | **N/A** | **DEFER**
 
-Последний прогон: `npm run audit` → [audits/latest.md](./audits/latest.md)
+Последний прогон: `npm run audit` → [audits/latest.md](./audits/latest.md) · security gate: `npm run audit:security`
 
 ## Базовые (1–22)
 
@@ -40,6 +40,17 @@
 | 25 | Телеметрия и приватность | pre-alpha | ✓ | [25-telemetry](./audits/25-telemetry.md) |
 | 26 | Деградация моделей (квантование) | alpha | ✓ | [26-quant-degrade](./audits/26-quant-degrade.md) |
 
+## Security layer (27–32) — [SECURITY-AUDITS-EXTRA.md](./SECURITY-AUDITS-EXTRA.md)
+
+| # | Аудит | Gate | Отчёт |
+|---|-------|------|-------|
+| 27 | Supply chain | security | [27-supply-chain](./audits/27-supply-chain.md) |
+| 28 | Prompt / tool abuse | security | [28-prompt-jail](./audits/28-prompt-jail.md) |
+| 29 | Egress verify | security | [29-egress-verify](./audits/29-egress-verify.md) |
+| 30 | Secrets redaction | security | [30-secrets-redact](./audits/30-secrets-redact.md) |
+| 31 | Container surface | security | [31-container-surface](./audits/31-container-surface.md) |
+| 32 | Update integrity | security | [32-update-integrity](./audits/32-update-integrity.md) |
+
 ## Gate по этапам
 
 | Этап | Обязательные аудиты без FAIL |
@@ -47,4 +58,7 @@
 | Pre-alpha | 3, 6, 15, 17, 19, 20, **25** |
 | Alpha | + 1, 8–14, 16, 18, 21, **23–24, 26** |
 | Pre-beta | все **26** (#22 может быть N/A с планом) |
+| Security | все **32** |
 | Beta+ | все PASS или задокументированный exception |
+
+Adversarial enforcement (не audit gate): `npm run test:security` — [SECURITY-EVAL.md](./SECURITY-EVAL.md)

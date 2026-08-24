@@ -16,7 +16,7 @@ docker-credential-desktop: executable file not found in %PATH%
 
 ## Decision
 
-1. `resolveEngineBin()` — ищет docker в PATH, `DEEP_DOCKER_BIN`, и DockerDesktop bin dir
+1. `resolveEngineBin()` — ищет docker в PATH, `GIM_DOCKER_BIN`, и DockerDesktop bin dir
 2. `engineEnv(bin)` — prepend bin directory к PATH для **всех** docker spawns
 3. `doctor` подсказка + `scripts/wait-docker.ps1`
 

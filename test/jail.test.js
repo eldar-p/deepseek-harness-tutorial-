@@ -5,7 +5,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { rewriteWorkspacePath, JailEscapeError, isPathInsideRoot } from '../src/workspace-jail.js'
 
-const ROOT = process.platform === 'win32' ? 'C:\\Users\\test\\.deep\\workspace' : '/home/test/.deep/workspace'
+const ROOT = process.platform === 'win32' ? 'C:\\Users\\test\\.gim\\workspace' : '/home/test/.gim/workspace'
 
 test('rewriteWorkspacePath maps /workspace', () => {
   const out = rewriteWorkspacePath('/workspace/foo/bar.txt', ROOT)
@@ -37,7 +37,7 @@ test('rewriteWorkspacePath rejects .. escape via /workspace', () => {
   )
 })
 
-test('rewriteWorkspacePath rejects deep .. escape', () => {
+test('rewriteWorkspacePath rejects gim .. escape', () => {
   assert.throws(
     () => rewriteWorkspacePath('/workspace/a/b/../../../../etc/passwd', ROOT),
     (e) => e instanceof JailEscapeError,
@@ -45,13 +45,13 @@ test('rewriteWorkspacePath rejects deep .. escape', () => {
 })
 
 test('isPathInsideRoot rejects sibling prefix trick', () => {
-  const root = process.platform === 'win32' ? 'C:\\Users\\test\\.deep\\workspace' : '/tmp/deep-ws'
+  const root = process.platform === 'win32' ? 'C:\\Users\\test\\.gim\\workspace' : '/tmp/gim-ws'
   const evil = root + '-evil' + path.sep + 'x'
   assert.equal(isPathInsideRoot(evil, root), false)
 })
 
 test('rewriteWorkspacePath rejects symlink escape when possible', () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-jail-'))
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-jail-'))
   const outside = path.join(tmp, 'outside.txt')
   const root = path.join(tmp, 'ws')
   fs.mkdirSync(root)

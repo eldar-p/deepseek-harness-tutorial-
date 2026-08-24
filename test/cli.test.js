@@ -65,13 +65,13 @@ test('cmdStatus default stack screen', async () => {
 
 test('cmdBootstrap seeds workspace', async () => {
   // Avoid long llama fetch in unit tests
-  const prev = process.env.DEEP_LLAMA_BIN
-  process.env.DEEP_LLAMA_BIN = path.join(os.tmpdir(), `no-llama-${process.pid}.exe`)
+  const prev = process.env.GIM_LLAMA_BIN
+  process.env.GIM_LLAMA_BIN = path.join(os.tmpdir(), `no-llama-${process.pid}.exe`)
   try {
     await cmdBootstrap({ preset: 'dev', name: `utest-boot-${process.pid}` })
   } finally {
-    if (prev === undefined) delete process.env.DEEP_LLAMA_BIN
-    else process.env.DEEP_LLAMA_BIN = prev
+    if (prev === undefined) delete process.env.GIM_LLAMA_BIN
+    else process.env.GIM_LLAMA_BIN = prev
   }
 })
 
@@ -92,43 +92,43 @@ test('main doctor ok', async () => {
 })
 
 test('cmdHelp topic start', () => {
-  process.env.DEEP_NO_BANNER = '1'
+  process.env.GIM_NO_BANNER = '1'
   try {
     cmdHelp('start')
   } finally {
-    delete process.env.DEEP_NO_BANNER
+    delete process.env.GIM_NO_BANNER
   }
 })
 
 test('main version ok', async () => {
-  process.env.DEEP_NO_BANNER = '1'
+  process.env.GIM_NO_BANNER = '1'
   try {
     await main(['version'])
   } finally {
-    delete process.env.DEEP_NO_BANNER
+    delete process.env.GIM_NO_BANNER
   }
 })
 
 test('main check ok', async () => {
-  process.env.DEEP_NO_BANNER = '1'
+  process.env.GIM_NO_BANNER = '1'
   const prev = process.exitCode
   process.exitCode = 0
   try {
     await main(['check'])
   } finally {
-    delete process.env.DEEP_NO_BANNER
+    delete process.env.GIM_NO_BANNER
     process.exitCode = prev
   }
 })
 
 test('main deps ok', async () => {
-  process.env.DEEP_NO_BANNER = '1'
+  process.env.GIM_NO_BANNER = '1'
   const prev = process.exitCode
   process.exitCode = 0
   try {
     await main(['deps'])
   } finally {
-    delete process.env.DEEP_NO_BANNER
+    delete process.env.GIM_NO_BANNER
     process.exitCode = prev
   }
 })

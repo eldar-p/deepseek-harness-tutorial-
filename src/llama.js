@@ -1,10 +1,11 @@
+import { resolveContextWindow } from './context-policy.js'
 import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
 import { loadManifest, ensureCachedAsset } from './download.js'
 import { which, detectGpu } from './detect.js'
 import { paths, appendLog } from './paths.js'
-import { spawnDetached, killTree, waitHttpOk, extractArchive, findFileRecursive, runLogPath, isPidAlive } from './proc.js'
+import { spawnDetached, killTree, waitHttpOk, extractArchive, findFileRecursive, runLogPath, isPidAlive, stopService } from './proc.js'
 
 function exeName() {
   return process.platform === 'win32' ? 'llama-server.exe' : 'llama-server'
@@ -43,13 +44,13 @@ export async function ensureLlamaBinary({ device = 'cpu', fetch = true } = {}) {
   const existing = findFileRecursive(runtimeRoot, [exeName()])
   if (existing) return { bin: existing, source: 'runtime' }
 
-  if (process.env.DEEP_LLAMA_BIN && fs.existsSync(process.env.DEEP_LLAMA_BIN)) {
-    return { bin: process.env.DEEP_LLAMA_BIN, source: 'env' }
+  if (process.env.GIM_LLAMA_BIN && fs.existsSync(process.env.GIM_LLAMA_BIN)) {
+    return { bin: process.env.GIM_LLAMA_BIN, source: 'env' }
   }
 
   if (!fetch) {
     throw new Error(
-      `llama-server not found. Place binary under ${runtimeRoot} or set DEEP_LLAMA_BIN / PATH`,
+      `llama-server not found. Place binary under ${runtimeRoot} or set GIM_LLAMA_BIN / PATH`,
     )
   }
 
@@ -103,7 +104,7 @@ export function resolveGguf({ flagsGguf, configGguf } = {}) {
     return p
   }
   if (configGguf && fs.existsSync(configGguf)) return configGguf
-  if (process.env.DEEP_GGUF && fs.existsSync(process.env.DEEP_GGUF)) return process.env.DEEP_GGUF
+  if (process.env.GIM_GGUF && fs.existsSync(process.env.GIM_GGUF)) return process.env.GIM_GGUF
 
   const models = paths().models
   if (fs.existsSync(models)) {
@@ -131,7 +132,7 @@ export function resolveGguf({ flagsGguf, configGguf } = {}) {
   }
   throw Object.assign(
     new Error(
-      'No GGUF: pass --gguf PATH, set config, place one file in ~/.deep/models, or pin default-gguf.json url',
+      'No GGUF: pass --gguf PATH, set config, place one file in ~/.gim/models, or pin default-gguf.json url',
     ),
     { exitCode: 2 },
   )
@@ -161,7 +162,7 @@ export async function startLlama({ stack, bin, gguf, port, device }) {
     '-ngl',
     ngl,
     '-c',
-    process.env.DEEP_LLAMA_CTX || '32768',
+    String(resolveContextWindow({}, {})),
   ]
   const logFile = runLogPath(stack, 'llama')
   const cwd = path.dirname(bin)
@@ -205,9 +206,8 @@ export async function waitLlamaHealthy(port, { onTick } = {}) {
   throw new Error(`llama health timeout — check ${runLogPath('default', 'llama')}`)
 }
 
-export function stopLlama(pid, { emergency = false } = {}) {
-  if (!pid) return
-  killTree(pid, { force: emergency })
+export function stopLlama(pid, { emergency = false, port = null } = {}) {
+  stopService({ pid, port, force: emergency || true })
 }
 
 export function llamaStatusFromRun(run) {

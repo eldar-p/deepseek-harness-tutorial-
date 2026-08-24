@@ -1,6 +1,6 @@
 # Types policy (pre-beta)
 
-Deep CLI is **ESM JavaScript** (Node 22+). Full TypeScript migration is deferred past pre-beta.
+GIM CLI is **ESM JavaScript** (Node 22+). Full TypeScript migration is deferred past pre-beta.
 
 ## Current contract
 

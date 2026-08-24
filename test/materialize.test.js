@@ -6,13 +6,13 @@ import path from 'node:path'
 import { materializeAssets, toFileUrl } from '../src/materialize.js'
 
 test('materializeAssets seeds memory.json and jail-core sync', () => {
-  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-mat-'))
-  const prev = process.env.DEEP_HOME
-  process.env.DEEP_HOME = base
+  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-mat-'))
+  const prev = process.env.GIM_HOME
+  process.env.GIM_HOME = base
   try {
     materializeAssets('mat-test')
     const ws = path.join(base, 'workspace', 'mat-test')
-    const mem = path.join(ws, '.deep', 'memory.json')
+    const mem = path.join(ws, '.gim', 'memory.json')
     assert.ok(fs.existsSync(mem))
     const j = JSON.parse(fs.readFileSync(mem, 'utf8'))
     assert.equal(j.version, 1)
@@ -33,13 +33,13 @@ test('materializeAssets seeds memory.json and jail-core sync', () => {
       assert.match(patchText, /file:\/\/\//)
     }
   } finally {
-    if (prev === undefined) delete process.env.DEEP_HOME
-    else process.env.DEEP_HOME = prev
+    if (prev === undefined) delete process.env.GIM_HOME
+    else process.env.GIM_HOME = prev
     fs.rmSync(base, { recursive: true, force: true })
   }
 })
 
 test('toFileUrl returns file scheme', () => {
-  const u = toFileUrl(path.join(os.tmpdir(), 'deep'))
+  const u = toFileUrl(path.join(os.tmpdir(), 'gim'))
   assert.ok(u.startsWith('file://'))
 })

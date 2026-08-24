@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Live AI + guest probe against a running Deep stack. */
+/** Live AI + guest probe against a running GIM stack. */
 import { spawnSync } from 'node:child_process'
 import { detectContainerEngine, engineEnv } from '../src/detect.js'
 import { readRunState } from '../src/runstate.js'
@@ -17,7 +17,7 @@ if (!engine.ok) {
   process.exit(1)
 }
 const env = engineEnv(engine.bin)
-const guest = run.guestName || `deep-guest-${stack}`
+const guest = run.guestName || `gim-guest-${stack}`
 
 function dex(...args) {
   const r = spawnSync(engine.bin, ['exec', guest, ...args], {

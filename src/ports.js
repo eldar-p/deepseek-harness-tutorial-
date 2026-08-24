@@ -22,5 +22,7 @@ export async function allocateStackPorts() {
   const dshPort = await findFreePort(13000, 14000)
   const indexPort = await findFreePort(14100, 14200)
   const proxyPort = await findFreePort(14200, 14300)
-  return { llamaPort, dshPort, indexPort, proxyPort }
+  const uiPort = await findFreePort(7420, 7600)
+  const colibriPort = await findFreePort(8000, 8200)
+  return { llamaPort, dshPort, indexPort, proxyPort, uiPort, colibriPort }
 }

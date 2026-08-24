@@ -9,8 +9,8 @@ Presets `balanced` and `dev` need egress control. Env-only was alpha; beta adds 
 
 ## Decision
 
-1. At `docker run`, inject `DEEP_NET_MODE` + `DEEP_NET_ALLOWLIST`
-2. Guest image `deep-guest:0.2-beta` ENTRYPOINT `deep-net-enforce`:
+1. At `docker run`, inject `GIM_NET_MODE` + `GIM_NET_ALLOWLIST`
+2. Guest image `gim-guest:0.2-beta` ENTRYPOINT `gim-net-enforce`:
    - resolve allowlist domains → IPv4
    - `OUTPUT DROP` + allow DNS/loopback/established + allowlisted IPs
 3. Host adds `--cap-add NET_ADMIN` (except offline/`--network none`)

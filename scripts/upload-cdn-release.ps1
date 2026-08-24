@@ -2,7 +2,7 @@
 # Usage: powershell -File .\scripts\upload-cdn-release.ps1
 param(
   [string]$Tag = "v1.0.0",
-  [string]$ZipName = "deep-cli-1.0.0.zip"
+  [string]$ZipName = "gim-cli-1.0.0.zip"
 )
 $ErrorActionPreference = "Stop"
 $Root = Resolve-Path (Join-Path $PSScriptRoot "..")
@@ -24,12 +24,12 @@ Write-Host "Uploading $ZipName (sha256=$sha) → $Tag"
 $view = & $gh release view $Tag 2>$null
 if ($LASTEXITCODE -ne 0) {
   & $gh release create $Tag $zip $side `
-    --title "Deep CLI $Tag" `
-    --notes "CC BY-NC-SA 4.0. CDN artifact for ``deep update``. See RELEASE.md / CHANGELOG.md." `
+    --title "GIM CLI $Tag" `
+    --notes "Apache-2.0. CDN artifact for ``gim update``. See RELEASE.md / CHANGELOG.md." `
     --target main
 } else {
   & $gh release upload $Tag $zip $side --clobber
 }
 
-Write-Host "[OK] https://github.com/eldar-p/deepseek-harness-tutorial-/releases/tag/$Tag"
+Write-Host "[OK] https://github.com/eldar-p/gim-cli/releases/tag/$Tag"
 & $gh release view $Tag

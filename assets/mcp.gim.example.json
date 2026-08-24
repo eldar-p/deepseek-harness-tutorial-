@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "gim-code-index": {
+      "command": "node",
+      "args": ["REPLACE_WITH_REPO/scripts/gim-mcp.mjs"],
+      "env": {
+        "GIM_INDEX_URL": "http://127.0.0.1:14150",
+        "GIM_HOME": "REPLACE_WITH_USER/.gim"
+      }
+    }
+  }
+}

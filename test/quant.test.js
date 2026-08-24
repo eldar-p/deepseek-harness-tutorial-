@@ -38,7 +38,7 @@ test('formatQuantWarning for Q3 is actionable', () => {
   assert.ok(w.includes('Q3_K_M'))
   assert.ok(w.includes(RECOMMENDED_MIN))
   assert.ok(w.includes('[HINT]'))
-  assert.ok(w.includes('deep start --gguf'))
+  assert.ok(w.includes('gim start --gguf'))
 })
 
 test('quantStatusRow Q3 yellow', () => {
@@ -86,7 +86,7 @@ test('enforceQuantPolicy require-q4 allows Q4', () => {
 })
 
 test('writeQuantHintFile for Q3', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-qhint-'))
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-qhint-'))
   try {
     const f = writeQuantHintFile(dir, assessGgufQuant('m.Q3_K_M.gguf'))
     assert.ok(f && fs.existsSync(f))

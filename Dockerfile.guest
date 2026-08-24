@@ -1,4 +1,4 @@
-# deep-guest — sandbox for Deep CLI (alpha+)
+# gim-guest — sandbox for GIM CLI (alpha+)
 FROM debian:bookworm-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -6,11 +6,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     iptables iproute2 dnsutils \
     && rm -rf /var/lib/apt/lists/*
 
-COPY guest/deep-net-enforce.sh /usr/local/bin/deep-net-enforce.sh
-RUN sed -i 's/\r$//' /usr/local/bin/deep-net-enforce.sh \
-    && chmod +x /usr/local/bin/deep-net-enforce.sh
+COPY guest/gim-net-enforce.sh /usr/local/bin/gim-net-enforce.sh
+RUN sed -i 's/\r$//' /usr/local/bin/gim-net-enforce.sh \
+    && chmod +x /usr/local/bin/gim-net-enforce.sh
 
 WORKDIR /workspace
 # bash + script avoids Windows CRLF shebang "no such file" failures
-ENTRYPOINT ["/bin/bash", "/usr/local/bin/deep-net-enforce.sh"]
+ENTRYPOINT ["/bin/bash", "/usr/local/bin/gim-net-enforce.sh"]
 CMD ["sleep", "infinity"]

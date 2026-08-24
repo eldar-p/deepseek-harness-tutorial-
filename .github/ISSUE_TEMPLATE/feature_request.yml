@@ -1,5 +1,5 @@
 name: Feature request
-description: Idea for Deep CLI
+description: Idea for GIM CLI
 labels: ["enhancement"]
 body:
   - type: textarea

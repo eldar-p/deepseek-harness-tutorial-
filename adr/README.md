@@ -1,6 +1,6 @@
 # Architecture Decision Records (ADR)
 
-Краткие решения по Deep CLI. Формат: контекст → решение → последствия.
+Краткие решения по GIM CLI. Формат: контекст → решение → последствия.
 
 | ADR | Title | Status |
 |-----|-------|--------|
@@ -11,7 +11,7 @@
 | [0005](./0005-workspace-jail-for-fs-tools.md) | Workspace jail для FS tools | Accepted |
 | [0006](./0006-context-layers-and-memory.md) | Слои контекста и memory.json | Accepted |
 | [0007](./0007-guest-network-env-policy.md) | Guest network policy via env | Accepted |
-| [0008](./0008-license-cc-by-nc-sa-4.0.md) | License CC BY-NC-SA 4.0 | Accepted |
+| [0008](./0008-license-apache-2.0.md) | License Apache-2.0 | Accepted |
 
 ## Шаблон нового ADR
 
@@ -31,4 +31,4 @@
 …
 ```
 
-Задачи по внедрению: [../todo/README.md](../todo/README.md)
+См. [docs/AUDITS.md](./AUDITS.md) и `npm run audit:prebeta`.

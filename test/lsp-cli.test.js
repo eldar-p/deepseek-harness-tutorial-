@@ -22,10 +22,10 @@ test('cmdLsp query missing file arg throws', async () => {
 })
 
 test('cmdLsp hover missing file sets exit on not found', async () => {
-  const prevHome = process.env.DEEP_HOME
+  const prevHome = process.env.GIM_HOME
   const prevExit = process.exitCode
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'deep-lsp-cli-'))
-  process.env.DEEP_HOME = home
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-lsp-cli-'))
+  process.env.GIM_HOME = home
   process.exitCode = 0
   try {
     fs.mkdirSync(path.join(home, 'workspace', 'default'), { recursive: true })
@@ -33,8 +33,8 @@ test('cmdLsp hover missing file sets exit on not found', async () => {
     assert.equal(process.exitCode, 1)
   } finally {
     process.exitCode = prevExit
-    if (prevHome === undefined) delete process.env.DEEP_HOME
-    else process.env.DEEP_HOME = prevHome
+    if (prevHome === undefined) delete process.env.GIM_HOME
+    else process.env.GIM_HOME = prevHome
     fs.rmSync(home, { recursive: true, force: true })
   }
 })

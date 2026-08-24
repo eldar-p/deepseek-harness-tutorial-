@@ -11,16 +11,14 @@ DSH fs tools (Read/Write/Edit/Glob) по умолчанию видят широ�
 
 Plugin **`workspace-jail-fs`**:
 
-- `DEEP_WORKSPACE` / `HOST_SHARE` = absolute host workspace
+- `GIM_WORKSPACE` / `HOST_SHARE` = absolute host workspace
 - `rewriteWorkspacePath()` maps `/workspace/*`, `/tmp/*`, `/home/*` → under workspace
-- Wired via `cordis.deep.patch.yml` → `fs-sandbox.backend`
+- Wired via `cordis.gim.patch.yml` → `fs-sandbox.backend`
 
 Core logic in `src/workspace-jail.js`; copied to `jail-core.mjs` at materialize.
 
-Legacy **`path-fix-fs`** (VM `/mnt/hostshare`) — только tutorial track.
-
 ## Consequences
 
-- Alpha security: agent file I/O bounded to stack workspace
-- Paths outside jail still rejected by sandbox resolve
-- E2E verification tracked in todo/003
+- Agent file I/O bounded to stack workspace
+- Paths outside jail rejected by sandbox resolve
+- Verified: `test/jail.test.js`, `npm run test:security`
