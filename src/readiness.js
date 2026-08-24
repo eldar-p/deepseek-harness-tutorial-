@@ -273,14 +273,94 @@ export function assessBetaReadiness() {
   return assessMilestones(BETA_MILESTONES)
 }
 
+/** RC milestone weights (sum = 100). Field beta closed; blockers for release candidate. */
+export const RC_MILESTONES = [
+  {
+    id: 'cov70',
+    label: 'Coverage gate ≥70%',
+    weight: 12,
+    check: () => fs.readFileSync(path.join(PKG_ROOT, 'scripts/coverage-gate.mjs'), 'utf8').includes("'70'"),
+  },
+  {
+    id: 'checksums',
+    label: 'Checksum sidecars',
+    weight: 10,
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'src/checksums.js')),
+  },
+  {
+    id: 'nightly',
+    label: 'Nightly CI workflow',
+    weight: 10,
+    check: () => fs.existsSync(path.join(PKG_ROOT, '.github/workflows/nightly.yml')),
+  },
+  {
+    id: 'gpu-lock',
+    label: 'GPU lock module',
+    weight: 10,
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'src/gpu-lock.js')),
+  },
+  {
+    id: 'cli-export',
+    label: 'parseArgs exported',
+    weight: 8,
+    check: () => fs.readFileSync(path.join(PKG_ROOT, 'src/cli.js'), 'utf8').includes('export function parseArgs'),
+  },
+  {
+    id: 'cdn-sha',
+    label: 'Beta CDN sha256 pinned',
+    weight: 12,
+    check: () => {
+      const rel = loadManifest('cli-releases.json')
+      const arts = rel.channels?.beta?.cli?.artifacts || []
+      return arts.some((x) => x.url && x.sha256 && /^[a-f0-9]{64}$/i.test(x.sha256))
+    },
+  },
+  {
+    id: 'prebeta-audit',
+    label: 'audit:prebeta script',
+    weight: 10,
+    check: () => {
+      const pkg = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'package.json'), 'utf8'))
+      return !!pkg.scripts?.['audit:prebeta']
+    },
+  },
+  {
+    id: 'rc-doc',
+    label: 'RC.md status page',
+    weight: 8,
+    check: () => fs.existsSync(path.join(PKG_ROOT, 'RC.md')),
+  },
+  {
+    id: 'license',
+    label: 'CC BY-NC-SA 4.0',
+    weight: 10,
+    check: () => {
+      const pkg = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'package.json'), 'utf8'))
+      return pkg.license === 'CC-BY-NC-SA-4.0'
+    },
+  },
+  {
+    id: 'engine',
+    label: 'Container engine',
+    weight: 10,
+    check: () => detectContainerEngine().ok,
+  },
+]
+
+export function assessRcReadiness() {
+  return assessMilestones(RC_MILESTONES)
+}
+
 export function assessReadiness(stage = 'pre-alpha') {
+  if (stage === 'rc') return assessRcReadiness()
   if (stage === 'beta') return assessBetaReadiness()
   if (stage === 'alpha') return assessAlphaReadiness()
   return assessPreAlphaReadiness()
 }
 
 export function formatReadinessReport(r, { host, engine, gpu, stage = 'pre-alpha' } = {}) {
-  const label = stage === 'beta' ? 'Beta' : stage === 'alpha' ? 'Alpha' : 'Pre-alpha'
+  const label =
+    stage === 'rc' ? 'RC' : stage === 'beta' ? 'Beta' : stage === 'alpha' ? 'Alpha' : 'Pre-alpha'
   const lines = []
   lines.push('')
   lines.push(`${label} readiness: ${r.pct}% (${r.score}/${r.max}) — stage: ${r.stage}`)

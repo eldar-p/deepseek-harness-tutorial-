@@ -52,12 +52,13 @@
 - [x] Nightly CI workflow (3 OS)
 - [x] Field beta: gpu-lock/dsh tests (019), coverage gate 60% (020)
 - [x] Version bump `0.4.0-beta`
+- [x] RC readiness `0.9.0-rc.0` (021), coverage gate 70%
 
-**Текущий этап:** Field beta (`0.4.0-beta`) — coverage **~73%** (gate 60%). Next: CDN Release upload (`gh auth`), field OS sign-off → RC.
+**Текущий этап:** RC (`0.9.0-rc.0`) — readiness **100/100**. Next: CDN Release upload, field matrix sign-off → `0.5` / `1.0`.
 
 ```bash
 npm test
-npm run test:coverage    # ≥60%
+npm run test:coverage    # ≥70%
 npm run audit:prebeta
-node bin/deep.js doctor --readiness --stage=beta
+node bin/deep.js doctor --readiness --stage=rc
 ```
