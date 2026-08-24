@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
+import path from 'node:path'
 import { paths } from '../src/paths.js'
 import { readGpuLock, withGpuLock, gpuLockHolder } from '../src/gpu-lock.js'
 
@@ -21,7 +22,7 @@ test('readGpuLock null when missing', () => {
 test('readGpuLock parses legacy pid and JSON', () => {
   clearLock()
   const p = paths().lockGpu
-  fs.mkdirSync(paths().home, { recursive: true })
+  fs.mkdirSync(path.dirname(p), { recursive: true })
   fs.writeFileSync(p, String(process.pid))
   assert.deepEqual(readGpuLock(), { pid: process.pid, stack: null })
   fs.writeFileSync(p, JSON.stringify({ pid: process.pid, stack: 'dev' }))
@@ -53,7 +54,7 @@ test('gpuLockHolder sees other stack', async () => {
 test('withGpuLock times out when held', async () => {
   clearLock()
   const p = paths().lockGpu
-  fs.mkdirSync(paths().home, { recursive: true })
+  fs.mkdirSync(path.dirname(p), { recursive: true })
   fs.writeFileSync(p, JSON.stringify({ pid: process.pid, stack: 'blocker' }))
   await assert.rejects(
     () => withGpuLock(async () => {}, { stack: 'waiter', timeoutMs: 250 }),

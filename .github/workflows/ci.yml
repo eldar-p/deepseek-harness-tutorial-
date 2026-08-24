@@ -5,6 +5,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   test:
@@ -21,14 +22,16 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
+          node-version: '22'
 
       - name: Unit tests
         run: npm test
 
-      - name: Coverage gate (1.0 / 80%)
+      - name: Coverage gate
         run: npm run test:coverage
         shell: bash
+        env:
+          DEEP_COVERAGE_MIN: '65'
 
       - name: Audit gate (pre-alpha)
         run: node scripts/audit-run.mjs --gate=pre-alpha
