@@ -10,6 +10,7 @@ import {
   resolveColiLauncher,
   resolveColibriRoot,
   colibriStatus,
+  colibriNativeEngineReady,
   resolvePython,
   DEFAULT_COLIBRI_MODEL_ID,
 } from '../src/colibri.js'
@@ -78,7 +79,24 @@ test('colibriStatus shape', () => {
   const s = colibriStatus({})
   assert.ok('root' in s)
   assert.ok('modelReady' in s)
+  assert.ok('engineReady' in s)
   assert.equal(s.modelId, process.env.GIM_COLIBRI_MODEL_ID || DEFAULT_COLIBRI_MODEL_ID)
+})
+
+test('colibriNativeEngineReady docker needs linux binary not exe only', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-eng-'))
+  fs.writeFileSync(path.join(root, 'deepseek_v4.exe'), 'MZ')
+  const model = fs.mkdtempSync(path.join(os.tmpdir(), 'gim-eng-m-'))
+  fs.writeFileSync(path.join(model, 'config.json'), JSON.stringify({ model_type: 'deepseek_v4' }))
+  const host = colibriNativeEngineReady(root, model)
+  assert.equal(host.ok, true)
+  const docker = colibriNativeEngineReady(root, model, { docker: true })
+  assert.equal(docker.ok, false)
+  assert.match(docker.detail, /ELF/)
+  fs.writeFileSync(path.join(root, 'deepseek_v4'), 'elf')
+  assert.equal(colibriNativeEngineReady(root, model, { docker: true }).ok, true)
+  fs.rmSync(root, { recursive: true, force: true })
+  fs.rmSync(model, { recursive: true, force: true })
 })
 
 test('resolvePython returns string or null', () => {

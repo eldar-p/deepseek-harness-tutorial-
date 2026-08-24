@@ -32,6 +32,7 @@ import {
   resolveColibriModelPath,
   resolveColibriCtx,
   colibriModelReady,
+  colibriNativeEngineReady,
   DEFAULT_COLIBRI_MODEL_ID,
   stopColibri,
 } from './colibri.js'
@@ -73,7 +74,8 @@ import { runReleaseCheck, formatReleaseCheckReport } from './release-check.js'
 import { cmdCoord } from './coordinator.js'
 import { validateDeepPlugins, formatPluginValidation } from './plugin-validate.js'
 import { resolveDshBin } from './dsh.js'
-import { formatMcpConfigHelp } from './mcp-config.js'
+import { cmdMcp } from './mcp-cli.js'
+import { cmdInstructions } from './instructions-cli.js'
 
 /** Legacy DSH UI — off by default; enable with --dsh or GIM_USE_DSH=1 */
 export function wantDsh(flags = {}) {
@@ -184,6 +186,13 @@ export async function cmdDoctor(flags = {}) {
   console.log(`  llama    ${llamaBin || 'not found (will fetch on start)'}`)
   console.log(`  config   ${cfg ? paths().config : 'missing — run gim bootstrap'}`)
   if (cfg?.gguf) console.log(`  gguf     ${cfg.gguf}`)
+  if (cfg && !isApiMode(cfg)) {
+    const dockerBackend = resolveLlmDockerBackend(cfg, {})
+    if (dockerBackend === 'colibri') {
+      const eng = colibriNativeEngineReady(undefined, resolveColibriModelPath(), { docker: true })
+      console.log(`  colibri  ${eng.ok ? 'OK' : 'FAIL'} — ${eng.ok ? `${eng.artifact} (${eng.path})` : eng.detail}`)
+    }
+  }
   {
     const apiMode = !!(cfg?.api?.provider)
     const q = quantStatusRow(apiMode ? null : cfg?.gguf, { apiMode })
@@ -608,6 +617,13 @@ async function startStackLlmDocker({ stack, cfg, flags, engine, backend }) {
       new Error(`${st.modelReady.detail} — set GIM_LLM_MODEL or ~/.gim/models`),
       { exitCode: 2 },
     )
+  }
+
+  if (backend === 'colibri') {
+    const dockerEng = colibriNativeEngineReady(st.root, modelPath, { docker: true })
+    if (!dockerEng.ok) {
+      throw Object.assign(new Error(dockerEng.detail), { exitCode: 2 })
+    }
   }
 
   const prevRun = readRunState(stack)
@@ -1130,8 +1146,10 @@ export function cmdHelp(topic) {
   Host language-server helpers (typescript-language-server / pyright / …).`,
     daemon: `gim daemon start|stop|status|tick [--name STACK] [--interval MS] [--proactive]
   Background health poller for llama/DSH (Kairos-lite). --proactive writes .gim/PROACTIVE.md.`,
-    mcp: `gim mcp | gim mcp config
-  Stdio MCP server, or print Cursor MCP JSON snippet.`,
+    mcp: `gim mcp | gim mcp config | gim mcp client list|add|remove|doctor
+  Stdio MCP server (GIM → IDE), external MCP registry, agent mcp_call tools.`,
+    instructions: `gim instructions init|refresh|sync|show [--name STACK]
+  Smart project instructions → .gim/ai-instructions.md (AGENTS.md compatible).`,
     coord: `gim coord --task="fix A; fix B" [--name STACK] [--workers N]
   Parallel index-search workers (coordinator).`,
     risk: `gim risk classify "bash command" [--llm]
@@ -1171,7 +1189,9 @@ export function cmdHelp(topic) {
   gim index build|search|status [--name STACK]
   gim lsp servers|query …
   gim daemon start|stop|status|tick [--name STACK] [--proactive]
-  gim mcp | gim mcp config
+  gim mcp | gim mcp client list
+  gim instructions init
+  gim instructions refresh
   gim coord --task="fix A; fix B"
   gim risk classify "cmd" [--llm]
   gim risk write-path PATH
@@ -1314,25 +1334,26 @@ export async function main(argv) {
       case 'daemon':
         return await cmdDaemon(flags, args)
       case 'mcp': {
-        if ((args[0] || '').toLowerCase() === 'config') {
-          console.log(formatMcpConfigHelp())
-          return
-        }
-        const { spawn } = await import('node:child_process')
-        const script = path.join(PKG_ROOT, 'scripts', 'gim-mcp.mjs')
-        const child = spawn(process.execPath, [script], {
-          stdio: 'inherit',
-          env: process.env,
-        })
-        await new Promise((resolve, reject) => {
-          child.on('error', reject)
-          child.on('exit', (code) => {
-            process.exitCode = code ?? 0
-            resolve()
+        const r = await cmdMcp(flags, args)
+        if (r === 'spawn') {
+          const { spawn } = await import('node:child_process')
+          const script = path.join(PKG_ROOT, 'scripts', 'gim-mcp.mjs')
+          const child = spawn(process.execPath, [script], {
+            stdio: 'inherit',
+            env: process.env,
           })
-        })
+          await new Promise((resolve, reject) => {
+            child.on('error', reject)
+            child.on('exit', (code) => {
+              process.exitCode = code ?? 0
+              resolve()
+            })
+          })
+        }
         return
       }
+      case 'instructions':
+        return await cmdInstructions(flags, args)
       case 'coord':
       case 'coordinator':
         return await cmdCoord(flags, args)

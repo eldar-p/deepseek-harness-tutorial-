@@ -9,6 +9,8 @@ import { paths } from './paths.js'
 import { detectContainerEngine, engineEnv } from './detect.js'
 import { isGuestRunning } from './guest.js'
 import { classifyBashRisk, classifyWriteRisk } from './permission-risk.js'
+import { hasMcpServers } from './mcp-client.js'
+import { scheduleIndexTouch } from './code-index/touch.js'
 
 const MAX_READ = Number(process.env.GIM_TOOL_MAX_READ || 8_192)
 const MAX_LIST = Number(process.env.GIM_TOOL_MAX_LIST || 400)
@@ -123,13 +125,59 @@ export const AGENT_TOOLS = [
   },
 ]
 
+export const MCP_AGENT_TOOLS = [
+  {
+    type: 'function',
+    function: {
+      name: 'mcp_list_tools',
+      description:
+        'List tools/resources/prompts from external MCP servers (~/.gim/mcp-servers.json). kind: tools|resources|prompts|all.',
+      parameters: {
+        type: 'object',
+        properties: {
+          kind: {
+            type: 'string',
+            description: 'tools (default), resources, prompts, or all',
+          },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'mcp_call',
+      description:
+        'Call MCP tool, read resource (type=resource, uri=...), or get prompt (type=prompt, prompt=...).',
+      parameters: {
+        type: 'object',
+        properties: {
+          server: { type: 'string', description: 'Server name from mcp-servers.json' },
+          type: { type: 'string', description: 'tool (default), resource, or prompt' },
+          tool: { type: 'string', description: 'Tool name when type=tool' },
+          uri: { type: 'string', description: 'Resource URI when type=resource' },
+          prompt: { type: 'string', description: 'Prompt name when type=prompt' },
+          arguments: { type: 'object', description: 'Tool or prompt arguments' },
+        },
+        required: ['server'],
+      },
+    },
+  },
+]
+
 export function modesWithTools(mode) {
   return mode === 'agent' || mode === 'debug' || mode === 'ask' || mode === 'plan'
 }
 
 /** Full toolset vs clarify-only for Ask/Plan. */
-export function toolsForMode(mode) {
-  if (mode === 'agent' || mode === 'debug') return AGENT_TOOLS
+export function toolsForMode(mode, stack = 'default') {
+  if (mode === 'agent' || mode === 'debug') {
+    const base = [...AGENT_TOOLS]
+    if (hasMcpServers() || process.env.GIM_MCP_TOOLS === '1') {
+      base.push(...MCP_AGENT_TOOLS)
+    }
+    return base
+  }
   if (mode === 'ask' || mode === 'plan') {
     return AGENT_TOOLS.filter((t) => t.function?.name === 'ask_user')
   }
@@ -190,6 +238,7 @@ export function writeWorkspaceFile(stack, rel, content) {
   if (!full) return { ok: false, error: 'path escapes workspace' }
   fs.mkdirSync(path.dirname(full), { recursive: true })
   fs.writeFileSync(full, String(content ?? ''), 'utf8')
+  scheduleIndexTouch(stack, rel)
   return { ok: true, path: rel, bytes: Buffer.byteLength(String(content ?? ''), 'utf8') }
 }
 
@@ -292,6 +341,11 @@ export function runAgentTool(stack, name, args = {}) {
   }
 }
 
+/** @param {string} name @param {object} args */
+export function isMcpAgentTool(name) {
+  return name === 'mcp_list_tools' || name === 'mcp_call'
+}
+
 export const TOOLS_TEXT_FALLBACK = `
 Native tool_calls are unavailable on this endpoint. To run a GIM tool, emit exactly one block then stop:
 
@@ -299,15 +353,17 @@ Native tool_calls are unavailable on this endpoint. To run a GIM tool, emit exac
 {"name":"list_dir","args":{"path":"."}}
 \`\`\`
 
-Tools: list_dir, read_file, write_file, search_files, guest_bash, ask_user (same names/args as always).
+Tools: list_dir, read_file, write_file, search_files, guest_bash, ask_user, mcp_list_tools, mcp_call (same names/args as always).
 For ask_user use args: {"title":"…","questions":[{"id":"q1","prompt":"…","options":["A","B"]}]}.
 `.trim()
 
 export const AGENT_SYSTEM_EXTRA = `
-You have tools: list_dir, read_file, write_file, search_files, guest_bash, ask_user.
+You have tools: list_dir, read_file, write_file, search_files, guest_bash, ask_user, mcp_list_tools, mcp_call.
 Use tools to inspect the workspace before guessing. guest_bash runs in the Docker guest (/workspace).
+External integrations: mcp_list_tools (kind=tools|resources|prompts|all) then mcp_call (type=tool|resource|prompt).
 When you need the user to choose or clarify, call ask_user (1–4 short questions with options when possible).
 After tools, answer the user's latest request directly. Do not repeat the same menu.
+Follow .gim/ai-instructions.md when present.
 `.trim()
 
 export const ASK_PLAN_SYSTEM_EXTRA = `

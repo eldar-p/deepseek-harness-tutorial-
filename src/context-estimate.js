@@ -2,6 +2,8 @@
  * Estimate context usage for GIM UI (char/4 heuristic — good enough for the meter).
  */
 import { toolsForMode, modesWithTools, AGENT_SYSTEM_EXTRA, ASK_PLAN_SYSTEM_EXTRA } from './agent-tools.js'
+import { loadAiInstructionsBlock } from './instructions.js'
+import { loadEnabledMcpServers } from './mcp-client.js'
 
 export function estimateTokens(text) {
   const s = String(text || '')
@@ -9,9 +11,9 @@ export function estimateTokens(text) {
   return Math.max(1, Math.ceil(s.length / 4))
 }
 
-function toolsJson(mode) {
+function toolsJson(mode, stack) {
   if (!modesWithTools(mode)) return '[]'
-  return JSON.stringify(toolsForMode(mode))
+  return JSON.stringify(toolsForMode(mode, stack))
 }
 
 /**
@@ -25,9 +27,12 @@ function toolsJson(mode) {
  */
 export function estimateContextUsage(opts = {}) {
   const mode = opts.mode || 'agent'
+  const stack = opts.stack || 'default'
   const contextWindow = Number(opts.contextWindow || process.env.GIM_CTX || 512_000)
   const extra = mode === 'ask' || mode === 'plan' ? ASK_PLAN_SYSTEM_EXTRA : AGENT_SYSTEM_EXTRA
   const system = `${opts.system || ''}\n\n${modesWithTools(mode) ? extra : ''}`.trim()
+  const instructions = loadAiInstructionsBlock(stack)
+  const mcpServers = Object.keys(loadEnabledMcpServers())
 
   const buckets = [
     { id: 'system', label: 'System prompt', color: '#8b949e', tokens: estimateTokens(system) },
@@ -35,11 +40,16 @@ export function estimateContextUsage(opts = {}) {
       id: 'tools',
       label: 'Tool definitions',
       color: '#a371f7',
-      tokens: modesWithTools(mode) ? estimateTokens(toolsJson(mode)) : 0,
+      tokens: modesWithTools(mode) ? estimateTokens(toolsJson(mode, stack)) : 0,
     },
-    { id: 'rules', label: 'Rules / hints', color: '#3fb950', tokens: 0 },
+    { id: 'rules', label: 'Rules / hints', color: '#3fb950', tokens: estimateTokens(instructions) },
     { id: 'skills', label: 'Skills', color: '#d29922', tokens: 0 },
-    { id: 'mcp', label: 'MCP & dynamic tools', color: '#8957e5', tokens: 0 },
+    {
+      id: 'mcp',
+      label: 'MCP & dynamic tools',
+      color: '#8957e5',
+      tokens: mcpServers.length ? mcpServers.length * 350 : 0,
+    },
     { id: 'attachments', label: 'Attachments', color: '#58a6ff', tokens: 0 },
     { id: 'conversation', label: 'Conversation', color: '#f778ba', tokens: 0 },
   ]

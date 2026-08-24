@@ -191,6 +191,7 @@ async function proxyChatCompletions(req, res, stack, payload) {
     messages: userMessages,
     contextWindow,
     mode,
+    stack,
     system,
     target,
     model: payload.model,
@@ -405,6 +406,7 @@ export function startUiServer(opts = {}) {
           200,
           estimateContextUsage({
             mode: body.mode || 'agent',
+            stack,
             messages: body.messages || [],
             contextWindow: body.contextWindow,
             system: body.system,

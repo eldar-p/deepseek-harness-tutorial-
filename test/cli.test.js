@@ -36,7 +36,9 @@ test('cmdDoctor and readiness rc', async () => {
 })
 
 test('cmdDoctor release gate', async () => {
+  const prevCode = process.exitCode
   await cmdDoctor({ release: true })
+  process.exitCode = prevCode
 })
 
 test('cmdStacks lists', async () => {

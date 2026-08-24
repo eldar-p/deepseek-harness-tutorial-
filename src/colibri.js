@@ -83,6 +83,64 @@ export function colibriModelReady(modelPath) {
   return { ok: true, shards, expected: expected || minShards, detail: `${shards} shards` }
 }
 
+/** Map model_type → native engine filename (Linux Docker + host). */
+const ENGINE_ARTIFACT = {
+  deepseek_v4: 'deepseek_v4',
+  glm4: 'colibri',
+  glm: 'colibri',
+}
+
+/**
+ * Docker Colibri needs native engine binary in GIM_COLIBRI_ROOT (not Python-only tree).
+ * @param {string} [root]
+ * @param {string} [modelPath]
+ * @param {{ docker?: boolean }} [opts]
+ */
+export function colibriNativeEngineReady(
+  root = resolveColibriRoot(),
+  modelPath = resolveColibriModelPath(),
+  opts = {},
+) {
+  if (!root) {
+    return { ok: false, detail: 'Colibri root not found — set GIM_COLIBRI_ROOT' }
+  }
+  let artifact = 'deepseek_v4'
+  try {
+    const cfg = JSON.parse(fs.readFileSync(path.join(modelPath, 'config.json'), 'utf8'))
+    const mt = String(cfg.model_type || cfg.architectures?.[0] || '').toLowerCase()
+    if (mt.includes('deepseek_v4') || mt === 'deepseek_v4') artifact = 'deepseek_v4'
+    else if (mt.includes('glm')) artifact = 'colibri'
+    else if (ENGINE_ARTIFACT[mt]) artifact = ENGINE_ARTIFACT[mt]
+  } catch {
+    /* default deepseek_v4 */
+  }
+  const linuxBin = path.join(root, artifact)
+  const winBin = path.join(root, `${artifact}.exe`)
+  if (opts.docker) {
+    if (fs.existsSync(linuxBin)) return { ok: true, artifact, path: linuxBin }
+    const winOnly = fs.existsSync(winBin)
+    return {
+      ok: false,
+      artifact,
+      detail:
+        `Colibri Linux engine "${artifact}" missing in ${root} (Docker needs ELF, not .exe). ` +
+        (winOnly ? `Found ${artifact}.exe for host only. ` : '') +
+        `Install full Colibri release with Linux binaries or build: make -C c ${artifact === 'deepseek_v4' ? 'deepseek-v4' : artifact}. ` +
+        `Fallback: gim start --gguf PATH`,
+    }
+  }
+  if (fs.existsSync(linuxBin)) return { ok: true, artifact, path: linuxBin }
+  if (fs.existsSync(winBin)) return { ok: true, artifact, path: winBin }
+  return {
+    ok: false,
+    artifact,
+    detail:
+      `Colibri native engine "${artifact}" missing in ${root}. ` +
+      `Install full Colibri release or build: make -C c ${artifact === 'deepseek_v4' ? 'deepseek-v4' : artifact}. ` +
+      `Fallback: gim start --gguf PATH`,
+  }
+}
+
 export function resolvePython() {
   if (process.env.GIM_PYTHON && fs.existsSync(process.env.GIM_PYTHON)) return process.env.GIM_PYTHON
   return which('py') || which('python') || which('python3')
@@ -190,6 +248,7 @@ export function colibriStatus(cfg = {}) {
     coli: resolveColiLauncher(root),
     modelPath: model,
     modelReady: colibriModelReady(model),
+    engineReady: colibriNativeEngineReady(root, model),
     modelId: process.env.GIM_COLIBRI_MODEL_ID || DEFAULT_COLIBRI_MODEL_ID,
   }
 }

@@ -7,6 +7,10 @@ import { PKG_ROOT } from './paths.js'
 import { assessReadiness, formatReadinessReport } from './readiness.js'
 import { assessPolicyScore, formatPolicyScoreReport } from './policy-score.js'
 import { runSecurityEval, formatSecurityEvalReport } from './security-eval.js'
+import { readConfig } from './config.js'
+import { resolveLlmDockerBackend } from './llm-docker.js'
+import { colibriNativeEngineReady, resolveColibriModelPath } from './colibri.js'
+import { isApiMode } from './api-provider.js'
 
 function runAuditGate(gate) {
   const script = path.join(PKG_ROOT, 'scripts', 'audit-run.mjs')
@@ -38,6 +42,17 @@ export function runReleaseCheck(ctx = {}) {
   if (!security.ok) blockers.push('security-eval')
   if (policy.grade && policy.grade !== 'A') blockers.push(`policy grade ${policy.grade}`)
 
+  let colibriEngine = null
+  try {
+    const cfg = readConfig()
+    if (cfg && !isApiMode(cfg) && resolveLlmDockerBackend(cfg, {}) === 'colibri') {
+      colibriEngine = colibriNativeEngineReady(undefined, resolveColibriModelPath(), { docker: true })
+      if (!colibriEngine.ok && !cfg.gguf) blockers.push('colibri-linux-engine')
+    }
+  } catch {
+    /* no config */
+  }
+
   return {
     ok: blockers.length === 0,
     blockers,
@@ -45,6 +60,7 @@ export function runReleaseCheck(ctx = {}) {
     policy,
     security,
     audits,
+    colibriEngine,
   }
 }
 
@@ -64,6 +80,10 @@ export function formatReleaseCheckReport(report, ctx = {}) {
   }
   lines.push('')
   lines.push(formatSecurityEvalReport(report.security))
+  if (report.colibriEngine && !report.colibriEngine.ok) {
+    lines.push('')
+    lines.push(`Colibri engine: FAIL — ${report.colibriEngine.detail}`)
+  }
   lines.push('─'.repeat(48))
   if (report.ok) {
     lines.push('Release gate: OK — ready to tag')

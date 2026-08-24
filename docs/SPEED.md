@@ -49,6 +49,8 @@ Set via Docker env (override any with host `COLI_*` / `CUDA_*`):
 - Context compact @ 72% (`GIM_COMPACT_PCT`).
 - **Adaptive ctx cap** — RAM < 64 GB → runtime ctx capped at 128K unless `GIM_CTX` set (`context-policy.js`).
 - Capability probe cached per stack (not per chat).
+- **Incremental code index** — `gim index build` skips unchanged files; worker search @ 500+ chunks (`GIM_INDEX_WORKER_MIN`).
+- **Auto touch on write** — agent `write_file` debounces re-index (`GIM_INDEX_TOUCH=0` to disable, `GIM_INDEX_TOUCH_MS` default 1500).
 
 ## P4 — Doctor
 

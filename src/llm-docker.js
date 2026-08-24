@@ -10,7 +10,7 @@ import { PKG_ROOT, appendLog } from './paths.js'
 import { loadManifest } from './download.js'
 import { toContainerHostPath } from './guest.js'
 import { waitHttpOk } from './proc.js'
-import { isColibriMode, resolveColibriModelPath, resolveColibriRoot, colibriModelReady } from './colibri.js'
+import { isColibriMode, resolveColibriModelPath, resolveColibriRoot, colibriModelReady, colibriNativeEngineReady } from './colibri.js'
 import { isVllmMode, isApiMode } from './api-provider.js'
 import { resolveContextWindow } from './context-policy.js'
 import {
@@ -39,8 +39,11 @@ export function assertLlmDockerPlatform() {
 }
 
 function defaultColibriDocker(cfg = {}, flags = {}) {
-  if (flags.gguf || cfg.gguf) return false
+  if (flags.gguf) return false
   if (isApiMode(cfg, flags)) return false
+  if (cfg.gguf && !isColibriMode(cfg, flags) && cfg?.llm !== 'colibri' && cfg?.backend !== 'colibri') {
+    return false
+  }
   const d = (process.env.GIM_DEFAULT_LLM || cfg.defaultLlm || 'colibri').toLowerCase()
   if (d === 'none' || d === 'gguf' || d === 'api') return false
   return llmDockerSupportedPlatform()
@@ -48,7 +51,7 @@ function defaultColibriDocker(cfg = {}, flags = {}) {
 
 /** @returns {'colibri'|'vllm'|null} */
 export function resolveLlmDockerBackend(cfg = {}, flags = {}) {
-  if (flags.gguf || cfg.gguf) return null
+  if (flags.gguf) return null
   const explicit = (flags['llm-docker'] || process.env.GIM_LLM_DOCKER || '').toLowerCase().trim()
   if (explicit === 'vllm') return 'vllm'
   if (explicit === 'colibri') return 'colibri'
@@ -56,6 +59,7 @@ export function resolveLlmDockerBackend(cfg = {}, flags = {}) {
   if (isColibriMode(cfg, flags)) return 'colibri'
   if (cfg?.llm === 'vllm' || cfg?.backend === 'vllm') return 'vllm'
   if (cfg?.llm === 'colibri' || cfg?.backend === 'colibri') return 'colibri'
+  if (cfg.gguf) return null
   if (defaultColibriDocker(cfg, flags)) return 'colibri'
   return null
 }
@@ -224,6 +228,14 @@ export async function startLlmDocker({
   const model = modelPath || resolveLlmDockerModelPath(backend, cfg)
   const ready = colibriModelReady(model)
   if (!ready.ok) return { ok: false, detail: ready.detail }
+  if (backend === 'colibri') {
+    const root = resolveColibriRoot()
+    const eng = colibriNativeEngineReady(root, model, { docker: true })
+    if (!eng.ok) {
+      console.log(`[RED] ${eng.detail}`)
+      return { ok: false, detail: eng.detail }
+    }
+  }
 
   const contextTokens = ctx ?? resolveContextWindow(cfg, {})
   const apiKey = process.env.GIM_COLIBRI_API_KEY || process.env.VLLM_API_KEY || 'sk-gim-llm-docker'

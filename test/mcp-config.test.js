@@ -11,4 +11,5 @@ test('buildMcpClientConfig has gim server', () => {
 
 test('formatMcpConfigHelp includes json', () => {
   assert.match(formatMcpConfigHelp({ gimBin: 'x.js' }), /mcpServers/)
+  assert.match(formatMcpConfigHelp({ gimBin: 'x.js' }), /mcp-servers.json/)
 })

@@ -1,6 +1,8 @@
 import { paths } from './paths.js'
 import { buildIndex, searchIndex, indexStatus, defaultIndexDir } from './code-index/indexer.js'
 import { readRunState } from './runstate.js'
+import { aiInstructionsPath, refreshAiInstructions } from './instructions.js'
+import fs from 'node:fs'
 
 function stackPaths(stack) {
   const p = paths(stack)
@@ -17,10 +19,16 @@ export async function cmdIndexBuild(flags) {
     workspaceRoot: workspace,
     indexDir,
     llamaBase,
+    force: flags.force === true,
     onProgress: (m) => process.stdout.write(`\r[INFO] ${m}    `),
   })
   console.log('')
-  console.log(`[OK] Index built: ${r.chunkCount} chunks from ${r.fileCount} files (${r.backend})`)
+  const inc = r.incremental ? `, ${r.skippedFiles} skipped, ${r.indexedFiles} re-indexed` : ''
+  console.log(`[OK] Index built: ${r.chunkCount} chunks from ${r.fileCount} files (${r.backend}${inc})`)
+  if (process.env.GIM_INSTRUCTIONS_ON_INDEX !== '0' && fs.existsSync(aiInstructionsPath(stack))) {
+    const refreshed = refreshAiInstructions(stack)
+    console.log(`[OK] Instructions refreshed (${refreshed.scriptCount} scripts, ${refreshed.mcpCount} MCP)`)
+  }
 }
 
 export async function cmdIndexSearch(flags, queryParts) {
@@ -56,5 +64,9 @@ export async function cmdIndexStatus(flags) {
   console.log(`Index: ${indexDir}`)
   console.log(`Backend: ${s.backend}`)
   console.log(`Chunks: ${s.chunkCount}`)
+  console.log(`Files: ${s.fileCount}`)
+  if (s.incremental) {
+    console.log(`Last build: ${s.indexedFiles} indexed, ${s.skippedFiles} unchanged`)
+  }
   console.log(`Built: ${s.builtAt || 'never'}`)
 }

@@ -8,6 +8,10 @@ import { paths } from './paths.js'
 import { detectGpu, detectContainerEngine } from './detect.js'
 import { hostSummary } from './detect.js'
 import { LOW_RAM_CTX_CAP, LOW_RAM_THRESHOLD_GB } from './context-policy.js'
+import { readConfig } from './config.js'
+import { resolveLlmDockerBackend } from './llm-docker.js'
+import { colibriNativeEngineReady, resolveColibriModelPath } from './colibri.js'
+import { isApiMode } from './api-provider.js'
 
 /** Stable cache id from resolved model directory (content-agnostic). */
 export function llmCacheId(modelPath) {
@@ -124,15 +128,29 @@ export function assessSpeedHints(opts = {}) {
   if (!engine.ok) {
     hints.push('Docker not running — Colibri default stack needs Docker')
     level = 'red'
-  } else if (gpu.discrete) {
-    const probe = process.env.GIM_DOCKER_GPU_OK
-    if (probe === '0') {
-      hints.push('Install NVIDIA Container Toolkit for GPU tier (COLI_CUDA=1)')
+  } else {
+    try {
+      const cfg = readConfig()
+      if (!isApiMode(cfg) && resolveLlmDockerBackend(cfg, {}) === 'colibri') {
+        const eng = colibriNativeEngineReady(undefined, resolveColibriModelPath(), { docker: true })
+        if (!eng.ok) {
+          hints.push(`Colibri Linux ELF engine missing — ${eng.detail}`)
+          level = 'red'
+        }
+      }
+    } catch {
+      /* no config */
+    }
+    if (gpu.discrete) {
+      const probe = process.env.GIM_DOCKER_GPU_OK
+      if (probe === '0') {
+        hints.push('Install NVIDIA Container Toolkit for GPU tier (COLI_CUDA=1)')
+        level = 'yellow'
+      }
+    } else {
+      hints.push('No discrete GPU — Colibri CPU tier; use cloud --api for speed if needed')
       level = 'yellow'
     }
-  } else {
-    hints.push('No discrete GPU — Colibri CPU tier; use cloud --api for speed if needed')
-    level = 'yellow'
   }
 
   hints.push('Keep model on fast NVMe (not network drive) — expert streaming is disk-bound')

@@ -1,5 +1,6 @@
 /** Simple TF-IDF-ish bag hash vector (stdlib fallback). */
-const DIM = 256
+export const EMBED_DIM = 256
+const DIM = EMBED_DIM
 
 /**
  * @param {string} text

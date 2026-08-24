@@ -1,14 +1,14 @@
 # Audit run 2026-08-24
 
-Gate: **pre-beta**
+Gate: **security**
 
 | # | Аудит | Статус | Детали |
 |---|-------|--------|--------|
 | 1 | Безопасность | PASS | No hardcoded secrets; root refuse; log policy |
-| 2 | Качество и структура | PASS | 59 src modules |
+| 2 | Качество и структура | PASS | 63 src modules |
 | 3 | Документация | PASS | Core docs present |
 | 4 | Лицензии | PASS | package: Apache-2.0 |
-| 5 | Типы и сигнатуры | PASS | JSDoc in 41/59 src files; TS deferred (docs/TYPES.md) |
+| 5 | Типы и сигнатуры | PASS | JSDoc in 45/63 src files; TS deferred (docs/TYPES.md) |
 | 6 | Версии среды | PASS | node ^22.19.0 // >=24.0.0 |
 | 7 | Производительность | PASS | Health timeouts + AbortSignal; gim profiling deferred to field beta |
 | 8 | Зависимости | PASS | Zero runtime npm deps (CLI only) |
@@ -42,4 +42,4 @@ Gate: **pre-beta**
 - FAIL: 0
 - WARN: 0
 
-**Gate pre-beta: OK** (no FAIL)
+**Gate security: OK** (no FAIL)

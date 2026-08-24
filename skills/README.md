@@ -12,6 +12,7 @@ Skills are copied to `~/.gim/dsh-home/skills/` on `gim bootstrap` (optional DSH)
 | [code-search](./code-search/SKILL.md) | Semantic index on 50+ file repos |
 | [lsp](./lsp/SKILL.md) | Go-to-def / refs via language servers |
 | [tool-search](./tool-search/SKILL.md) | Deferred catalog — search before guessing CLI/MCP |
+| [ai-instructions](./ai-instructions/SKILL.md) | `.gim/ai-instructions.md` — project context for agent |
 | [large-project](./large-project/SKILL.md) | Multi-module apps under workspace |
 | [frontend-ui](./frontend-ui/SKILL.md) | Non-default HTML/CSS (not bare blue links) |
 | [network-egress](./network-egress/SKILL.md) | Guest outbound HTTP — presets, proxy, allowlist |

@@ -7,9 +7,10 @@ import { classifyBashRisk } from './permission-risk.js'
 import { summarizeStacks } from './runstate.js'
 import { searchDeferredTools, selectDeferredTool, formatToolSearchHits } from './tool-search.js'
 import { daemonTick } from './daemon.js'
+import { loadAiInstructionsBlock, readAiInstructionsMeta } from './instructions.js'
 
 export const MCP_PROTOCOL = '2024-11-05'
-export const MCP_SERVER_INFO = { name: 'gim-cli', version: '1.1.1' }
+export const MCP_SERVER_INFO = { name: 'gim-cli', version: '1.1.2' }
 
 export const MCP_TOOLS = [
   {
@@ -78,6 +79,14 @@ export const MCP_TOOLS = [
       properties: { name: { type: 'string', description: 'Stack name (default)' } },
     },
   },
+  {
+    name: 'project_instructions',
+    description: 'Read .gim/ai-instructions.md for workspace (GIM smart project context).',
+    inputSchema: {
+      type: 'object',
+      properties: { stack: { type: 'string', description: 'Stack name (default)' } },
+    },
+  },
 ]
 
 /**
@@ -139,6 +148,25 @@ export async function callMcpTool(name, args = {}, opts = {}) {
   if (name === 'daemon_tick') {
     const summary = await daemonTick(args.name || 'default', { fetchFn })
     return { content: [{ type: 'text', text: JSON.stringify(summary, null, 2) }] }
+  }
+  if (name === 'project_instructions') {
+    const stack = args.stack || 'default'
+    const meta = readAiInstructionsMeta(stack)
+    if (!meta.exists) {
+      return {
+        content: [{ type: 'text', text: 'No .gim/ai-instructions.md — run: gim instructions init' }],
+        isError: true,
+      }
+    }
+    const block = loadAiInstructionsBlock(stack)
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify({ path: meta.path, bytes: meta.bytes, mtime: meta.mtime, body: block }, null, 2),
+        },
+      ],
+    }
   }
   return { content: [{ type: 'text', text: `unknown tool ${name}` }], isError: true }
 }

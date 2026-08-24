@@ -43,6 +43,12 @@ export function materializeAssets(stack = 'default') {
     fs.copyFileSync(path.join(PKG_ROOT, 'assets', 'CONTEXT.md'), ctx)
   }
 
+  const aiInstr = path.join(p.workspace, '.gim', 'ai-instructions.md')
+  if (!fs.existsSync(aiInstr)) {
+    const tpl = path.join(PKG_ROOT, 'assets', 'ai-instructions.template.md')
+    if (fs.existsSync(tpl)) fs.copyFileSync(tpl, aiInstr)
+  }
+
   const memDir = path.join(p.workspace, '.gim')
   const memPath = path.join(memDir, 'memory.json')
   fs.mkdirSync(memDir, { recursive: true })

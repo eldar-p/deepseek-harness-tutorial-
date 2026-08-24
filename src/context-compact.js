@@ -56,6 +56,7 @@ async function llmSummarize(target, messages, model) {
  *   contextWindow: number,
  *   mode?: string,
  *   system?: string,
+ *   stack?: string,
  *   target?: { baseURL: string, model: string, apiKey?: string } | null,
  *   model?: string,
  *   compactPct?: number,
@@ -67,6 +68,7 @@ export async function compactMessagesIfNeeded(opts) {
   const compactPct = opts.compactPct ?? DEFAULT_COMPACT_PCT
   const usage = estimateContextUsage({
     mode: opts.mode || 'agent',
+    stack: opts.stack || 'default',
     messages,
     contextWindow,
     system: opts.system,

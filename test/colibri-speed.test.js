@@ -58,6 +58,8 @@ test('llmKeepWarm default on', () => {
 
 test('resolveLlmDockerBackend defaults to colibri on win/linux', () => {
   const orig = process.platform
+  const prevDefault = process.env.GIM_DEFAULT_LLM
+  delete process.env.GIM_DEFAULT_LLM
   try {
     Object.defineProperty(process, 'platform', { value: 'win32' })
     assert.equal(resolveLlmDockerBackend({}, {}), 'colibri')
@@ -65,6 +67,8 @@ test('resolveLlmDockerBackend defaults to colibri on win/linux', () => {
     assert.equal(resolveLlmDockerBackend({ gguf: 'x.gguf' }, {}), null)
   } finally {
     Object.defineProperty(process, 'platform', { value: orig })
+    if (prevDefault === undefined) delete process.env.GIM_DEFAULT_LLM
+    else process.env.GIM_DEFAULT_LLM = prevDefault
   }
 })
 

@@ -2,7 +2,9 @@
  * Agent loop: OpenAI tools → execute → continue; emit SSE events for the UI.
  * ask_user pauses the loop until the client posts answers (resumeMessages).
  */
-import { AGENT_SYSTEM_EXTRA, ASK_PLAN_SYSTEM_EXTRA, TOOLS_TEXT_FALLBACK, modesWithTools, toolsForMode, runAgentTool } from './agent-tools.js'
+import { AGENT_SYSTEM_EXTRA, ASK_PLAN_SYSTEM_EXTRA, TOOLS_TEXT_FALLBACK, modesWithTools, toolsForMode, runAgentTool, isMcpAgentTool } from './agent-tools.js'
+import { runMcpAgentTool } from './mcp-client.js'
+import { loadAiInstructionsBlock } from './instructions.js'
 import { emitChunkedDelta, extractTextPoll, extractTextToolCall } from './clarify-detect.js'
 import { llmFetch } from './llm-fetch.js'
 import {
@@ -63,10 +65,14 @@ export async function runAgentLoop(opts) {
     const extra =
       mode === 'ask' || mode === 'plan' ? ASK_PLAN_SYSTEM_EXTRA : AGENT_SYSTEM_EXTRA
     const fallback = nativeTools ? '' : `\n\n${TOOLS_TEXT_FALLBACK}`
+    const instructions = loadAiInstructionsBlock(stack)
+    const instructionsBlock = instructions ? `\n\n${instructions}` : ''
     messages = [
       {
         role: 'system',
-        content: useTools ? `${system}\n\n${extra}${fallback}` : system,
+        content: useTools
+          ? `${system}\n\n${extra}${fallback}${instructionsBlock}`
+          : `${system}${instructionsBlock}`,
       },
       ...(opts.messages || []),
     ]
@@ -87,7 +93,7 @@ export async function runAgentLoop(opts) {
     }
     if (cacheSlot > 0) body.cache_slot = cacheSlot
     if (nativeTools) {
-      body.tools = toolsForMode(mode)
+      body.tools = toolsForMode(mode, stack)
       body.tool_choice = 'auto'
     } else if (useTools) {
       const rf = textFallbackResponseFormat(true)
@@ -159,7 +165,9 @@ export async function runAgentLoop(opts) {
         }
 
         onEvent({ type: 'tool_start', id: tc.id, name, args })
-        const result = runAgentTool(stack, name, args)
+        const result = isMcpAgentTool(name)
+          ? await runMcpAgentTool(name, args)
+          : runAgentTool(stack, name, args)
         onEvent({ type: 'tool_result', id: tc.id, name, result })
         messages.push({
           role: 'tool',
@@ -216,7 +224,9 @@ export async function runAgentLoop(opts) {
             return { ok: true, paused: true, messages, clarify: { id: fakeId, title, questions } }
           }
         }
-        const result = runAgentTool(stack, name, args)
+        const result = isMcpAgentTool(name)
+          ? await runMcpAgentTool(name, args)
+          : runAgentTool(stack, name, args)
         onEvent({ type: 'tool_result', id: fakeId, name, result })
         messages.push({ role: 'assistant', content })
         messages.push({

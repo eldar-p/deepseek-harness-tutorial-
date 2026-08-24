@@ -59,10 +59,18 @@ export const DEFERRED_TOOLS = [
   },
   {
     id: 'mcp_bridge',
-    keywords: ['mcp', 'cursor', 'claude desktop', 'stdio'],
+    keywords: ['mcp', 'cursor', 'claude desktop', 'stdio', 'resources', 'prompts'],
     summary: 'GIM MCP stdio server',
-    detail: 'gim mcp  OR  node scripts/gim-mcp.mjs — code_search + tool_search + status.',
+    detail:
+      'gim mcp  OR  node scripts/gim-mcp.mjs — code_search + tool_search + project_instructions. External: gim mcp client add/list/doctor; resources/prompts via mcp_list_tools kind=all.',
     when: 'Wire GIM tools into Cursor / Claude Desktop',
+  },
+  {
+    id: 'ai_instructions',
+    keywords: ['agents.md', 'ai-instructions', 'project context', 'conventions'],
+    summary: 'Smart project instructions',
+    detail: 'gim instructions init|refresh|sync → .gim/ai-instructions.md (AGENTS.md compatible). Injected into agent system prompt.',
+    when: 'New repo, monorepo onboarding, publish AGENTS.md',
   },
   {
     id: 'doctor_release',
