@@ -22,8 +22,9 @@
 | [025](./025-toolsearch-mcp-vulkan.md) | ToolSearch + MCP + Vulkan | ✅ done | post-1.0 |
 | [026](./026-ship-1.1.md) | Ship 1.1.0 | ✅ done | 1.1 |
 | [027](./027-harness-policy.md) | Harness pack + policy score | ✅ done | 1.1 |
+| [028](./028-field-parity.md) | Linux/macOS field-lite | ✅ done | 1.1 |
 
-**1.1** (`1.1.0`) — coord + mcp + harness pack + policy score · coverage ~83%  
-Readiness: `deep doctor --readiness --stage=1.1` · Policy: `deep doctor --policy` · [RELEASE-1.1.md](../RELEASE-1.1.md)
+**1.1** (`1.1.0`) — harness + policy + field-lite CI · [OS-COMPAT.md](../docs/OS-COMPAT.md)  
+Readiness: `deep doctor --readiness --stage=1.1|field` · Policy: `deep doctor --policy`
 
 Alpha archive: [README.md](./README.md)

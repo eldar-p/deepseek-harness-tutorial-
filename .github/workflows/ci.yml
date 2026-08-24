@@ -52,6 +52,23 @@ jobs:
       - name: Harness test pack
         run: npm run test:harness
 
+  field-lite:
+    name: field-lite (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Field-lite (policy + llama CPU fetch)
+        run: npm run field:lite
+        env:
+          DEEP_NO_BANNER: '1'
+
   smoke-guest:
     name: smoke guest (ubuntu + docker)
     runs-on: ubuntu-latest

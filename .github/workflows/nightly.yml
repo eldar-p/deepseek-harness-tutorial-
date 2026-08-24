@@ -23,6 +23,9 @@ jobs:
           DEEP_COVERAGE_MIN: '80'
           DEEP_COVERAGE_FLOOR: '78'
       - run: npm run audit:prebeta
-      - name: doctor readiness (beta)
-        run: node bin/deep.js doctor --readiness --stage=beta
-        continue-on-error: true
+      - name: doctor readiness (field)
+        run: node bin/deep.js doctor --readiness --stage=field
+      - name: field-lite
+        run: npm run field:lite
+        env:
+          DEEP_NO_BANNER: '1'

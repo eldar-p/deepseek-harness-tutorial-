@@ -1,7 +1,7 @@
 # OS compatibility matrix
 
 Last verified: **2026-08-24**  
-CI: [`32708202606`](https://github.com/eldar-p/deepseek-harness-tutorial-/actions/runs/32708202606) (unit matrix) + Linux field WSL after llama sha pins.
+CI: unit matrix (win/mac/linux) + **field-lite** (ubuntu + macos llama CPU fetch) + guest smoke (ubuntu).
 
 Deep is a **hybrid** host orchestrator: local GGUF (`llama-server`) **or** cloud API (`--api`). Guest container (Docker/Podman), code index, and egress proxy are shared.
 
@@ -10,32 +10,48 @@ Deep is a **hybrid** host orchestrator: local GGUF (`llama-server`) **or** cloud
 | Check | Ubuntu | macOS | Windows |
 |-------|--------|-------|---------|
 | Unit tests (`npm test`) | PASS | PASS | PASS |
-| Coverage gate (≥65%) | PASS | PASS | PASS |
+| Coverage gate (≥80%, floor 78) | PASS | PASS | PASS |
 | Audit pre-alpha | PASS | PASS | PASS |
 | Infra check | PASS | PASS | PASS |
 | `deep doctor` / `help` | PASS | PASS | PASS |
-| Guest smoke (build + mount) | PASS | n/a (Ubuntu-only job) | n/a |
+| Harness pack + API smoke | PASS | PASS | PASS |
+| **Field-lite** (policy + llama fetch) | PASS (job) | PASS (job) | via local `deep field lite` |
+| Guest smoke (build + mount) | PASS | n/a | n/a |
 
 ## Local / field (full stack)
 
-| Capability | Windows (this machine) | Linux (WSL Ubuntu 24.04) | macOS |
-|------------|------------------------|--------------------------|-------|
-| `deep doctor` | PASS (Docker Desktop) | PASS | via CI only |
-| Unit tests + security audit | PASS 170/170 | PASS (audits OK) | via CI |
-| Guest smoke | PASS | PASS after image load / BuildKit | — |
-| `deep start` local GGUF | PASS (llama+DSH+index+proxy+guest) | PASS (CPU; llama auto-fetch + `LD_LIBRARY_PATH`) | — |
-| `smoke-e2e` | PASS | **PASS** | — |
-| Agent probe / coding eval | **14/16** coding-eval | probe **3/4** (1 model fluke on bash wording) | — |
-| `deep start --api …` | wired; needs API key | same | same |
+| Capability | Windows | Linux (native / WSL) | macOS |
+|------------|---------|----------------------|-------|
+| `deep doctor --policy` | PASS | PASS | field-lite CI |
+| `deep field lite` | PASS | PASS | CI job |
+| Guest smoke | PASS | PASS (Desktop integration / image load) | Docker Desktop |
+| `deep start` local GGUF | PASS | PASS (CPU / Vulkan) | Metal pin; needs Mac + GGUF |
+| `smoke-e2e` | PASS | PASS (WSL field) | run `field-macos.sh --gguf …` |
+| `deep start --api …` | wired | wired | wired |
+
+## Field helpers
+
+```bash
+# Offline + llama CPU auto-fetch (CI runs this on ubuntu/macos)
+deep field lite
+npm run field:lite
+
+# Full stack (needs Docker + GGUF)
+bash scripts/field-linux.sh --gguf /path/model.gguf
+bash scripts/field-macos.sh --gguf /path/model.gguf
+bash scripts/field-linux-wsl.sh --gguf /path/model.gguf
+
+# Readiness checklist for OS parity assets
+deep doctor --readiness --stage=field
+```
 
 ## Known gaps / notes
 
-1. **llama pins** — `manifests/llama-binaries.json` now has sha256 for **win32 / linux / darwin** (b9771).
-2. **WSL Docker** — apt `docker` is often a **separate daemon** from Docker Desktop. Prefer Desktop WSL integration, or `docker save`/`load` the guest image; install `docker-buildx-plugin` for local builds.
-3. **WSL DSH** — Windows npm shim under `/mnt/c/...` is rejected; install Linux dsh:  
-   `npm i -g --prefix ~/.local @deepseek-ai/dsh@0.1.1-rc.2` and put `~/.local/bin` on `PATH` (or `DEEP_DSH_BIN`).
-4. **Coverage** — CI uses `DEEP_COVERAGE_MIN=65` (~70% measured).
-5. **macOS field stack** — no physical Mac; unit CI green; Metal binary sha pinned for auto-fetch.
+1. **llama pins** — win32 / linux (cpu+vulkan) / darwin sha256 for **b9771**.
+2. **WSL Docker** — prefer Docker Desktop WSL integration; apt docker is often a separate daemon.
+3. **WSL DSH** — install Linux dsh under `~/.local` (reject `/mnt/c` Windows shim).
+4. **macOS physical full stack** — no dedicated Mac in lab; Metal binary + field-lite CI green; full e2e needs operator with GGUF.
+5. **Linux CUDA** — no official ggml zip; use Vulkan pin or `DEEP_LLAMA_BIN`.
 
 ## Recommended models (quick)
 
@@ -45,4 +61,4 @@ Deep is a **hybrid** host orchestrator: local GGUF (`llama-server`) **or** cloud
 | Local spare / smaller | gpt-oss-20b Q8 or Qwen3-4B Q4 |
 | Cloud | `--api deepseek` / `openai` / `openrouter` |
 
-See [README.md](../README.md) for full tables and flags. Field helper: `scripts/field-linux-wsl.sh`.
+See [README.md](../README.md) · [HARNESS-TEST-PACK.md](./HARNESS-TEST-PACK.md) · [INSTALL.md](./INSTALL.md).

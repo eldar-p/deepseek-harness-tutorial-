@@ -8,6 +8,7 @@ import {
   assessCoreReadiness,
   assessV1Readiness,
   assessV11Readiness,
+  assessFieldReadiness,
   assessReadiness,
   PREALPHA_MILESTONES,
   ALPHA_MILESTONES,
@@ -16,6 +17,7 @@ import {
   CORE_MILESTONES,
   V1_MILESTONES,
   V11_MILESTONES,
+  FIELD_MILESTONES,
 } from '../src/readiness.js'
 
 test('PREALPHA_MILESTONES weights sum to 100', () => {
@@ -80,7 +82,18 @@ test('assessV11Readiness returns pct and stage', () => {
   assert.equal(r.items.length, V11_MILESTONES.length)
 })
 
+test('FIELD_MILESTONES weights sum to 100', () => {
+  assert.equal(FIELD_MILESTONES.reduce((s, m) => s + m.weight, 0), 100)
+})
+
+test('assessFieldReadiness complete', () => {
+  const r = assessFieldReadiness()
+  assert.equal(r.items.length, FIELD_MILESTONES.length)
+  assert.ok(r.pct >= 90)
+})
+
 test('assessReadiness stage routing', () => {
+  assert.equal(assessReadiness('field').items.length, FIELD_MILESTONES.length)
   assert.equal(assessReadiness('1.1').items.length, V11_MILESTONES.length)
   assert.equal(assessReadiness('1.0').items.length, V1_MILESTONES.length)
   assert.equal(assessReadiness('v1').items.length, V1_MILESTONES.length)

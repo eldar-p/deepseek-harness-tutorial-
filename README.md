@@ -95,6 +95,7 @@ node bin/deep.js bootstrap --api custom --api-base https://llm.example.com/v1 --
 |---------|----------|
 | `deep doctor` | Проверка окружения (+ `--policy`) |
 | `deep test harness` | Offline guardrail pack |
+| `deep field lite` | OS field-lite (llama fetch) |
 | `deep bootstrap --gguf PATH` | Локальная модель |
 | `deep bootstrap --api PROVIDER [--api-model M] [--api-key K]` | Облачная модель |
 | `deep start [--gguf PATH \| --api PROVIDER] [--cpu]` | Поднять стек |
