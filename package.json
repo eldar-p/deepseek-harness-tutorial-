@@ -28,6 +28,7 @@
     "smoke:guest": "node scripts/smoke-guest.mjs",
     "smoke:e2e": "node scripts/smoke-e2e.mjs",
     "smoke:api": "node scripts/smoke-api.mjs",
+    "test:harness": "node scripts/harness-test-pack.mjs",
     "pack:release": "node scripts/pack-release.mjs",
     "audit": "node scripts/audit-run.mjs --gate=pre-alpha",
     "audit:alpha": "node scripts/audit-run.mjs --gate=alpha",

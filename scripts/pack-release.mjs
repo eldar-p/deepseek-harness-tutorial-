@@ -32,6 +32,7 @@ const INCLUDE = [
   'README.md',
   'ALPHA.md',
   'PRE-ALPHA.md',
+  'RELEASE-1.1.md',
   'package.json',
 ]
 

@@ -46,6 +46,12 @@ jobs:
       - name: deep help
         run: node bin/deep.js help
 
+      - name: API smoke (mock)
+        run: npm run smoke:api
+
+      - name: Harness test pack
+        run: npm run test:harness
+
   smoke-guest:
     name: smoke guest (ubuntu + docker)
     runs-on: ubuntu-latest

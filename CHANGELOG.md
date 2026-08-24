@@ -9,6 +9,9 @@
 - `npm run smoke:api` — mock (or live) API provider smoke
 - Write-path risk: `deep risk write-path` + one-shot-guard deny for `.env`/keys/`secrets.json`
 - Readiness stage `1.1` (`deep doctor --readiness --stage=1.1`)
+- Agent harness test pack: `deep test harness` / `npm run test:harness` + [docs/HARNESS-TEST-PACK.md](./docs/HARNESS-TEST-PACK.md)
+- Policy score: `deep doctor --policy` (isolation grade A–F)
+- CI runs `smoke:api` + harness pack on all OS
 
 ### Changed
 
