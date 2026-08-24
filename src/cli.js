@@ -41,7 +41,8 @@ function parseArgs(argv) {
         a === '--watch' ||
         a === '--dry-run' ||
         a === '--readiness' ||
-        a === '--all'
+        a === '--all' ||
+        a === '--dry-run'
       ) {
         flags[a.slice(2)] = true
       } else {
@@ -501,7 +502,7 @@ export function cmdHelp() {
   deep stop [--name STACK] [--emergency] [--wipe-session]
   deep status [--name STACK] [--all]
   deep stacks
-  deep update [--channel stable|beta|edge]
+  deep update [--channel stable|beta|edge] [--dry-run]
   deep presets
 
 Presets: ${PRESET_NAMES.join(', ')}

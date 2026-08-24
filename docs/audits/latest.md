@@ -25,7 +25,7 @@ Gate: **alpha**
 | 19 | Ошибки | PASS | Structured exitCode |
 | 20 | Помощь | PASS | deep help command |
 | 21 | Multi-stack | PASS | listStacks + --name |
-| 22 | Деградация контекста | N/A | Compact/prune enforcement deferred to beta (t6) |
+| 22 | Деградация контекста | PASS | compaction + pruner in cordis; CONTEXT/AGENTS; memory template |
 | 23 | Завершение и прерывания | PASS | SIGINT/SIGTERM → stop stacks; emergency; GPU lock release |
 | 24 | Диск I/O и износ | PASS | log rotate 512KiB; stale .part cleanup; atomic downloads |
 | 25 | Телеметрия и приватность | PASS | telemetry off; PRIVACY.md; no prompt logs |

@@ -1,6 +1,6 @@
 {
   "schema": "deep-cli-releases/v1",
-  "note": "Alpha: git install only. CDN URLs filled at beta.",
+  "note": "Alpha/beta: git install default. Fill artifacts[].url+sha256 to enable deep update CDN fetch.",
   "channels": {
     "stable": {
       "revision": "2026.08.24-alpha",
@@ -10,10 +10,33 @@
       }
     },
     "beta": {
-      "revision": "2026.08.24-alpha",
+      "revision": "2026.08.24-beta",
       "cli": {
         "version": "0.2.0-alpha",
-        "artifacts": []
+        "artifacts": [
+          {
+            "os": "win32",
+            "arch": "x64",
+            "format": "zip",
+            "url": null,
+            "sha256": null,
+            "note": "Placeholder — set url+sha256 when CDN publishes"
+          },
+          {
+            "os": "darwin",
+            "arch": "arm64",
+            "format": "tar.gz",
+            "url": null,
+            "sha256": null
+          },
+          {
+            "os": "linux",
+            "arch": "x64",
+            "format": "tar.gz",
+            "url": null,
+            "sha256": null
+          }
+        ]
       }
     },
     "edge": {

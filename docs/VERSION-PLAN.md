@@ -42,9 +42,9 @@
 
 - [x] Coverage gate ≥50% (src ~69%)
 - [x] Audit #18 TTY PASS
-- [ ] Hard egress (010)
-- [ ] Audit #22 context (011)
-- [ ] CDN artifacts (013)
+- [x] Hard egress iptables (010)
+- [x] Audit #22 context (011)
+- [ ] CDN publish real artifacts (013)
 
 ## Команды
 

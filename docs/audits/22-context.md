@@ -1,7 +1,7 @@
 # 22. Деградация контекста
 
-**Status:** N/A
+**Status:** PASS
 
-Compact/prune enforcement deferred to beta (t6)
+compaction + pruner in cordis; CONTEXT/AGENTS; memory template
 
 _Auto-generated 2026-08-24. Re-run: `npm run audit`_

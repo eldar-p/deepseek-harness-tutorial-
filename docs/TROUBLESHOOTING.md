@@ -93,13 +93,18 @@ Only one **GPU** stack at a time. If start fails with GPU lock, stop the other s
 
 ## Guest network allowlist
 
-Preset `balanced` / `dev` pass `DEEP_NET_ALLOWLIST` into the guest container (domains from `manifests/allowlists.json`).
+Preset `balanced` / `dev`:
 
-- `offline` / `paranoia` → `--network none` (no egress)
-- `open` → full bridge egress (WARN)
-- Hard egress filter (proxy) — beta; env policy is alpha baseline
+1. Host injects `DEEP_NET_MODE` / `DEEP_NET_ALLOWLIST`
+2. Guest entrypoint `deep-net-enforce` applies **iptables** OUTPUT allowlist (needs `NET_ADMIN`)
+3. `offline` / `paranoia` → `--network none`
 
-Check at start: `[INFO] Guest net: network=allowlist (N domains...)`
+```bash
+docker exec deep-guest-default printenv DEEP_NET_ALLOWLIST
+docker logs deep-guest-default 2>&1 | findstr deep-net
+```
+
+Hard proxy sidecar — future; current filter is DNS→IP iptables (IPv4).
 
 ## Port already in use
 

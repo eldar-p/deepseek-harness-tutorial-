@@ -1,5 +1,8 @@
 # 011 — Context audit #22
 
-**Status:** ⏳ pending · **Stage:** pre-beta
+**Status:** ✅ done · **Stage:** pre-beta
 
-Make audit #22 PASS: prove compaction + pruner active in runtime (not just cordis YAML present).
+## Checklist
+
+- [x] Audit #22 checks cordis compaction + pruner + CONTEXT/AGENTS + memory template
+- [x] `npm run audit:alpha` includes #22 PASS

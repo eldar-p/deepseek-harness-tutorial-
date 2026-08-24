@@ -13,7 +13,7 @@ const AUDITS_DIR = path.join(ROOT, 'docs', 'audits')
 
 const GATE_CHECKS = {
   'pre-alpha': [3, 6, 15, 17, 19, 20, 25],
-  alpha: [1, 3, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 23, 24, 25, 26],
+  alpha: [1, 3, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26],
   'pre-beta': Array.from({ length: 26 }, (_, i) => i + 1),
 }
 
@@ -204,7 +204,21 @@ function runAudits() {
   }
 
   // 22 Context
-  results.push(na(22, 'Деградация контекста', 'Compact/prune enforcement deferred to beta (t6)'))
+  {
+    const cordis = read('assets/cordis.deep.patch.yml')
+    const ctx = read('assets/CONTEXT.md')
+    const agents = read('assets/AGENTS.deep.md')
+    const mem = fs.existsSync(path.join(ROOT, 'assets/memory.template.json'))
+    const compact = cordis.includes('compaction-basic') && cordis.includes('tool-result-pruner')
+    const docs = /compact|compaction|pruner|memory\.json/i.test(ctx + agents)
+    if (compact && mem && docs) {
+      results.push(pass(22, 'Деградация контекста', 'compaction + pruner in cordis; CONTEXT/AGENTS; memory template'))
+    } else if (compact) {
+      results.push(warn(22, 'Деградация контекста', 'cordis OK; missing CONTEXT/memory docs'))
+    } else {
+      results.push(fail(22, 'Деградация контекста', 'Missing compaction/pruner in cordis patch'))
+    }
+  }
 
   // 23 Shutdown / interruptions
   {

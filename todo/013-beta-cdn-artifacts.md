@@ -1,5 +1,11 @@
 # 013 — CDN artifacts
 
-**Status:** ⏳ pending · **Stage:** beta
+**Status:** 🔄 in progress · **Stage:** beta
 
-Fill `manifests/cli-releases.json` with url+sha256; `deep update` / install scripts pull from channel.
+## Checklist
+
+- [x] `pickCliArtifact()` + `deep update --dry-run`
+- [x] CDN fetch+sha256 path when `artifacts[].url` set
+- [x] Placeholder rows in `cli-releases.json` beta channel
+- [ ] Publish real zip/tar.gz + fill url/sha256
+- [ ] Auto extract + install into `~/.deep` / PATH
