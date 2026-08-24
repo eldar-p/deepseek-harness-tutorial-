@@ -47,8 +47,11 @@
 - [x] CDN publish path + install shim (013); zip on GitHub Release
 - [x] Pre-beta audit gate (015) — `npm run audit:prebeta` 0 FAIL
 - [x] Extra proc/llama/shutdown tests (016)
+- [x] Checksum sidecars (017) + `parseArgs` tests (018)
+- [x] Version bump `0.3.0-prebeta`
+- [x] Nightly CI workflow (3 OS)
 
-## Команды
+**Текущий этап:** Pre-beta (`0.3.0-prebeta`) — **complete** (code + audits). Field beta (`0.4.x`) next: re-upload zip under new tag, coverage ≥60%.
 
 ```bash
 npm test

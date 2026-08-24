@@ -1,0 +1,25 @@
+name: nightly
+
+on:
+  schedule:
+    - cron: '17 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  test-matrix:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm test
+      - run: npm run test:coverage
+      - run: npm run audit:prebeta
+      - name: doctor readiness (beta)
+        run: node bin/deep.js doctor --readiness --stage=beta
+        continue-on-error: true
