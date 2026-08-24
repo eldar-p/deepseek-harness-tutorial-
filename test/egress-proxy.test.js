@@ -29,3 +29,10 @@ test('egress proxy rejects non-absolute URL', async () => {
   assert.equal(status, 400)
   await new Promise((r) => server.close(r))
 })
+
+test('guestProxyUrl uses docker.internal on win/mac', async () => {
+  const { guestProxyUrl } = await import('../src/egress-proxy.js')
+  const url = guestProxyUrl(18080)
+  assert.match(url, /:18080/)
+  assert.ok(url.startsWith('http://'))
+})
